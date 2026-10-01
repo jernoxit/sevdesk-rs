@@ -248,6 +248,7 @@ async fn transaction_create_update_and_check_account_update_payloads() {
     let c = client(&server);
     let new = NewTransaction {
         value_date: datetime!(2026-08-15 12:00 +2),
+        entry_date: None,
         amount: eur(-1500),
         payee_payer_name: "Stripe Payments Europe, Limited".into(),
         paymt_purpose: Some("txn_1".into()),
@@ -352,4 +353,35 @@ async fn deleting_a_booked_transaction_is_a_409_with_code_159() {
         ),
         "{err:?}"
     );
+}
+
+#[allow(clippy::unwrap_used)] // helper: clippy exempts only `#[test]` fns
+async fn posted_transaction_body(new: &NewTransaction) -> serde_json::Value {
+    let server = MockServer::start().await;
+    Mock::given(method("POST"))
+        .and(path("/CheckAccountTransaction"))
+        .respond_with(
+            ResponseTemplate::new(201).set_body_string(fixture("write_transaction_create")),
+        )
+        .expect(1)
+        .mount(&server)
+        .await;
+    client(&server).create_transaction(new).await.unwrap();
+    let requests = server.received_requests().await.unwrap();
+    serde_json::from_slice(&requests[0].body).unwrap()
+}
+
+#[tokio::test]
+async fn transaction_create_sends_entry_date_in_the_value_date_format_when_set() {
+    let mut new = common::new_transaction();
+    new.entry_date = Some(datetime!(2026-10-10 12:00 +2));
+    let body = posted_transaction_body(&new).await;
+    assert_eq!(body["valueDate"], "2026-08-15T12:00:00+02:00");
+    assert_eq!(body["entryDate"], "2026-10-10T12:00:00+02:00");
+}
+
+#[tokio::test]
+async fn transaction_create_omits_entry_date_when_none() {
+    let body = posted_transaction_body(&common::new_transaction()).await;
+    assert!(body.as_object().unwrap().get("entryDate").is_none());
 }

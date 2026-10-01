@@ -51,7 +51,13 @@ pub struct TransactionQuery {
     /// SUBSTRING match at sevDesk: compare exactly on the result.
     pub paymt_purpose: Option<String>,
     /// Sent as a Unix timestamp; `startDate`/`endDate` accept it like ISO dates.
+    /// Measured on the sevDesk test tenant (2026-10-01): the `startDate` and
+    /// `endDate` filter cuts by `entryDate`, NOT by `valueDate`. Three
+    /// transactions with the same `valueDate` and `entryDate`s of 01.10.,
+    /// 10.10. and 20.10., queried with the window 05.-15.10., returned only
+    /// the 10.10. one.
     pub start_date: Option<OffsetDateTime>,
+    /// Cuts by `entryDate`, like [`Self::start_date`].
     pub end_date: Option<OffsetDateTime>,
     /// Measured: `true` returns only booked transactions, but `false` is
     /// IGNORED and returns everything. To ask for the open ones use

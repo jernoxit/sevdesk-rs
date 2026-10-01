@@ -206,6 +206,7 @@ impl Ctx {
     ) -> NewTransaction {
         NewTransaction {
             value_date: at,
+            entry_date: None,
             amount: eur(minor),
             payee_payer_name: SUPPLIER.into(),
             paymt_purpose: Some(self.marker.clone()),

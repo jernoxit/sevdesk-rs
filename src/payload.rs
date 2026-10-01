@@ -224,6 +224,17 @@ pub struct NewTransaction {
     /// calendar day (Berlin) by choosing the offset.
     #[serde(with = "time::serde::rfc3339")]
     pub value_date: OffsetDateTime,
+    /// `entryDate`, sent in the same format as [`Self::value_date`]. Measured
+    /// on the sevDesk test tenant (2026-10-01): it is accepted independently
+    /// of `valueDate`, reads back unchanged, and defaults to `valueDate` when
+    /// omitted. The payment date of a booking (Invoice/Voucher `payDate`, the
+    /// transaction log's `bookingDate`, the DATEV payment line) is the
+    /// transaction's `valueDate`, not `entryDate`.
+    #[serde(
+        with = "time::serde::rfc3339::option",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub entry_date: Option<OffsetDateTime>,
     #[serde(serialize_with = "serialize_amount")]
     pub amount: Amount,
     pub payee_payer_name: String,

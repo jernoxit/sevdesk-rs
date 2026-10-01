@@ -45,6 +45,7 @@ pub fn eur(minor: i64) -> Amount {
 pub fn new_transaction() -> NewTransaction {
     NewTransaction {
         value_date: datetime!(2026-08-15 12:00 +2),
+        entry_date: None,
         amount: eur(1),
         payee_payer_name: "Stripe Payments Europe, Limited".into(),
         paymt_purpose: Some("txn_1".into()),

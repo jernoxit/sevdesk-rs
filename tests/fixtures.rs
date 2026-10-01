@@ -311,6 +311,7 @@ async fn error_422_offline_account() {
 pub fn sample_transaction() -> NewTransaction {
     NewTransaction {
         value_date: time::macros::datetime!(2026-08-15 12:00 +2),
+        entry_date: None,
         amount: eur(-100),
         payee_payer_name: "Stripe Payments Europe, Limited".into(),
         paymt_purpose: Some("x".into()),
