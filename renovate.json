@@ -64,14 +64,15 @@
     },
     {
       "customType": "regex",
-      "description": "Cargo.toml MSRV (rust-version) — in lockstep with the toolchain under depName 'rust' (major.minor, via the rust Docker tags).",
+      "description": "Cargo.toml MSRV (rust-version) — tracked as a Rust release (rust-lang/rust) under depName 'rust', in lockstep with the toolchain; the release tag (1.99.0) is reduced to major.minor (1.99).",
       "managerFilePatterns": [
         "/^Cargo\\.toml$/"
       ],
-      "datasourceTemplate": "docker",
-      "packageNameTemplate": "rust",
+      "datasourceTemplate": "github-releases",
+      "packageNameTemplate": "rust-lang/rust",
       "depNameTemplate": "rust",
-      "versioningTemplate": "docker",
+      "extractVersionTemplate": "^(?<version>\\d+\\.\\d+)\\.\\d+$",
+      "versioningTemplate": "semver-coerced",
       "matchStrings": [
         "rust-version = \"(?<currentValue>\\d+\\.\\d+)\""
       ]
