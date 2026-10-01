@@ -5,7 +5,7 @@
 # depName 'rust' (renovate.json) — the version is deliberately not repeated in
 # prose here.
 [toolchain]
-channel = "1.97.1"
+channel = "1.99.0"
 # `rust-analyzer` is listed so the language server runs on the PINNED
 # toolchain: `rustup component add rust-analyzer` without `--toolchain` hits
 # the default toolchain, the repo override then wins, and every LSP call dies

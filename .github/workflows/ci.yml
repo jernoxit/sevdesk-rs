@@ -18,7 +18,7 @@ jobs:
       - uses: actions/checkout@v7
       # Same Rust as rust-toolchain.toml; Renovate keeps them in lockstep
       # (group "rust", custom manager - dtolnay versions by branch).
-      - uses: dtolnay/rust-toolchain@1.97.1
+      - uses: dtolnay/rust-toolchain@1.99.0
         with:
           components: clippy, rustfmt
       # save-if main-only: PRs restore but never save, so dependency PRs (each a
@@ -41,7 +41,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: dtolnay/rust-toolchain@1.97.1
+      - uses: dtolnay/rust-toolchain@1.99.0
       # Own cache key: the test profile compiles a different artifact set than
       # `check`'s clippy - sharing a key would thrash both caches.
       - uses: Swatinem/rust-cache@v2
