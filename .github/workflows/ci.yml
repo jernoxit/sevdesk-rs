@@ -55,3 +55,23 @@ jobs:
           echo "SCCACHE_GHA_ENABLED=true" >> "$GITHUB_ENV"
       - uses: taiki-e/install-action@just
       - run: just test
+
+  # MSRV: the rust-version from Cargo.toml (single source of truth), installed
+  # via plain rustup. `cargo +<ver>` bypasses rust-toolchain.toml, and no
+  # dtolnay@x.y.z ref appears here, so Renovate leaves this job alone.
+  msrv:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Read MSRV from Cargo.toml
+        run: |
+          msrv=$(grep -m1 '^rust-version' Cargo.toml | cut -d'"' -f2)
+          test -n "$msrv"
+          echo "MSRV=$msrv" >> "$GITHUB_ENV"
+      - name: Install MSRV toolchain
+        run: rustup toolchain install "$MSRV" --profile minimal
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: msrv
+          save-if: ${{ github.ref == 'refs/heads/main' }}
+      - run: cargo "+$MSRV" check --all-targets --locked

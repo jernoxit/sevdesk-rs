@@ -28,7 +28,7 @@
       "enabled": false
     },
     {
-      "description": "Keep every Rust-version pin in lockstep, in ONE PR: rust-toolchain.toml, the MSRV in Cargo.toml and the dtolnay/rust-toolchain CI action are all surfaced as depName 'rust'.",
+      "description": "Keep the development-toolchain pins in lockstep, in ONE PR: rust-toolchain.toml and the dtolnay/rust-toolchain CI action are both surfaced as depName 'rust'. The MSRV (rust-version in Cargo.toml) is deliberately not managed by Renovate.",
       "matchDepNames": [
         "rust"
       ],
@@ -60,21 +60,6 @@
       "depNameTemplate": "rust",
       "matchStrings": [
         "dtolnay/rust-toolchain@(?<currentValue>\\d+\\.\\d+\\.\\d+)"
-      ]
-    },
-    {
-      "customType": "regex",
-      "description": "Cargo.toml MSRV (rust-version) — tracked as a Rust release (rust-lang/rust) under depName 'rust', in lockstep with the toolchain; the release tag (1.99.0) is reduced to major.minor (1.99).",
-      "managerFilePatterns": [
-        "/^Cargo\\.toml$/"
-      ],
-      "datasourceTemplate": "github-releases",
-      "packageNameTemplate": "rust-lang/rust",
-      "depNameTemplate": "rust",
-      "extractVersionTemplate": "^(?<version>\\d+\\.\\d+)\\.\\d+$",
-      "versioningTemplate": "semver-coerced",
-      "matchStrings": [
-        "rust-version = \"(?<currentValue>\\d+\\.\\d+)\""
       ]
     }
   ]

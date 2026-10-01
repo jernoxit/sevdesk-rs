@@ -110,6 +110,16 @@ async fn euro_invoices_for(
 The library reads no environment variables: the token, base URL, pacing and
 `X-Version` come in through `SevdeskClientConfig`.
 
+## Minimum supported Rust version
+
+The MSRV is **Rust 1.88** (`rust-version` in `Cargo.toml`). Cargo refuses to
+build the crate with an older toolchain.
+
+The MSRV is raised only when a dependency or a language feature requires it,
+and the raise is noted in the commit message. The CI job `msrv` checks it
+(`cargo check --all-targets --locked` on exactly that version). Renovate
+updates the development toolchain (`rust-toolchain.toml`), not the MSRV.
+
 ## Development
 
 The toolchain is pinned in `rust-toolchain.toml`; [`just`](https://just.systems)
