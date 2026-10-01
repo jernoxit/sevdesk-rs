@@ -1,0 +1,96 @@
+{
+  "objects": [
+    {
+      "id": "213039458",
+      "objectName": "VoucherPos",
+      "additionalInformation": null,
+      "create": "2026-09-29T15:20:31+02:00",
+      "update": "2026-09-29T15:44:55+02:00",
+      "sevClient": {
+        "id": "1303847",
+        "objectName": "SevClient"
+      },
+      "voucher": {
+        "id": "156244013",
+        "objectName": "Voucher"
+      },
+      "taxRate": "0",
+      "sum": null,
+      "net": "1",
+      "isAsset": "0",
+      "assetMemoValue": "0",
+      "sumNet": "57.49",
+      "sumTax": "0",
+      "sumGross": "57.49",
+      "sumNetAccounting": "57.49",
+      "sumTaxAccounting": "0",
+      "sumGrossAccounting": "57.49",
+      "comment": "Zahlungsabwicklung 08/2026 (106 Bewegungen)",
+      "isGwg": "0",
+      "cateringTaxRate": null,
+      "cateringTip": "0",
+      "specialAccountingField1": null,
+      "specialAccountingField2": null,
+      "specialAccountingField3": null,
+      "specialAccountingField4": null,
+      "specialAccountingField5": null,
+      "accountDatev": {
+        "id": "4285",
+        "objectName": "AccountDatev"
+      },
+      "isPercentage": "1",
+      "discountedValue": "0",
+      "sumNetForeignCurrency": "0",
+      "sumTaxForeignCurrency": "0",
+      "sumGrossForeignCurrency": "0",
+      "sumDiscountForeignCurrency": "0",
+      "createNextPart": null
+    },
+    {
+      "id": "213039459",
+      "objectName": "VoucherPos",
+      "additionalInformation": null,
+      "create": "2026-09-29T15:20:31+02:00",
+      "update": "2026-09-29T15:44:55+02:00",
+      "sevClient": {
+        "id": "1303847",
+        "objectName": "SevClient"
+      },
+      "voucher": {
+        "id": "156244013",
+        "objectName": "Voucher"
+      },
+      "taxRate": "0",
+      "sum": null,
+      "net": "1",
+      "isAsset": "0",
+      "assetMemoValue": "0",
+      "sumNet": "30",
+      "sumTax": "0",
+      "sumGross": "30",
+      "sumNetAccounting": "30",
+      "sumTaxAccounting": "0",
+      "sumGrossAccounting": "30",
+      "comment": "Dispute-Gebühren 08/2026 (2)",
+      "isGwg": "0",
+      "cateringTaxRate": null,
+      "cateringTip": "0",
+      "specialAccountingField1": null,
+      "specialAccountingField2": null,
+      "specialAccountingField3": null,
+      "specialAccountingField4": null,
+      "specialAccountingField5": null,
+      "accountDatev": {
+        "id": "4285",
+        "objectName": "AccountDatev"
+      },
+      "isPercentage": "1",
+      "discountedValue": "0",
+      "sumNetForeignCurrency": "0",
+      "sumTaxForeignCurrency": "0",
+      "sumGrossForeignCurrency": "0",
+      "sumDiscountForeignCurrency": "0",
+      "createNextPart": null
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+# Pin the toolchain so everyone (and CI) builds, lints, and FORMATS with the
+# same Rust. Without this pin, a newer local rustfmt reformats the whole tree
+# (line-breaking heuristics change between releases). Same channel as the
+# crate's consumers; Renovate bumps it together with the other Rust pins under
+# depName 'rust' (renovate.json) — the version is deliberately not repeated in
+# prose here.
+[toolchain]
+channel = "1.97.1"
+# `rust-analyzer` is listed so the language server runs on the PINNED
+# toolchain: `rustup component add rust-analyzer` without `--toolchain` hits
+# the default toolchain, the repo override then wins, and every LSP call dies
+# with "Unknown binary in official toolchain".
+# `llvm-tools` backs `cargo-llvm-cov`: "does any test touch this line" becomes
+# a query instead of an experiment. Pinned here so the answer is the same on
+# every machine.
+components = ["rustfmt", "clippy", "rust-analyzer", "llvm-tools"]
+# No extra targets: the client runs on the host platform of its consumers.

@@ -1,0 +1,67 @@
+{
+  "objects": {
+    "id": "120010251",
+    "objectName": "ContactAddress",
+    "additionalInformation": null,
+    "create": "2026-09-28T19:38:20+02:00",
+    "update": "2026-09-28T19:38:20+02:00",
+    "contact": {
+      "id": "138615465",
+      "objectName": "Contact",
+      "additionalInformation": null,
+      "create": "2026-09-28T19:38:19+02:00",
+      "update": "2026-09-28T19:38:19+02:00",
+      "name": "Probe Practice GmbH PROBE-R1",
+      "status": "1000",
+      "customerNumber": "1000",
+      "surename": null,
+      "familyname": null,
+      "titel": null,
+      "category": {
+        "id": "3",
+        "objectName": "Category"
+      },
+      "description": "PROBE-R1 fake B2B practice",
+      "academicTitle": null,
+      "gender": null,
+      "sevClient": {
+        "id": "1303847",
+        "objectName": "SevClient"
+      },
+      "name2": null,
+      "birthday": null,
+      "vatNumber": "DE999999999",
+      "bankAccount": null,
+      "bankNumber": null,
+      "mandateReference": null,
+      "defaultCashbackTime": null,
+      "defaultCashbackPercent": null,
+      "defaultTimeToPay": null,
+      "taxNumber": null,
+      "taxOffice": null,
+      "exemptVat": "0",
+      "taxType": null,
+      "defaultDiscountAmount": null,
+      "defaultDiscountPercentage": "1",
+      "buyerReference": "PROBE-R1-LEITWEG-04011000-1234512345-06",
+      "governmentAgency": "0",
+      "defaultShowVat": "1"
+    },
+    "street": "Probestrasse 1",
+    "zip": "10115",
+    "city": "Berlin",
+    "country": {
+      "id": "1",
+      "objectName": "StaticCountry"
+    },
+    "category": {
+      "id": "43",
+      "objectName": "Category"
+    },
+    "name": null,
+    "sevClient": {
+      "id": "1303847",
+      "objectName": "SevClient"
+    }
+  }
+}

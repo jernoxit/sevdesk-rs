@@ -1,0 +1,36 @@
+{
+  "objects": {
+    "id": "1897869138",
+    "objectName": "CheckAccountTransaction",
+    "additionalInformation": null,
+    "create": "2026-09-29T21:19:08+02:00",
+    "update": "2026-09-29T21:19:08+02:00",
+    "sevClient": {
+      "id": "1303847",
+      "objectName": "SevClient"
+    },
+    "valueDate": "2026-09-29T12:00:00+02:00",
+    "entryDate": "2026-09-29T12:00:00+02:00",
+    "amount": "-0.45",
+    "feeAmount": null,
+    "gvCode": null,
+    "entryText": null,
+    "primaNotaNo": null,
+    "paymtPurpose": "SS-LIVE-1790709544-capture",
+    "payeePayerBankCode": null,
+    "payeePayerAcctNo": null,
+    "payeePayerName": "Stripe Payments Europe, Limited",
+    "checkAccount": {
+      "id": "6306695",
+      "objectName": "CheckAccount"
+    },
+    "status": "100",
+    "score": null,
+    "compareHash": null,
+    "enshrined": null,
+    "obonoReceiptUuid": null,
+    "externalId": null,
+    "deletedAt": null,
+    "restoredAt": null
+  }
+}

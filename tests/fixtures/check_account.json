@@ -1,0 +1,35 @@
+{
+  "objects": [
+    {
+      "id": "6306017",
+      "objectName": "CheckAccount",
+      "additionalInformation": null,
+      "create": "2026-09-28T19:48:09+02:00",
+      "update": "2026-09-28T19:48:09+02:00",
+      "sevClient": {
+        "id": "1303847",
+        "objectName": "SevClient"
+      },
+      "name": "Probe Stripe Import PROBE-R1",
+      "type": "online",
+      "importType": "CSV",
+      "currency": "EUR",
+      "checkAccId": null,
+      "pin": null,
+      "defaultAccount": "1",
+      "status": "100",
+      "translationCode": null,
+      "bankServer": null,
+      "balance": "0",
+      "accountingNumber": "1201",
+      "iban": null,
+      "bic": null,
+      "baseAccount": "0",
+      "priority": "0",
+      "countryCode": null,
+      "autoMapTransaction": "1",
+      "autoSyncTransactions": "0",
+      "lastSync": null
+    }
+  ]
+}

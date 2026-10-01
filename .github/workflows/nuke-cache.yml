@@ -1,0 +1,25 @@
+name: nuke-build-cache
+
+# Manual escape hatch for a suspected-bad cache: deletes all Actions caches,
+# i.e. the sccache content (SCCACHE_GHA_ENABLED) and the Swatinem rust-cache of
+# `check` and `test`. All re-seed by themselves. This repo builds no image, so
+# there is no registry layer cache to clear.
+#
+# The caches are content-hashed and cannot normally serve a stale artifact -
+# use this only if one is genuinely suspected of producing a wrong build.
+on:
+  workflow_dispatch:
+
+permissions:
+  actions: write
+
+jobs:
+  nuke:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Delete all Actions caches
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh cache delete --all --repo "${{ github.repository }}" --succeed-on-no-caches
+          echo "all Actions caches deleted (sccache, rust-cache)"

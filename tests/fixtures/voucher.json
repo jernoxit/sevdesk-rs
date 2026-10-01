@@ -1,0 +1,73 @@
+{
+  "objects": [
+    {
+      "id": "156244013",
+      "objectName": "Voucher",
+      "additionalInformation": null,
+      "create": "2026-09-29T15:20:31+02:00",
+      "update": "2026-09-29T15:44:57+02:00",
+      "sevClient": {
+        "id": "1303847",
+        "objectName": "SevClient"
+      },
+      "createUser": {
+        "id": "1551095",
+        "objectName": "SevUser"
+      },
+      "voucherDate": "2026-08-31T00:00:00+02:00",
+      "supplierName": "Stripe Payments Europe, Limited",
+      "description": "Test fee voucher 2026-08 (probe, PDF per API)",
+      "document": {
+        "id": "300881699",
+        "objectName": "Document"
+      },
+      "resultDisdar": null,
+      "payDate": "2026-08-25T12:00:00+02:00",
+      "status": "1000",
+      "currency": "EUR",
+      "sumNet": "87.49",
+      "sumTax": "0",
+      "sumGross": "87.49",
+      "sumNetAccounting": "87.49",
+      "sumTaxAccounting": "0",
+      "sumGrossAccounting": "87.49",
+      "showNet": "1",
+      "paidAmount": 87.49,
+      "taxType": null,
+      "creditDebit": "C",
+      "hidden": "0",
+      "voucherType": "VOU",
+      "recurringIntervall": null,
+      "recurringInterval": null,
+      "recurringStartDate": null,
+      "recurringNextVoucher": null,
+      "recurringLastVoucher": null,
+      "recurringEndDate": null,
+      "enshrined": null,
+      "sendType": null,
+      "inSource": null,
+      "iban": null,
+      "accountingSpecialCase": null,
+      "paymentDeadline": null,
+      "tip": "0",
+      "mileageRate": "0",
+      "selectedForPaymentFile": "0",
+      "supplierNameAtSave": "Stripe Payments Europe, Limited",
+      "taxmaroStockAccount": null,
+      "vatNumber": null,
+      "deliveryDate": "2026-08-31T00:00:00+02:00",
+      "deliveryDateUntil": null,
+      "sumDiscountNet": "0",
+      "sumDiscountGross": "0",
+      "sumNetForeignCurrency": "0",
+      "sumTaxForeignCurrency": "0",
+      "sumGrossForeignCurrency": "0",
+      "sumDiscountNetForeignCurrency": "0",
+      "sumDiscountGrossForeignCurrency": "0",
+      "taxRule": {
+        "id": "14",
+        "objectName": "TaxRule"
+      }
+    }
+  ]
+}

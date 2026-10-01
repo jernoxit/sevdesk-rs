@@ -1,0 +1,20 @@
+#!/bin/sh
+# Local token guard. Enable with `just hooks`.
+# Fails the commit if the staged diff contains the SEVDESK_API_KEY from .env,
+# or if a staged file contains the key lastLogin+Ip (a sign of an unredacted account
+# object in a recorded response). The token is never printed.
+
+if [ -f .env ]; then
+    token=$(sed -n 's/^[[:space:]]*\(export[[:space:]]\{1,\}\)\{0,1\}SEVDESK_API_KEY=//p' .env | head -n 1)
+    token=${token%\"}; token=${token#\"}; token=${token%\'}; token=${token#\'}
+    if [ -n "$token" ] && git diff --cached | grep -qF -e "$token"; then
+        echo "pre-commit: the staged diff contains SEVDESK_API_KEY from .env. Commit aborted." >&2
+        exit 1
+    fi
+fi
+
+# The pattern is split so that this file does not match itself.
+if git grep --cached -qF -e '"lastLogin''Ip"'; then
+    echo 'pre-commit: a staged file contains "lastLogin''Ip" (unredacted account/user object). Commit aborted.' >&2
+    exit 1
+fi

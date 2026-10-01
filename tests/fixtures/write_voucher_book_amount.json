@@ -1,0 +1,20 @@
+{
+  "objects": {
+    "id": "148586846",
+    "objectName": "VoucherLog",
+    "additionalInformation": null,
+    "create": "2026-09-29T21:19:16+02:00",
+    "voucher": {
+      "id": "156270656",
+      "objectName": "Voucher"
+    },
+    "fromStatus": "100",
+    "toStatus": "1000",
+    "amountPayed": "0.45",
+    "bookingDate": "2026-09-29T12:00:00+02:00",
+    "sevClient": {
+      "id": "1303847",
+      "objectName": "SevClient"
+    }
+  }
+}

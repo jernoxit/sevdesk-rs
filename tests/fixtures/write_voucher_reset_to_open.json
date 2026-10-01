@@ -1,0 +1,71 @@
+{
+  "objects": {
+    "id": "156270656",
+    "objectName": "Voucher",
+    "additionalInformation": null,
+    "create": "2026-09-29T21:19:13+02:00",
+    "update": "2026-09-29T21:19:18+02:00",
+    "sevClient": {
+      "id": "1303847",
+      "objectName": "SevClient"
+    },
+    "createUser": {
+      "id": "1551095",
+      "objectName": "SevUser"
+    },
+    "voucherDate": "2026-09-29T00:00:00+02:00",
+    "supplierName": "Stripe Payments Europe, Limited",
+    "description": "SS-LIVE-1790709544-capture",
+    "document": {
+      "id": "300938451",
+      "objectName": "Document"
+    },
+    "resultDisdar": null,
+    "payDate": null,
+    "status": "100",
+    "currency": "EUR",
+    "sumNet": "0.45",
+    "sumTax": "0",
+    "sumGross": "0.45",
+    "sumNetAccounting": "0.45",
+    "sumTaxAccounting": "0",
+    "sumGrossAccounting": "0.45",
+    "showNet": "1",
+    "paidAmount": 0,
+    "taxType": null,
+    "creditDebit": "C",
+    "hidden": "0",
+    "voucherType": "VOU",
+    "recurringIntervall": null,
+    "recurringInterval": null,
+    "recurringStartDate": null,
+    "recurringNextVoucher": null,
+    "recurringLastVoucher": null,
+    "recurringEndDate": null,
+    "enshrined": null,
+    "sendType": null,
+    "inSource": null,
+    "iban": null,
+    "accountingSpecialCase": null,
+    "paymentDeadline": null,
+    "tip": "0",
+    "mileageRate": "0",
+    "selectedForPaymentFile": "0",
+    "supplierNameAtSave": null,
+    "taxmaroStockAccount": null,
+    "vatNumber": null,
+    "deliveryDate": "2026-09-29T00:00:00+02:00",
+    "deliveryDateUntil": null,
+    "sumDiscountNet": "0",
+    "sumDiscountGross": "0",
+    "sumNetForeignCurrency": "0",
+    "sumTaxForeignCurrency": "0",
+    "sumGrossForeignCurrency": "0",
+    "sumDiscountNetForeignCurrency": "0",
+    "sumDiscountGrossForeignCurrency": "0",
+    "taxRule": {
+      "id": "14",
+      "objectName": "TaxRule"
+    }
+  }
+}

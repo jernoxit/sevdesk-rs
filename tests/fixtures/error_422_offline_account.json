@@ -1,0 +1,11 @@
+{
+  "error": {
+    "exceptionUUID": "00000000-0000-0000-0000-000000000000",
+    "message": "You can only create transactions on online checkaccounts. Use document bookAmount to create transactions on other types.",
+    "errorCode": 0,
+    "code": null,
+    "data": [],
+    "responseCode": 422
+  },
+  "objects": null
+}

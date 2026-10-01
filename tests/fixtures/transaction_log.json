@@ -1,0 +1,26 @@
+{
+  "objects": [
+    {
+      "id": "237462270",
+      "objectName": "CheckAccountTransactionLog",
+      "additionalInformation": null,
+      "create": "2026-09-29T15:49:00+02:00",
+      "checkAccountTransaction": {
+        "id": "1897813785",
+        "objectName": "CheckAccountTransaction"
+      },
+      "fromStatus": "100",
+      "toStatus": "400",
+      "amountPaid": -15,
+      "bookingDate": "2026-08-15T12:00:00+02:00",
+      "sevClient": {
+        "id": "1303847",
+        "objectName": "SevClient"
+      },
+      "object": {
+        "id": "156247137",
+        "objectName": "Voucher"
+      }
+    }
+  ]
+}

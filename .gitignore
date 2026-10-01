@@ -1,0 +1,35 @@
+/target
+**/*.rs.bk
+.DS_Store
+.idea/
+.vscode/
+
+# Local secrets: the sevDesk token (full access to the books, no scopes, no
+# expiry) lives here. Every variant is ignored; only the documented template
+# is tracked.
+.env
+.env.*
+!.env.example
+
+# The developer's global ~/.gitignore excludes CLAUDE.md and `.claude/`. A
+# project-level .gitignore takes precedence, so re-include the project
+# instructions and Claude Code config here. Personal / machine-local bits stay
+# out.
+!CLAUDE.md
+!.claude/
+!.claude/**
+.claude/settings.local.json
+# Runtime lock of the Claude Code task scheduler — machine-local state.
+.claude/scheduled_tasks.lock
+# Temporary git worktrees of background agents — transient checkouts of this very
+# repository, never content of it.
+.claude/worktrees/
+.claude/.headroom_wrap*
+
+# Serena MCP server: machine-local project cache and memories.
+.serena/
+
+# Roadmap and stage protocols: kept locally only, never committed in this
+# public repository (project owner, 2026-10-01).
+docs/fahrplan.md
+docs/*-protokoll.md

@@ -1,0 +1,57 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+# The live tests are `#[ignore]`d and need a token this workflow never has:
+# `just test` runs the unit and mock-server tests only.
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      # Same Rust as rust-toolchain.toml; Renovate keeps them in lockstep
+      # (group "rust", custom manager - dtolnay versions by branch).
+      - uses: dtolnay/rust-toolchain@1.97.1
+        with:
+          components: clippy, rustfmt
+      # save-if main-only: PRs restore but never save, so dependency PRs (each a
+      # unique Cargo.lock) don't each write a cache and thrash the 10 GB repo
+      # budget. PRs fall back to main's cache via restore-keys.
+      - uses: Swatinem/rust-cache@v2
+        with:
+          save-if: ${{ github.ref == 'refs/heads/main' }}
+      - uses: mozilla-actions/sccache-action@v0.0.11
+      - name: Enable sccache
+        run: |
+          echo "RUSTC_WRAPPER=sccache" >> "$GITHUB_ENV"
+          echo "SCCACHE_GHA_ENABLED=true" >> "$GITHUB_ENV"
+      - uses: taiki-e/install-action@just
+      - run: just fmt-check
+      - run: just lint
+      - run: just doc
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@1.97.1
+      # Own cache key: the test profile compiles a different artifact set than
+      # `check`'s clippy - sharing a key would thrash both caches.
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: test
+          save-if: ${{ github.ref == 'refs/heads/main' }}
+      - uses: mozilla-actions/sccache-action@v0.0.11
+      - name: Enable sccache
+        run: |
+          echo "RUSTC_WRAPPER=sccache" >> "$GITHUB_ENV"
+          echo "SCCACHE_GHA_ENABLED=true" >> "$GITHUB_ENV"
+      - uses: taiki-e/install-action@just
+      - run: just test

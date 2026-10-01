@@ -1,0 +1,102 @@
+{
+  "objects": [
+    {
+      "id": "2996041",
+      "objectName": "CreditNote",
+      "additionalInformation": null,
+      "creditNoteNumber": "GU-1006",
+      "contact": {
+        "id": "138615465",
+        "objectName": "Contact"
+      },
+      "create": "2026-09-29T01:30:50+02:00",
+      "update": "2026-09-29T18:03:57+02:00",
+      "creditNoteDate": "2026-09-29T01:30:50+02:00",
+      "header": "Gutschrift Nr. GU-1006 zur Rechnung Nr. RE-1020",
+      "headText": null,
+      "footText": null,
+      "timeToPay": null,
+      "discountTime": "0",
+      "discount": "0",
+      "addressName": "Probe Practice GmbH PROBE-R1",
+      "addressStreet": "Probestrasse 1",
+      "addressZip": "10115",
+      "addressCity": "Berlin",
+      "addressCountry": {
+        "id": "1",
+        "objectName": "StaticCountry"
+      },
+      "payDate": "2026-08-26T12:00:00+02:00",
+      "createUser": {
+        "id": "1551095",
+        "objectName": "SevUser"
+      },
+      "sevClient": {
+        "id": "1303847",
+        "objectName": "SevClient"
+      },
+      "deliveryDate": "2026-09-28T00:00:00+02:00",
+      "status": "1000",
+      "smallSettlement": "0",
+      "contactPerson": {
+        "id": "1551095",
+        "objectName": "SevUser"
+      },
+      "taxRate": "0",
+      "taxText": null,
+      "addressParentName": null,
+      "taxType": null,
+      "sendDate": "2026-09-29T01:31:08+02:00",
+      "origin": {
+        "id": "135171965",
+        "objectName": "Invoice"
+      },
+      "creditNoteType": "CN",
+      "accountIntervall": null,
+      "accountLastCreditNote": null,
+      "accountNextCreditNote": null,
+      "reminderTotal": null,
+      "reminderDebit": null,
+      "reminderDeadline": null,
+      "reminderCharge": null,
+      "addressParentName2": null,
+      "addressName2": null,
+      "addressGender": null,
+      "accountEndDate": null,
+      "address": "Probe Practice GmbH PROBE-R1\nProbestrasse 1\n10115 Berlin",
+      "currency": "EUR",
+      "sumNet": "49",
+      "sumTax": "9.31",
+      "sumGross": "58.31",
+      "sumDiscounts": "0",
+      "sumNetForeignCurrency": "0",
+      "sumTaxForeignCurrency": "0",
+      "sumGrossForeignCurrency": "0",
+      "sumDiscountsForeignCurrency": "0",
+      "sumNetAccounting": "49",
+      "sumTaxAccounting": "9.31",
+      "sumGrossAccounting": "58.31",
+      "customerInternalNote": "PROBE-R1-CN-REF-002",
+      "taxNumber": null,
+      "vatNumber": null,
+      "showNet": "1",
+      "enshrined": "2026-09-29T01:31:09+02:00",
+      "sendType": "VPDF",
+      "bookingCategory": "UNDERACHIEVEMENT",
+      "deliveryDateUntil": "2026-10-27T00:00:00+01:00",
+      "refSrcInvoice": {
+        "id": "135171965",
+        "objectName": "Invoice"
+      },
+      "isTransferred": "0",
+      "sumDiscountNet": "0",
+      "sumDiscountGross": "0",
+      "sumDiscountNetForeignCurrency": "0",
+      "sumDiscountGrossForeignCurrency": "0",
+      "taxRule": {
+        "id": "1",
+        "objectName": "TaxRule"
+      }
+    }
+  ]
+}

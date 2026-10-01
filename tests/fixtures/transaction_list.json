@@ -1,0 +1,76 @@
+{
+  "objects": [
+    {
+      "id": "1897434114",
+      "objectName": "CheckAccountTransaction",
+      "additionalInformation": null,
+      "create": "2026-09-28T19:48:11+02:00",
+      "update": "2026-09-28T19:51:22+02:00",
+      "sevClient": {
+        "id": "1303847",
+        "objectName": "SevClient"
+      },
+      "valueDate": "2026-09-28T00:00:00+02:00",
+      "entryDate": "2026-09-28T00:00:00+02:00",
+      "amount": "34.51",
+      "feeAmount": null,
+      "gvCode": null,
+      "entryText": null,
+      "primaNotaNo": null,
+      "paymtPurpose": "PROBE-R1 ch_probe_0001",
+      "payeePayerBankCode": null,
+      "payeePayerAcctNo": null,
+      "payeePayerName": "Probe Practice GmbH",
+      "checkAccount": {
+        "id": "6306017",
+        "objectName": "CheckAccount"
+      },
+      "status": "200",
+      "score": null,
+      "compareHash": null,
+      "enshrined": null,
+      "obonoReceiptUuid": null,
+      "externalId": null,
+      "deletedAt": null,
+      "restoredAt": null
+    },
+    {
+      "id": "1897833515",
+      "objectName": "CheckAccountTransaction",
+      "additionalInformation": null,
+      "create": "2026-09-29T18:03:22+02:00",
+      "update": "2026-09-29T18:03:25+02:00",
+      "sevClient": {
+        "id": "1303847",
+        "objectName": "SevClient"
+      },
+      "valueDate": "2026-08-29T12:00:00+02:00",
+      "entryDate": "2026-08-29T12:00:00+02:00",
+      "amount": "-100",
+      "feeAmount": null,
+      "gvCode": null,
+      "entryText": null,
+      "primaNotaNo": null,
+      "paymtPurpose": "M1-V3 payout po_probe_3",
+      "payeePayerBankCode": null,
+      "payeePayerAcctNo": null,
+      "payeePayerName": "Stripe Payments Europe, Limited",
+      "checkAccount": {
+        "id": "6306017",
+        "objectName": "CheckAccount"
+      },
+      "status": "400",
+      "score": null,
+      "compareHash": null,
+      "enshrined": null,
+      "targetTransaction": {
+        "id": "1897833518",
+        "objectName": "CheckAccountTransaction"
+      },
+      "obonoReceiptUuid": null,
+      "externalId": null,
+      "deletedAt": null,
+      "restoredAt": null
+    }
+  ]
+}
