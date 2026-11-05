@@ -40,3 +40,10 @@ debug = "line-tables-only"
 [profile.dev.package."*"]
 opt-level = 2
 debug = false
+
+# Writes PERMANENT documents to the test account: never part of a plain
+# `cargo test`; run with `just test-live --test enshrine_matrix run1`.
+[[test]]
+name = "enshrine_matrix"
+path = "tests/enshrine_matrix/main.rs"
+test = false
