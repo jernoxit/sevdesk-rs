@@ -77,6 +77,12 @@ async fn known_codes_are_data() {
         (456, KnownCode::TaxRateDiffersFromOrigin),
         (830, KnownCode::EInvoiceFieldsMissing),
         (7100, KnownCode::NegativeInvoiceSum),
+        (251, KnownCode::CreditNoteRefersToDraft),
+        (322, KnownCode::EnshrinedLock),
+        (423, KnownCode::CancelOnDraft),
+        (832, KnownCode::EInvoiceGenerationFailed),
+        (7200, KnownCode::CreditNoteBookingRefused),
+        (90102, KnownCode::InvoiceNotBookableAsDraft),
     ] {
         let server = MockServer::start().await;
         Mock::given(method("PUT"))

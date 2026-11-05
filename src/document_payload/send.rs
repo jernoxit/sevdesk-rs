@@ -12,8 +12,19 @@ pub struct SendBy {
 }
 
 impl SendBy {
-    /// Enshrine without sending anything.
-    pub const ENSHRINE: Self = Self {
+    /// Finalize without sending anything: the document gets status 200 and its
+    /// number. It is enshrined only if the account setting "Automatische
+    /// Festschreibung von Dokumenten bei Fertigstellung" is on (measured
+    /// 2026-11-05; with the setting off, `enshrined` stays `None`). For a lock
+    /// independent of the setting, call `enshrine_invoice` or
+    /// `enshrine_credit_note` afterwards; on an already enshrined document that
+    /// is an idempotent no-op.
+    ///
+    /// sevDesk can answer a write with an error body such as
+    /// `cURL error 28 … 10001 milliseconds` (its internal accounting-service
+    /// timeout). The write may have happened: re-read the document before
+    /// retrying.
+    pub const FINALIZE: Self = Self {
         send_type: SendType::Vpdf,
         send_draft: false,
     };

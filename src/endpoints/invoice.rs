@@ -57,8 +57,12 @@ impl SevdeskClient {
             .one()
     }
 
-    /// `PUT /Invoice/{id}/sendBy`: enshrines a draft (status 200) and assigns
-    /// its number; answers with the invoice.
+    /// `PUT /Invoice/{id}/sendBy`: finalizes a draft (status 200) and assigns
+    /// its number; answers with the invoice. It also enshrines only if the
+    /// account setting for automatic enshrinement is on (measured 2026-11-05);
+    /// see [`SendBy::FINALIZE`] and [`Self::enshrine_invoice`]. A write answered
+    /// with an error body (e.g. `cURL error 28 … 10001 milliseconds`) may have
+    /// happened: re-read the invoice before retrying.
     pub async fn send_invoice_by(
         &self,
         id: InvoiceId,
@@ -74,7 +78,7 @@ impl SevdeskClient {
     /// `PUT /Invoice/{id}/changeParameter`, e.g. the document language.
     /// Measured 2026-10-01: `en_US` alone, without a render call, makes the
     /// next PDF English, before `sendBy` and after it. On an e-invoice DRAFT it
-    /// answers 503 like [`Self::invoice_pdf`]: change it after enshrining.
+    /// fails like [`Self::invoice_pdf`]: change it after finalizing.
     pub async fn change_invoice_parameter(
         &self,
         id: InvoiceId,
@@ -103,10 +107,19 @@ impl SevdeskClient {
 
 impl SevdeskClient {
     /// `PUT /Invoice/{id}/enshrine` (festschreiben, GoBD lock): sets `enshrined`
-    /// to now. Per spec, measured in the enshrine matrix: no request body, the
-    /// answer is `{"objects": null}`, so nothing is decoded; re-read the
-    /// invoice to see `enshrined`. Spec: only from status 200 (open) on, irreversible. An error answer (including "already
-    /// enshrined") surfaces as [`SevdeskError::Api`].
+    /// to now. No request body; the answer is `{"objects": null}`, so nothing is
+    /// decoded: re-read the invoice to see `enshrined`.
+    ///
+    /// Measured 2026-11-05 (account setting for automatic enshrinement on and
+    /// off): a draft (status 100) answers 422 ("at least status open (200) is
+    /// required"); from status 200 on it answers 200 and enshrines; on an
+    /// already enshrined document it answers 200 and leaves the `enshrined`
+    /// timestamp unchanged (idempotent no-op). An enshrined invoice
+    /// refuses content changes and `resetToDraft` (422, code 322,
+    /// [`crate::KnownCode::EnshrinedLock`]) and deletion (409, code 159); a
+    /// finalized but not enshrined one accepts both changes. `bookAmount` works
+    /// on enshrined invoices. Other error answers surface as
+    /// [`SevdeskError::Api`].
     pub async fn enshrine_invoice(&self, id: InvoiceId) -> Result<(), SevdeskError> {
         self.send_empty(Method::PUT, &format!("/Invoice/{id}/enshrine"))
             .await
@@ -124,18 +137,20 @@ impl SevdeskClient {
     }
 
     /// `GET /Invoice/{id}/getPdf`, always with `preventSendBy=true`: without it,
-    /// rendering a draft enshrines it. There is no way to switch it off.
+    /// rendering a draft finalizes it (status 200; measured 2026-11-05), and
+    /// enshrines it only if the account setting for automatic enshrinement is on.
     ///
     /// A draft renders too (filename `".pdf"`, see [`DocumentPdf`]), except an
-    /// e-invoice draft: it has no number yet, and sevDesk answers 503 ("Invoice
-    /// number is required", measured 2026-10-01).
+    /// e-invoice draft: sevDesk cannot generate the ZUGFeRD data and answers 400
+    /// with code 832 ([`crate::KnownCode::EInvoiceGenerationFailed`], measured
+    /// 2026-11-05; earlier 503 "Invoice number is required").
     pub async fn invoice_pdf(&self, id: InvoiceId) -> Result<DocumentPdf, SevdeskError> {
         let query = [("preventSendBy", "true".to_owned())];
         let body = self.get(&format!("/Invoice/{id}/getPdf"), &query).await?;
         DocumentPdf::from_body(&body)
     }
 
-    /// `GET /Invoice/{id}/getXml`: the e-invoice XML, only after enshrining and
+    /// `GET /Invoice/{id}/getXml`: the e-invoice XML, only after finalizing and
     /// only for an e-invoice. Measured: the failures (missing bank data, a
     /// non-electronic document) come as 500, 503 or 400, mostly without a
     /// code, so match on the status and message.

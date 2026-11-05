@@ -335,7 +335,7 @@ impl Env {
         })
     }
 
-    /// `sendBy` with `SendBy::ENSHRINE`, then `PUT …/enshrine` when `sendBy`
+    /// `sendBy` with `SendBy::FINALIZE`, then `PUT …/enshrine` when `sendBy`
     /// alone left the document unenshrined (setting OFF).
     pub(crate) async fn enshrine_doc(&self, doc: &Doc) -> Result<(), String> {
         let o = self.finalize(doc, Finalizer::SendBy).await;

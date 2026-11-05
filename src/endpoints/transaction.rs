@@ -63,11 +63,17 @@ impl SevdeskClient {
             .map(drop)
     }
 
-    /// `PUT /CheckAccountTransaction/{id}/enshrine` (festschreiben, GoBD lock): sets `enshrined`
-    /// to now. Per spec, measured in the enshrine matrix: no request body, the
-    /// answer is `{"objects": null}`, so nothing is decoded; re-read the
-    /// transaction to see `enshrined`. Spec: only from status 200 (linked) on; linked documents can no longer be changed once the transaction is enshrined. An error answer (including "already
-    /// enshrined") surfaces as [`SevdeskError::Api`].
+    /// `PUT /CheckAccountTransaction/{id}/enshrine` (festschreiben, GoBD lock):
+    /// sets `enshrined` to now. No request body; the answer is
+    /// `{"objects": null}`, so nothing is decoded: re-read the transaction to
+    /// see `enshrined`.
+    ///
+    /// Measured 2026-11-05: once the payment transaction of a paid document is
+    /// enshrined, `resetToOpen` on that document answers 422 with code 322
+    /// ("Already enshrined by payment", [`crate::KnownCode::EnshrinedLock`]) and
+    /// deleting the transaction answers 409 with code 159. Without an enshrined
+    /// transaction, `resetToOpen` on a paid document works. Error answers
+    /// surface as [`SevdeskError::Api`].
     pub async fn enshrine_transaction(&self, id: TransactionId) -> Result<(), SevdeskError> {
         self.send_empty(
             Method::PUT,

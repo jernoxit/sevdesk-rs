@@ -96,7 +96,7 @@ async fn live_write_21_b2b_einvoice_chain_with_credit_note() {
             Ok(()) => measured("changeParameter language on an e-invoice draft: ok"),
             Err(e) => measured(&format!("changeParameter language on an e-invoice draft: {e}")),
         }
-        let sent = ctx.c.send_invoice_by(inv.id, &SendBy::ENSHRINE).await.unwrap();
+        let sent = ctx.c.send_invoice_by(inv.id, &SendBy::FINALIZE).await.unwrap();
         match ctx.c.change_invoice_parameter(inv.id, english).await {
             Ok(()) => measured("changeParameter language on the enshrined e-invoice: ok"),
             Err(e) => measured(&format!("changeParameter language on the enshrined e-invoice: {e}")),
@@ -215,7 +215,7 @@ async fn live_write_22_b2c_cancel_delete_and_list() {
             .unwrap();
         let sent = ctx
             .c
-            .send_invoice_by(original, &SendBy::ENSHRINE)
+            .send_invoice_by(original, &SendBy::FINALIZE)
             .await
             .unwrap();
         assert_eq!(sent.status, Some(InvoiceStatus::Open));

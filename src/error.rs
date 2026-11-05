@@ -21,6 +21,18 @@ pub enum KnownCode {
     AlreadyCancelled,
     /// 455: the credit notes' sum would exceed the invoice they refer to.
     CreditSumExceedsInvoice,
+    /// 251: a credit note refers (`refSrcInvoice`) to an invoice that is still
+    /// a draft (HTTP 422, `saveCreditNote`; measured 2026-11-05).
+    CreditNoteRefersToDraft,
+    /// 322: the document is locked by enshrinement ("Already enshrined by
+    /// object" or "Already enshrined by payment", HTTP 422). Seen on content
+    /// change and `resetToDraft` of an enshrined invoice, `resetToDraft` of an
+    /// enshrined credit note, and `resetToOpen` of a paid document whose payment
+    /// transaction is enshrined (measured 2026-11-05).
+    EnshrinedLock,
+    /// 423: cancelling a draft invoice (`cancelInvoice`; HTTP 200 with an
+    /// `error` body; measured 2026-11-05).
+    CancelOnDraft,
     /// 456: a credit note's tax rate differs from its origin invoice's. Also
     /// the answer to an `UNDERACHIEVEMENT` credit note without `refSrcInvoice`.
     TaxRateDiffersFromOrigin,
@@ -28,9 +40,19 @@ pub enum KnownCode {
     InvoiceAlreadyPaid,
     /// 751: the voucher is already paid (booking over the total is refused).
     VoucherAlreadyPaid,
+    /// 7200: booking a credit note refused because of its state or the amount
+    /// (second `bookAmount` on a paid credit note, `bookAmount` on a draft
+    /// credit note; HTTP 422; measured 2026-11-05).
+    CreditNoteBookingRefused,
+    /// 90102: the invoice cannot be booked because it is still a draft
+    /// (`bookAmount`, HTTP 422; measured 2026-11-05).
+    InvoiceNotBookableAsDraft,
     /// 830: the e-invoice cannot be generated because fields are missing
     /// (HTTP 400). The error message lists them.
     EInvoiceFieldsMissing,
+    /// 832: the e-invoice (ZUGFeRD) could not be generated (HTTP 400), e.g.
+    /// `getPdf` or `getXml` on a draft e-invoice (measured 2026-11-05).
+    EInvoiceGenerationFailed,
     /// 7100: enshrining would give the invoice a negative sum.
     NegativeInvoiceSum,
 }
@@ -44,10 +66,16 @@ impl KnownCode {
             390 => Some(Self::PartlyPaid),
             421 => Some(Self::AlreadyCancelled),
             455 => Some(Self::CreditSumExceedsInvoice),
+            251 => Some(Self::CreditNoteRefersToDraft),
+            322 => Some(Self::EnshrinedLock),
+            423 => Some(Self::CancelOnDraft),
             456 => Some(Self::TaxRateDiffersFromOrigin),
             750 => Some(Self::InvoiceAlreadyPaid),
             751 => Some(Self::VoucherAlreadyPaid),
+            7200 => Some(Self::CreditNoteBookingRefused),
+            90102 => Some(Self::InvoiceNotBookableAsDraft),
             830 => Some(Self::EInvoiceFieldsMissing),
+            832 => Some(Self::EInvoiceGenerationFailed),
             7100 => Some(Self::NegativeInvoiceSum),
             _ => None,
         }

@@ -41,13 +41,35 @@ Where a measurement contradicts sevDesk's OpenAPI spec, the measurement wins.
   in status 100 (409, code 159). On a voucher update every position goes along
   with its id, because sevDesk totals only the positions of that call.
 - **Documents get their number on `sendBy`.** `saveInvoice` makes a draft
-  without a number; `sendBy` with `VPDF` enshrines it and assigns the number.
+  without a number; `sendBy` with `VPDF` finalizes it (status 200) and assigns
+  the number.
   A credit note needs a number from its sequence and a `bookingCategory`.
-- **E-invoices render only with a number.** `getPdf` and `changeParameter` on
-  an e-invoice DRAFT fail with 503 ("Invoice number is required"); enshrine
-  first. An e-invoice credit note needs a `paymentMethod`, else rendering it
+- **E-invoices render only once finalized.** `getPdf` and `getXml` on an
+  e-invoice DRAFT fail with 400, code 832 (ZUGFeRD generation failed; 503 was
+  measured in 2026-09, the code is what counts); finalize first. An e-invoice credit note needs a `paymentMethod`, else rendering it
   answers 830. `customerNumber` and `contact[id]` filters are exact, and
   `changeParameter` `en_US` alone makes the PDF English (no render call).
+- **`sendBy` enshrines only if the account setting says so.** With
+  "Automatische Festschreibung von Dokumenten bei Fertigstellung" on, `sendBy`
+  (and `getPdf` without `preventSendBy`) also sets `enshrined`; with it off,
+  `enshrined` stays `null` (measured 2026-11-05, invoices and credit notes).
+- **`enshrine` is idempotent.** On a draft it answers 422; from status 200 on
+  it enshrines; on an already enshrined document it answers 200 and keeps the
+  timestamp.
+- **`bookAmount` works on enshrined documents** (they become paid, `enshrined`
+  unchanged). A second booking on a paid invoice answers 400/750, on a paid
+  credit note 422/7200; a draft invoice 422/90102, a draft credit note 422/7200.
+- **Enshrinement locks the invoice.** Content change and `resetToDraft`
+  answer 422/322, delete 409/159. A finalized but not enshrined invoice accepts
+  both. Credit notes stay editable in every state; only `resetToDraft` on an
+  enshrined one answers 422/322.
+- **An enshrined payment transaction locks the paid document:** `resetToOpen`
+  answers 422/322 ("Already enshrined by payment") and deleting the transaction
+  409/159.
+- **Other refusals:** `cancelInvoice` on a draft is an error in HTTP 200 (code
+  423); a credit note with `refSrcInvoice` on a draft invoice answers 422/251.
+- **Timeouts inside sevDesk** can come as an error body such as `cURL error 28
+  … 10001 milliseconds`. The write may have happened: re-read before retrying.
 - **The transaction log** (`CheckAccountTransactionLog`, undocumented) filters
   by transaction but not by document; it pages stably with `limit`/`offset`.
 - **Days are cut in Berlin time** by `getBalanceAtDate`, and `dd.mm.yyyy`
@@ -109,6 +131,14 @@ async fn euro_invoices_for(
 
 The library reads no environment variables: the token, base URL, pacing and
 `X-Version` come in through `SevdeskClientConfig`.
+
+### Finalize vs. enshrine
+
+`send_invoice_by(id, &SendBy::FINALIZE)` (likewise `send_credit_note_by`)
+finalizes a draft: status 200 and a number. Whether it also enshrines depends
+on the account setting. For a GoBD lock that does not depend on the setting,
+call `enshrine_invoice` / `enshrine_credit_note` afterwards; on an already
+enshrined document it is a no-op.
 
 ## Minimum supported Rust version
 

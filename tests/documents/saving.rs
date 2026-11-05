@@ -86,7 +86,7 @@ async fn an_invoice_is_saved_as_a_draft_and_enshrined_by_send_by() {
     assert_eq!(saved.invoice.invoice_number, None);
     assert_eq!(saved.invoice.sum_gross, Some(eur(1000)));
     let sent = c
-        .send_invoice_by(saved.invoice.id, &SendBy::ENSHRINE)
+        .send_invoice_by(saved.invoice.id, &SendBy::FINALIZE)
         .await
         .unwrap();
     assert_eq!(sent.status, Some(InvoiceStatus::Open));
@@ -161,7 +161,7 @@ async fn a_credit_note_needs_its_number_and_the_provision_category() {
         .await
         .unwrap();
     let sent = c
-        .send_credit_note_by(saved.credit_note.id, &SendBy::ENSHRINE)
+        .send_credit_note_by(saved.credit_note.id, &SendBy::FINALIZE)
         .await
         .unwrap();
     assert_eq!(sent.status, Some(CreditNoteStatus::Open));

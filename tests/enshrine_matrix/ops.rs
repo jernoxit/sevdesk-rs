@@ -105,7 +105,7 @@ impl Env {
         let path = format!("/{}/{}", doc.kind.obj(), doc.id);
         let send = |draft| SendBy {
             send_draft: draft,
-            ..SendBy::ENSHRINE
+            ..SendBy::FINALIZE
         };
         match how {
             Finalizer::SendBy | Finalizer::SendDraft => {

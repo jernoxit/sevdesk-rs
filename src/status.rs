@@ -168,7 +168,8 @@ pub enum ImportType {
 }
 
 /// How `sendBy` "sends" a document; `Vpdf` only marks it as sent (no mail, no
-/// print) and enshrines it, which is what gives an invoice its number.
+/// print) and finalizes it, which is what gives an invoice its number. Whether it
+/// also enshrines depends on the account setting (see [`crate::SendBy::FINALIZE`]).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
 pub enum SendType {
     #[serde(rename = "VPDF")]

@@ -1,7 +1,7 @@
 //! The invoice payload.
 //!
 //! Measured on the test account (2026-09-29): `saveInvoice` makes a DRAFT
-//! (`status` 100, no number); `sendBy` with [`crate::SendType::Vpdf`] enshrines
+//! (`status` 100, no number); `sendBy` with [`crate::SendType::Vpdf`] finalizes
 //! it (status 200) and only then assigns the number. `invoiceDate` goes out as
 //! a `dd.mm.yyyy` string, the service period as Unix seconds. sevDesk does not
 //! copy the contact's address onto the document: send the address fields, or

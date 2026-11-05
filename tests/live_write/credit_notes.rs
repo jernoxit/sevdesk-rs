@@ -103,7 +103,7 @@ pub(crate) async fn credit_note_on_enshrined_invoice(
 
     let sent = ctx
         .c
-        .send_credit_note_by(cn.id, &SendBy::ENSHRINE)
+        .send_credit_note_by(cn.id, &SendBy::FINALIZE)
         .await
         .unwrap();
     assert_eq!(sent.status, Some(CreditNoteStatus::Open));

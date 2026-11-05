@@ -51,7 +51,12 @@ impl SevdeskClient {
             .one()
     }
 
-    /// `PUT /CreditNote/{id}/sendBy`: enshrines a draft (status 200).
+    /// `PUT /CreditNote/{id}/sendBy`: finalizes a draft (status 200). It also
+    /// enshrines only if the account setting for automatic enshrinement is on
+    /// (measured 2026-11-05); see [`SendBy::FINALIZE`] and
+    /// [`Self::enshrine_credit_note`]. A write answered with an error body (e.g.
+    /// `cURL error 28 … 10001 milliseconds`) may have happened: re-read the
+    /// credit note before retrying.
     pub async fn send_credit_note_by(
         &self,
         id: CreditNoteId,
@@ -92,10 +97,19 @@ impl SevdeskClient {
 
 impl SevdeskClient {
     /// `PUT /CreditNote/{id}/enshrine` (festschreiben, GoBD lock): sets `enshrined`
-    /// to now. Per spec, measured in the enshrine matrix: no request body, the
-    /// answer is `{"objects": null}`, so nothing is decoded; re-read the
-    /// credit note to see `enshrined`. Spec: only from status 200 (open) on, irreversible. An error answer (including "already
-    /// enshrined") surfaces as [`SevdeskError::Api`].
+    /// to now. No request body; the answer is `{"objects": null}`, so nothing is
+    /// decoded: re-read the credit note to see `enshrined`.
+    ///
+    /// Measured 2026-11-05 (account setting for automatic enshrinement on and
+    /// off): a draft (status 100) answers 422 ("at least status open (200) is
+    /// required"); from status 200 on it answers 200 and enshrines; on an
+    /// already enshrined document it answers 200 and leaves the `enshrined`
+    /// timestamp unchanged (idempotent no-op). An enshrined credit
+    /// note refuses `resetToDraft` (422, code 322,
+    /// [`crate::KnownCode::EnshrinedLock`]) and deletion (409, code 159), but
+    /// its content stays editable in every state, even enshrined or paid.
+    /// Other error answers surface as
+    /// [`SevdeskError::Api`].
     pub async fn enshrine_credit_note(&self, id: CreditNoteId) -> Result<(), SevdeskError> {
         self.send_empty(Method::PUT, &format!("/CreditNote/{id}/enshrine"))
             .await
@@ -113,7 +127,8 @@ impl SevdeskClient {
     }
 
     /// `GET /CreditNote/{id}/getPdf`, always with `preventSendBy=true`: without it,
-    /// rendering a draft enshrines it. There is no way to switch it off.
+    /// rendering a draft finalizes it (status 200; measured 2026-11-05), and
+    /// enshrines it only if the account setting for automatic enshrinement is on.
     ///
     /// A draft renders too (filename `".pdf"`, see [`DocumentPdf`]).
     pub async fn credit_note_pdf(&self, id: CreditNoteId) -> Result<DocumentPdf, SevdeskError> {
@@ -124,7 +139,7 @@ impl SevdeskClient {
         DocumentPdf::from_body(&body)
     }
 
-    /// `GET /CreditNote/{id}/getXml`: the e-invoice XML, only after enshrining and
+    /// `GET /CreditNote/{id}/getXml`: the e-invoice XML, only after finalizing and
     /// only for an e-invoice. Measured: the failures (missing bank data, a
     /// non-electronic document) come as 500, 503 or 400, mostly without a
     /// code, so match on the status and message.

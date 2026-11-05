@@ -330,7 +330,7 @@ async fn the_missing_einvoice_fields_are_named_in_the_message() {
         .mount(&server)
         .await;
     let err = client(&server)
-        .send_invoice_by(InvoiceId::new(5), &SendBy::ENSHRINE)
+        .send_invoice_by(InvoiceId::new(5), &SendBy::FINALIZE)
         .await
         .unwrap_err();
     assert_eq!(err.known_code(), Some(KnownCode::EInvoiceFieldsMissing));
