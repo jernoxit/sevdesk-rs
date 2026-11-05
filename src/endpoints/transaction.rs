@@ -63,6 +63,20 @@ impl SevdeskClient {
             .map(drop)
     }
 
+    /// `PUT /CheckAccountTransaction/{id}/enshrine` (festschreiben, GoBD lock): sets `enshrined`
+    /// to now. Per spec, measured in the enshrine matrix: no request body, the
+    /// answer is `{"objects": null}`, so nothing is decoded; re-read the
+    /// transaction to see `enshrined`. Spec: only from status 200 (linked) on; linked documents can no longer be changed once the transaction is enshrined. An error answer (including "already
+    /// enshrined") surfaces as [`SevdeskError::Api`].
+    pub async fn enshrine_transaction(&self, id: TransactionId) -> Result<(), SevdeskError> {
+        self.send_empty(
+            Method::PUT,
+            &format!("/CheckAccountTransaction/{id}/enshrine"),
+        )
+        .await
+        .map(drop)
+    }
+
     /// `GET /CheckAccountTransactionLog` (undocumented; the filter works):
     /// the bookings of one transaction. `resetToOpen` on the document removes
     /// its entries.

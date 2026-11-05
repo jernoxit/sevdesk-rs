@@ -27,6 +27,59 @@ fn error_body(status: u16, code: Option<i64>, message: &str) -> ResponseTemplate
     }))
 }
 
+#[tokio::test]
+async fn enshrining_is_a_bodyless_put_per_document_kind() {
+    let server = MockServer::start().await;
+    for p in ["Invoice/5", "CreditNote/6", "CheckAccountTransaction/7"] {
+        Mock::given(method("PUT"))
+            .and(path(format!("/{p}/enshrine")))
+            .respond_with(answer(json!({"objects": null})))
+            .expect(1)
+            .mount(&server)
+            .await;
+    }
+    let c = client(&server);
+    c.enshrine_invoice(InvoiceId::new(5)).await.unwrap();
+    c.enshrine_credit_note(CreditNoteId::new(6)).await.unwrap();
+    c.enshrine_transaction(TransactionId::new(7)).await.unwrap();
+    for r in server.received_requests().await.unwrap() {
+        assert!(r.body.is_empty());
+    }
+}
+
+#[tokio::test]
+async fn an_enshrine_refusal_is_an_api_error_not_swallowed() {
+    let server = MockServer::start().await;
+    for (p, status) in [
+        ("Invoice/5", 422),
+        ("CreditNote/6", 409),
+        ("CheckAccountTransaction/7", 400),
+    ] {
+        Mock::given(method("PUT"))
+            .and(path(format!("/{p}/enshrine")))
+            .respond_with(error_body(status, None, "refused"))
+            .expect(1)
+            .mount(&server)
+            .await;
+    }
+    let c = client(&server);
+    let errs = [
+        c.enshrine_invoice(InvoiceId::new(5)).await.unwrap_err(),
+        c.enshrine_credit_note(CreditNoteId::new(6))
+            .await
+            .unwrap_err(),
+        c.enshrine_transaction(TransactionId::new(7))
+            .await
+            .unwrap_err(),
+    ];
+    for (err, want) in errs.iter().zip([422, 409, 400]) {
+        assert!(
+            matches!(err, SevdeskError::Api { status, .. } if *status == want),
+            "{err:?}"
+        );
+    }
+}
+
 fn cancellation_invoice() -> serde_json::Value {
     json!({"objects": {
         "id": "135169578", "objectName": "Invoice", "invoiceType": "SR",

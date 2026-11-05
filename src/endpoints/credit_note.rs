@@ -91,6 +91,19 @@ impl SevdeskClient {
 }
 
 impl SevdeskClient {
+    /// `PUT /CreditNote/{id}/enshrine` (festschreiben, GoBD lock): sets `enshrined`
+    /// to now. Per spec, measured in the enshrine matrix: no request body, the
+    /// answer is `{"objects": null}`, so nothing is decoded; re-read the
+    /// credit note to see `enshrined`. Spec: only from status 200 (open) on, irreversible. An error answer (including "already
+    /// enshrined") surfaces as [`SevdeskError::Api`].
+    pub async fn enshrine_credit_note(&self, id: CreditNoteId) -> Result<(), SevdeskError> {
+        self.send_empty(Method::PUT, &format!("/CreditNote/{id}/enshrine"))
+            .await
+            .map(drop)
+    }
+}
+
+impl SevdeskClient {
     /// `DELETE /CreditNote/{id}` (undocumented; measured: a draft deletes with 200,
     /// an enshrined credit note answers 409 with code 159, [`crate::KnownCode::NotDeletable`]).
     pub async fn delete_credit_note(&self, id: CreditNoteId) -> Result<(), SevdeskError> {
