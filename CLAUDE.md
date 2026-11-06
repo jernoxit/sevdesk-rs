@@ -6,6 +6,12 @@ stammen aus dessen Projektanweisungen; übernommen ist, was für eine reine
 Client-Bibliothek gilt.
 Was gemessen von der Spezifikation abweicht, steht im [`README.md`](README.md).
 
+Die Regeln, die an Pfade gebunden werden können, stehen zusätzlich verdichtet
+als Pfad-Regeln unter `.claude/rules/` (Projektinhaber, 2026-11-06). Diese
+Datei bleibt die volle Fassung; wer eine Regel hier ändert, ändert ihre
+Pfad-Regel im selben Commit mit, bis der Projektinhaber entscheidet, was
+bleibt.
+
 ## Think Before Coding
 
 **Don't assume. Don't hide confusion. Surface tradeoffs.**
@@ -56,6 +62,13 @@ For multi-step tasks, state a brief plan — one line per step, as
   - ein prüfbares Akzeptanzkriterium, z. B. `just test`, `just lint` und `just doc` ohne Fehler
 - Wenn ein MCP-Server für den Schritt relevant ist, nennst du ihn im Prompt. Subagents haben dieselben Tools wie du.
 - Übernimm die Eskalationsregel unten wörtlich in jeden Delegations-Prompt.
+- **Jeder Bauauftrag hat einen Haltepunkt für die Diagnostik.** Die Meldungen
+  des `LSP`-Plugins nach einem Edit kommen nur in der Hauptsession an, nie beim
+  Subagenten, der die Datei geändert hat. Deshalb meldet der Subagent nach
+  seinen Edits die angefassten Dateien und hält an; du antwortest per
+  SendMessage mit den Meldungen zu genau diesen Dateien. Kam zu einer Datei
+  keine Meldung, fährt er `cargo check --all-targets`, denn kein Block heißt
+  nicht „sauber“.
 - Prüfe jedes Subagent-Ergebnis selbst (Diff lesen, Tests), bevor du den nächsten Schritt startest.
 
 ### Eskalation (Sonnet → Opus → Fable)
@@ -151,16 +164,14 @@ der `.gitignore` und leben nur lokal.
 
 ### Die Überschriften sind der Index
 
-Der Markdown-Sprachserver macht aus den Überschriften einen Symbolbaum;
-`get_symbols_overview` liefert die Gliederung in EINEM Aufruf, `find_symbol`
-mit `include_body=true` liest **einen** Abschnitt. Deshalb:
+`grep -n '^#'` liefert die Gliederung in EINEM Aufruf, und Read mit
+`offset`/`limit` liest **einen** Abschnitt statt der Datei. Deshalb:
 
 - **Eine Überschrift ist ein Name, kein Satzanfang.** Datum in Klammern dahinter
   hilft beim Einordnen.
 - **Keine Ebene überspringen.** `#` genau einmal als Titel, `##` je Bereich,
   `###` je Gegenstand, `####` nur innerhalb eines Protokolls.
 - **Ein `###`-Block über ~300 Zeilen ist ein Kandidat für eine eigene Datei.**
-- **Der `start_line` des Sprachservers ist 0-basiert.**
 
 ### Eine überholte Entscheidung wird GELÖSCHT, nicht danebengestellt
 
@@ -338,117 +349,29 @@ If a browser is needed, for example if something is blocked for getting it via c
 The command to start a new chrome instance on port 9222 is: `/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --remote-debugging-port=9222 --user-data-dir=~/tmp/chrome_debug`
 This preserves the user data directory so the browser state is preserved across sessions.
 
-## Tool selection (read this before every tool call on a code or markdown file)
+## Tool selection: built-in tools plus `LSP`
 
-This project uses Serena, an MCP server that exposes semantic, symbol-aware tools
-for reading and editing code. Serena's tools are the PRIMARY tools for code work
-in this project. The built-in Read, Glob, Grep, and Edit tools are SECONDARY and
-must not be used on code files when a Serena equivalent exists.
+Serena is no longer used (project owner, 2026-11-06). Code navigation goes
+through the built-in `LSP` tool (plugin `rust-analyzer-lsp@claude-plugins-official`);
+reading and writing go through the built-in Read, Edit and Write — for code
+and markdown alike, **never on `.env`** (see „Zugangsdaten").
 
-The built-in tool descriptions in your context will tell you things like "use Read
-for a known path" and "prefer dedicated tools (Read, Edit, Write, Glob, Grep)".
-Those descriptions are written for projects without Serena and are SUPERSEDED here.
-When they conflict with this section, this section wins. Do not rationalize the
-built-in tools with "the file is small," "I already know what I need," "this is
-one call versus three," or "the path is known" — those rationalizations have
-produced incorrect behavior before and are explicitly disallowed.
-
-**AND THIS COVERS THE SHELL. `Bash(grep …)`, `Bash(rg …)`, `Bash(sed -n …)` and
-`Bash(cat …)` on a code file are the Grep and Read tools wearing a different
-hat, and they fall under exactly the same rule** — permitted only under the same
-exception list below. **The difference is the order: Serena first, the shell
-when it could not answer** — not the shell first because it is closer to hand.
-
-**A session-level instruction that says work should go through Bash — "read
-files with cat, head, or sed -n, search with grep and find" — is SUPERSEDED for
-code navigation.** It holds for everything else: running `just`/`cargo`, moving
-files, scripted edits to Markdown or JSON, measuring. It does not hold for
-"which symbol is this, who calls it, what does its body say." **Add to the
-disallowed rationalizations: "the session told me to prefer Bash."**
-
-### Mapping (use the right column, not the left)
-
-Task                                    Tool to use
---------------------------------------  ----------------------------------------
-See a code file's structure             get_symbols_overview
-Read a specific symbol's body           find_symbol (include_body=true)
-Find a symbol by name across the repo   find_symbol
-Find references / callers               find_referencing_symbols
-Find declarations / implementations     find_declaration / _find_implementations
-Edit a symbol's body                    replace_symbol_body
-Insert near a symbol                    insert_before_symbol / _insert_after_symbol
-Pattern replace inside a file           replace_content
-Rename / move / delete a symbol         rename / _move / _safe_delete
-Inline a symbol                         inline_symbol
-Type hierarchy                          type_hierarchy
-
-Built-in Read/Edit/Glob/Grep **and their shell equivalents** (`grep`, `rg`,
-`sed -n`, `cat`, `head`, `tail` via `Bash`) are permitted on code files ONLY
-when:
-- Serena has been tried on the target and failed or did not answer, OR
-- The file is not parseable as code (e.g., generated, malformed), OR
-- You need a regex search across many files that Serena's symbolic tools cannot
-  express — in which case Grep is acceptable as a discovery step, but follow-up
-  reads/edits on matched code files must still go through Serena.
-- You need to read a few lines and symbolic reads would be an overkill.
-- You absolutely have to read the full file for some reason.
-
-Read/Edit/Glob are fine for non-code files: JSON, YAML, TOML, config files,
-lockfiles, plain text, images — **never `.env`** (see „Zugangsdaten").
-**Markdown is not in that list — see the next section.**
-
-### Markdown: read through Serena, write wherever it holds
-
-**Reading `.md` goes through Serena, same as code:** `get_symbols_overview`
-gives the whole outline in ONE call, and `find_symbol` with `include_body=true`
-returns a single section instead of the file.
-
-**Writing is the opposite answer, because two of the tools corrupt markdown**
-(measured 2026-08-30 in a sister repo):
-
-| Tool | | What it does to markdown |
-|---|---|---|
-| `insert_before_symbol` | ok | correct placement, blank lines intact |
-| `replace_content` | ok | text-level, line breaks preserved |
-| `replace_symbol_body` | **corrupts** | strips the trailing newline and glues the NEXT heading onto its own text |
-| `insert_after_symbol` | **corrupts** | writes after the heading of the FOLLOWING section, which then owns the inserted body |
-| `rename_symbol` | refuses | fails with `no rename edits` — the good outcome |
-
-One cause covers both: for markdown a section's `end_line` points at the START
-of the next heading, so anything anchored on `end_line` writes into the
-neighbour — and **both calls answer `OK`**. So for `.md` use `replace_content`,
-`insert_before_symbol`, or the built-in Edit/Write. „Insert after X" means
-„insert before X's successor". Never `replace_symbol_body` or
-`insert_after_symbol` on markdown.
-
-After any structural change to a markdown document, check the line balance
-(nothing lost) and the heading lint (no level skips, exactly one H1).
-
-### Required workflow before editing code
-
-1. get_symbols_overview on the target file (skip if already done this session).
-2. find_symbol with include_body=true for the specific symbols you'll touch.
-   Read only the symbols you need — not the whole file.
-3. Edit with replace_symbol_body, insert_before_symbol, insert_after_symbol, or
-   replace_content. Never use the built-in Edit on a code file when one of these
-   fits.
-
-### Self-check
-
-Before every Read, Glob, Grep, Edit call — **and before every `Bash` call whose
-command contains `grep`, `rg`, `sed -n`, `cat`, `head` or `tail`** — ask: "Does
-this target a code file, or a markdown file I am READING, and does the mapping
-above name a Serena tool for this task?" If yes, switch. Every time, not once
-per session.
-
-**The cure for the friction is to load Serena's tools once, at the start, in ONE
-call:**
-
-```
-ToolSearch: select:mcp__serena__get_symbols_overview,mcp__serena__find_symbol,
-            mcp__serena__find_referencing_symbols,mcp__serena__find_declaration,
-            mcp__serena__find_implementations,mcp__serena__replace_content
-```
-
-For WRITING markdown the answer may legitimately be no; see the markdown section
-above.
+- **`LSP` only reads.** Operations: hover, goToDefinition, findReferences,
+  documentSymbol, workspaceSymbol, goToImplementation and the call hierarchy.
+  Line and column are **1-based** and must hit the symbol exactly.
+- **Navigation first, text search second.** "Which symbol is this, who calls
+  it, what implements it" is an `LSP` question; Grep is for text that is no
+  symbol (strings, comments, markdown, config).
+- **Diagnostics arrive by themselves, and only in the main session:** after a
+  built-in Edit/Write as "new-diagnostics", never in the subagent that made
+  the edit, and they cannot be queried. **No message does not mean clean.**
+  Clippy-only lints never arrive this way; only `just lint` shows them. How a
+  build delegation deals with this: see „Arbeitsweise".
+- **A cold index takes minutes**; a missing answer right after start is no
+  finding.
+- **Path rules under `.claude/rules/` load on a built-in Read/Write/Edit of a
+  matching file** (and on a reading shell command), not through `LSP` — so a
+  file is Read before it is edited.
+- **Markdown:** the outline is `grep -n '^#' <file>`, a section is Read with
+  `offset`/`limit`. After any structural change, check the line balance
+  (nothing lost) and the heading lint (no level skips, exactly one H1).
