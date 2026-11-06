@@ -62,13 +62,10 @@ For multi-step tasks, state a brief plan — one line per step, as
   - ein prüfbares Akzeptanzkriterium, z. B. `just test`, `just lint` und `just doc` ohne Fehler
 - Wenn ein MCP-Server für den Schritt relevant ist, nennst du ihn im Prompt. Subagents haben dieselben Tools wie du.
 - Übernimm die Eskalationsregel unten wörtlich in jeden Delegations-Prompt.
-- **Jeder Bauauftrag hat einen Haltepunkt für die Diagnostik.** Die Meldungen
-  des `LSP`-Plugins nach einem Edit kommen nur in der Hauptsession an, nie beim
-  Subagenten, der die Datei geändert hat. Deshalb meldet der Subagent nach
-  seinen Edits die angefassten Dateien und hält an; du antwortest per
-  SendMessage mit den Meldungen zu genau diesen Dateien. Kam zu einer Datei
-  keine Meldung, fährt er `cargo check --all-targets`, denn kein Block heißt
-  nicht „sauber“.
+- **Jeder Bauauftrag sagt: `just lint` läuft EINMAL, wenn alle Edits des
+  Schritts stehen**, nicht nach jeder Datei (Projektinhaber, 2026-11-06) — ein
+  halbfertiger Umbau ist rot, weil er halbfertig ist. Der Lint ist der einzige
+  Compile-Check; nach einem Edit kommt keine Diagnostik.
 - Prüfe jedes Subagent-Ergebnis selbst (Diff lesen, Tests), bevor du den nächsten Schritt startest.
 
 ### Eskalation (Sonnet → Opus → Fable)
@@ -352,7 +349,8 @@ This preserves the user data directory so the browser state is preserved across 
 ## Tool selection: built-in tools plus `LSP`
 
 Serena is no longer used (project owner, 2026-11-06). Code navigation goes
-through the built-in `LSP` tool (plugin `rust-analyzer-lsp@claude-plugins-official`);
+through the built-in `LSP` tool (plugin `rust-analyzer-nav@claude-tools`,
+installed user-wide; navigation only, no diagnostics);
 reading and writing go through the built-in Read, Edit and Write — for code
 and markdown alike, **never on `.env`** (see „Zugangsdaten").
 
@@ -362,13 +360,11 @@ and markdown alike, **never on `.env`** (see „Zugangsdaten").
 - **Navigation first, text search second.** "Which symbol is this, who calls
   it, what implements it" is an `LSP` question; Grep is for text that is no
   symbol (strings, comments, markdown, config).
-- **Diagnostics arrive by themselves, and only in the main session:** after a
-  built-in Edit/Write as "new-diagnostics", never in the subagent that made
-  the edit, and they cannot be queried. **No message does not mean clean.**
-  Clippy-only lints never arrive this way; only `just lint` shows them. How a
-  build delegation deals with this: see „Arbeitsweise".
+- **No diagnostics after an edit**, in neither the main session nor a
+  subagent: the plugin has them switched off. Whether the code compiles shows
+  only `just lint`, run once after all edits of a step (see „Arbeitsweise").
 - **A cold index takes minutes**; a missing answer right after start is no
-  finding.
+  finding — repeat the call once.
 - **Path rules under `.claude/rules/` load on a built-in Read/Write/Edit of a
   matching file** (and on a reading shell command), not through `LSP` — so a
   file is Read before it is edited.
