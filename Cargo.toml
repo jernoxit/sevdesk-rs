@@ -47,3 +47,11 @@ debug = false
 name = "enshrine_matrix"
 path = "tests/enshrine_matrix/main.rs"
 test = false
+
+# Writes PERMANENT documents to the test account: never part of a plain
+# `cargo test`; run with
+# `just test-live --test number_probe <filter> -- --nocapture --test-threads=1`.
+[[test]]
+name = "number_probe"
+path = "tests/number_probe/main.rs"
+test = false
