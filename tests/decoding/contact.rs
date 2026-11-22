@@ -114,10 +114,23 @@ fn contact_status_reads_spec_values_and_unknown_codes() {
 }
 
 #[test]
-fn contact_birthday_in_another_form_is_a_decode_error() {
+fn contact_birthday_reads_the_measured_timestamp_form_as_its_date() {
+    // Measured 2026-11-22 (write-side release gate): sent "1990-05-17".
+    let c: Contact = serde_json::from_str(
+        r#"{"id":"1","objectName":"Contact","birthday":"1990-05-17T00:00:00+02:00"}"#,
+    )
+    .unwrap();
+    assert_eq!(c.birthday, Some(time::macros::date!(1990 - 05 - 17)));
+}
+
+#[test]
+fn contact_birthday_in_an_unknown_form_is_a_decode_error_naming_the_field() {
+    let err = serde_json::from_str::<Contact>(r#"{"id":"1","birthday":"17.05.1990"}"#)
+        .unwrap_err()
+        .to_string();
     assert!(
-        serde_json::from_str::<Contact>(r#"{"id":"1","birthday":"1990-01-31T00:00:00+01:00"}"#)
-            .is_err()
+        err.contains("birthday") || err.contains("17.05.1990"),
+        "{err}"
     );
 }
 

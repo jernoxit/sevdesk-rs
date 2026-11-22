@@ -1,5 +1,5 @@
 use super::Guard;
-use crate::codec::{date_opt, deserialize_flag_opt, string_opt};
+use crate::codec::{day_or_midnight_timestamp_opt, deserialize_flag_opt, string_opt};
 use crate::ids::*;
 use crate::status::{CommunicationWayType, ContactStatus};
 use serde::Deserialize;
@@ -45,9 +45,10 @@ pub struct Contact {
     /// spec, which says "m, w, or your own definition": free text, so no enum.
     #[serde(default)]
     pub gender: Option<String>,
-    /// Form not measured (`null` in every measurement); type from the OpenAPI
-    /// spec (`date`).
-    #[serde(default, deserialize_with = "date_opt")]
+    /// Measured 2026-11-22: comes as an RFC 3339 timestamp at Berlin midnight
+    /// (`"1990-05-17T00:00:00+02:00"` for a sent `"1990-05-17"`); read as its
+    /// date. The OpenAPI spec's `format: date` is wrong here.
+    #[serde(default, deserialize_with = "day_or_midnight_timestamp_opt")]
     pub birthday: Option<Date>,
     /// The contact's status; measured `1000` only.
     #[serde(default)]

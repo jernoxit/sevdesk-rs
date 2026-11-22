@@ -80,13 +80,29 @@ pub(crate) fn string_opt<'de, D: Deserializer<'de>>(d: D) -> Result<Option<Strin
     Ok(Option::<String>::deserialize(d)?.filter(|s| !s.is_empty()))
 }
 
-/// A calendar date `YYYY-MM-DD` (the OpenAPI spec's `date`); `null` is `None`.
-/// Any other form is an error.
-pub(crate) fn date_opt<'de, D: Deserializer<'de>>(d: D) -> Result<Option<Date>, D::Error> {
+/// A calendar day read from either form sevDesk is known to use: the plain
+/// `YYYY-MM-DD` (what the crate sends) or an RFC 3339 timestamp at local
+/// midnight (measured 2026-11-22 for `Contact.birthday`:
+/// `"1990-05-17T00:00:00+02:00"`). A timestamp yields the date AS WRITTEN, i.e.
+/// the local date at its own offset, never converted to UTC. `null` is `None`;
+/// any other form is an error.
+pub(crate) fn day_or_midnight_timestamp_opt<'de, D: Deserializer<'de>>(
+    d: D,
+) -> Result<Option<Date>, D::Error> {
     let format = time::format_description::parse_borrowed::<2>("[year]-[month]-[day]")
         .map_err(de::Error::custom)?;
     Option::<String>::deserialize(d)?
-        .map(|text| Date::parse(&text, &format).map_err(de::Error::custom))
+        .map(|text| {
+            Date::parse(&text, &format)
+                .or_else(|_| {
+                    time::OffsetDateTime::parse(
+                        &text,
+                        &time::format_description::well_known::Rfc3339,
+                    )
+                    .map(|t| t.date())
+                })
+                .map_err(|_| de::Error::custom(format!("unreadable date `{text}`")))
+        })
         .transpose()
 }
 
@@ -247,10 +263,46 @@ mod tests {
         flag: Option<bool>,
         #[serde(default, deserialize_with = "deserialize_i64_opt")]
         int: Option<i64>,
+        #[serde(default, deserialize_with = "day_or_midnight_timestamp_opt")]
+        day: Option<Date>,
     }
 
     fn probe(json: &str) -> Result<Probe, serde_json::Error> {
         serde_json::from_str(json)
+    }
+
+    #[test]
+    fn day_reads_plain_dates_and_the_local_date_of_a_timestamp() {
+        use time::macros::date;
+        for (json, want) in [
+            (r#"{"day":"1990-05-17"}"#, Some(date!(1990 - 05 - 17))),
+            (
+                r#"{"day":"1990-05-17T00:00:00+02:00"}"#,
+                Some(date!(1990 - 05 - 17)),
+            ),
+            (
+                r#"{"day":"1990-01-31T00:00:00+01:00"}"#,
+                Some(date!(1990 - 01 - 31)),
+            ),
+            (r#"{"day":null}"#, None),
+            (r#"{}"#, None),
+        ] {
+            assert_eq!(probe(json).unwrap().day, want, "{json}");
+        }
+    }
+
+    #[test]
+    fn day_rejects_other_forms_naming_the_input() {
+        for json in [
+            r#"{"day":"17.05.1990"}"#,
+            r#"{"day":"1990-05-17 00:00:00"}"#,
+            r#"{"day":"1990-05-17T00:00:00"}"#,
+            r#"{"day":"1990-05-17x"}"#,
+            r#"{"day":""}"#,
+            r#"{"day":19900517}"#,
+        ] {
+            assert!(probe(json).is_err(), "{json}");
+        }
     }
 
     fn d(units: i128, scale: u32) -> Option<Decimal> {
