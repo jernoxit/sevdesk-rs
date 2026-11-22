@@ -9,6 +9,10 @@
 //!
 //! `just test-live --test credit_rounding_probe case1`
 //!
+//! `case2_half_cent_drafts` writes and deletes two credit note DRAFTS (net
+//! 1.50 and 0.50, VAT exactly 0.285 and 0.095) to see how a half cent rounds;
+//! it leaves nothing behind and consumes no number.
+//!
 //! Sequence (all writes through the crate's public API, every read raw):
 //! 1. `GET /SevClient` (account check), then read-only inputs: contact,
 //!    contact person, payment method.
@@ -130,6 +134,11 @@ impl Sums {
 /// Reads head and positions of a document raw and records both under
 /// `credit_rounding_<name>_head` / `_pos`. `None` when a read failed.
 async fn read_sums(ctx: &Ctx, obj: &str, id: i64, name: &str) -> Option<Sums> {
+    read_sums_at(ctx, obj, id, &format!("credit_rounding_{name}")).await
+}
+
+/// [`read_sums`] with the full capture name prefix (`<prefix>_head` / `_pos`).
+async fn read_sums_at(ctx: &Ctx, obj: &str, id: i64, prefix: &str) -> Option<Sums> {
     let number_key = if obj == "Invoice" {
         "invoiceNumber"
     } else {
@@ -140,7 +149,7 @@ async fn read_sums(ctx: &Ctx, obj: &str, id: i64, name: &str) -> Option<Sums> {
             Method::GET,
             &format!("/{obj}/{id}"),
             None,
-            Some(&format!("credit_rounding_{name}_head")),
+            Some(&format!("{prefix}_head")),
         )
         .await;
     if status >= 300 {
@@ -158,7 +167,7 @@ async fn read_sums(ctx: &Ctx, obj: &str, id: i64, name: &str) -> Option<Sums> {
             Method::GET,
             &format!("/{obj}Pos?{ref_key}[id]={id}&{ref_key}[objectName]={obj}"),
             None,
-            Some(&format!("credit_rounding_{name}_pos")),
+            Some(&format!("{prefix}_pos")),
         )
         .await;
     if status >= 300 {
@@ -399,4 +408,287 @@ async fn case1_credit_rounding() {
         credit_draft.positions_text(),
         credit_final.positions_text(),
     );
+}
+
+/// Gross needed on the reference invoice for `case2`, in thousandths: both
+/// drafts together (1.79 + 0.60 = 2.39); the drafts count against the cap too.
+const NEEDED_GROSS_THOUSANDTHS: i64 = 2390;
+
+/// Reference invoice for `case2`: an enshrined net invoice whose gross minus
+/// the gross of all credit notes already referencing it covers
+/// [`NEEDED_GROSS_THOUSANDTHS`]; one without any credit note is preferred.
+/// Read-only; aborts when none qualifies.
+async fn enshrined_invoice(ctx: &Ctx) -> InvoiceId {
+    let enshrined = |v: &Value| !matches!(v["enshrined"], Value::Null);
+    let (status, text) = ctx.raw(Method::GET, "/Invoice?limit=200", None, None).await;
+    assert!(status < 300, "GET /Invoice answered {status}");
+    let invoices: Vec<Value> = serde_json::from_value(raw_objects(&text)).unwrap();
+    let (status, text) = ctx
+        .raw(Method::GET, "/CreditNote?limit=1000", None, None)
+        .await;
+    assert!(status < 300, "GET /CreditNote answered {status}");
+    let credits: Vec<Value> = serde_json::from_value(raw_objects(&text)).unwrap_or_default();
+    // (invoice id, credit notes referencing it, room left in thousandths)
+    let mut best: Option<(i64, usize, i64)> = None;
+    for inv in &invoices {
+        if !enshrined(inv) || text_of(inv, "showNet") != "true" {
+            continue;
+        }
+        let Some(id) = inv["id"].as_str().and_then(|s| s.parse::<i64>().ok()) else {
+            continue;
+        };
+        let Some(gross) = thousandths(&text_of(inv, "sumGross")) else {
+            continue;
+        };
+        let refs: Vec<&Value> = credits
+            .iter()
+            .filter(|c| c["refSrcInvoice"]["id"].as_str() == Some(&id.to_string()))
+            .collect();
+        let used: Option<i64> = refs
+            .iter()
+            .map(|c| thousandths(&text_of(c, "sumGross")))
+            .sum();
+        let Some(used) = used else { continue };
+        let room = gross - used;
+        if room < NEEDED_GROSS_THOUSANDTHS {
+            continue;
+        }
+        let better = best.is_none_or(|(_, n, r)| (refs.len(), -room) < (n, -r));
+        if better {
+            best = Some((id, refs.len(), room));
+        }
+    }
+    let (id, n, room) =
+        best.expect("no enshrined net invoice with enough room below its gross: aborting");
+    eprintln!("REF-INVOICE\t{id}: {n} credit notes, room {room} thousandths");
+    InvoiceId::new(id)
+}
+
+/// The raw answer of the CN sequence (scrubbed for comparison) and the number
+/// the crate derives from it.
+async fn credit_sequence(ctx: &Ctx, name: &str) -> (String, String) {
+    let (status, text) = ctx
+        .raw(
+            Method::GET,
+            "/SevSequence/Factory/getByType?objectType=CreditNote&type=CN",
+            None,
+            Some(name),
+        )
+        .await;
+    assert!(status < 300, "GET /SevSequence answered {status}");
+    let next = ctx.c.next_credit_note_number().await.unwrap();
+    (scrub::scrub_capture(&text), next)
+}
+
+/// Cents of a decimal string (`"0.285"` -> 28.5 as thousandths: 285).
+fn thousandths(s: &str) -> Option<i64> {
+    s.parse::<f64>().ok().map(|v| (v * 1000.0).round() as i64)
+}
+
+/// Raw list of credit notes carrying `marker`, filtered client-side because
+/// the filter on `customerInternalNote` is not trusted.
+async fn drafts_by_marker(ctx: &Ctx, marker: &str, name: &str) -> Vec<String> {
+    let (status, text) = ctx
+        .raw(
+            Method::GET,
+            &format!("/CreditNote?customerInternalNote={marker}&limit=1000"),
+            None,
+            Some(name),
+        )
+        .await;
+    assert!(status < 300, "GET /CreditNote by marker answered {status}");
+    let list: Vec<Value> = serde_json::from_value(raw_objects(&text)).unwrap_or_default();
+    list.iter()
+        .filter(|c| text_of(c, "customerInternalNote").contains(marker))
+        .map(|c| text_of(c, "id"))
+        .collect()
+}
+
+#[tokio::test]
+#[ignore = "writes and deletes credit note drafts on the sevDesk test account"]
+async fn case2_half_cent_drafts() {
+    let Ok(token) = std::env::var("SEVDESK_API_KEY") else {
+        eprintln!("SEVDESK_API_KEY is not set: skipping the half cent probe");
+        return;
+    };
+    let _alone = SERIAL.lock().await;
+    let ts = OffsetDateTime::now_utc().unix_timestamp();
+    let ctx = Ctx::new(&token, format!("SDRS-HALF-{ts}"));
+    verify_test_account(&ctx).await;
+
+    // Read-only inputs.
+    let methods = ctx.c.list_payment_methods().await.unwrap();
+    let pm = methods
+        .iter()
+        .find(|m| m.electronic_invoice_id == Some(ONLINE_PAYMENT_XML_ID))
+        .expect("a payment method with electronicInvoiceId 68")
+        .id;
+    let customer = existing_customer(&ctx).await;
+    let person = contact_person(&ctx).await;
+    let invoice_id = enshrined_invoice(&ctx).await;
+    let (seq_before, number_before) = credit_sequence(&ctx, "half_cent_sequence_before").await;
+    eprintln!(
+        "SETUP contact {} payment method {} ref invoice {} next CN {number_before}",
+        customer.contact.id.get(),
+        pm.get(),
+        invoice_id.get()
+    );
+
+    // (case, net price in cents, expected half-up tax, expected half-even tax)
+    let cases = [("a", 150_i64, "0.29", "0.28"), ("b", 50, "0.10", "0.10")];
+    let mut created: Vec<(&str, i64, String)> = Vec::new();
+    for (case, net, _, _) in cases {
+        let note = format!("{}-{case}", ctx.marker);
+        let mut draft = CreditNoteDraft {
+            credit_note_number: number_before.clone(),
+            contact: ObjectRef::new(customer.contact.id),
+            contact_person: ObjectRef::new(person),
+            credit_note_date: date!(2026 - 10 - 01),
+            delivery_date: datetime!(2026-10-01 0:00 +2),
+            header: note.clone(),
+            tax_rule: ObjectRef::new(TaxRuleId::new(1)),
+            tax_text: "Umsatzsteuer 19%".into(),
+            booking_category: CreditNoteCategory::Underachievement,
+            currency: CurrencyCode::EUR,
+            show_net: true,
+            customer_internal_note: note.clone(),
+            options: Default::default(),
+        };
+        draft.options.delivery_date_until = Some(datetime!(2026-10-31 0:00 +1));
+        draft.options.ref_src_invoice = Some(ObjectRef::new(invoice_id));
+        draft.options.address_name = Some(customer.name.clone());
+        draft.options.address_street = Some(customer.street.into());
+        draft.options.address_zip = Some(customer.zip.into());
+        draft.options.address_city = Some(customer.city.into());
+        draft.options.address_country = Some(ObjectRef::new(GERMANY));
+        draft.options.payment_method = Some(ObjectRef::new(pm));
+        draft.options.is_e_invoice = true;
+        let positions = vec![net_position(
+            1,
+            net,
+            &format!("SDRS-HALF Position {case}"),
+            None,
+        )];
+        match ctx
+            .c
+            .save_credit_note(&SaveCreditNote::new(draft, positions))
+            .await
+        {
+            Ok(saved) => {
+                let id = saved.credit_note.id.get();
+                eprintln!("CREATED CreditNote {id} (case {case}, marker {note})");
+                created.push((case, id, note));
+            }
+            Err(e) => {
+                // The write may have happened: record, re-read, never retry.
+                eprintln!("HALF-FAILED\tsave_credit_note case {case} failed: {e}");
+                let found = drafts_by_marker(&ctx, &ctx.marker, "half_cent_reread").await;
+                eprintln!(
+                    "HALF-FAILED\tre-read by marker {} found ids {found:?}; stopping",
+                    ctx.marker
+                );
+                break;
+            }
+        }
+    }
+
+    // Read back raw, record the sums, print the verdict.
+    for (case, id, _) in &created {
+        let Some(s) = read_sums_at(&ctx, "CreditNote", *id, &format!("half_cent_{case}")).await
+        else {
+            continue;
+        };
+        eprintln!(
+            "HALF\t{case}\t{id}\t{}\t{}\t{}\t{}",
+            s.net,
+            s.tax,
+            s.gross,
+            s.positions_text()
+        );
+        let (_, _, half_up, half_even) = cases.iter().find(|c| c.0 == *case).unwrap();
+        let head_tax = thousandths(&s.tax);
+        let pos_tax = s.positions.first().and_then(|p| thousandths(&p[1]));
+        let matches = |expect: &str| {
+            let e = thousandths(expect);
+            head_tax == e && pos_tax == e
+        };
+        let discriminates = half_up != half_even;
+        eprintln!(
+            "HALF-VERDICT\t{case}\thalf-up expects {half_up}, half-even expects {half_even} \
+             (0.285 -> 0.28 half-even because 8 is even; 0.095 -> 0.10 half-even because 9 is odd, \
+             so only case a discriminates)\tmeasured head tax {} / position tax {}\t\
+             matches half-up={} matches half-even={} discriminating={discriminates}",
+            s.tax,
+            s.positions.first().map_or("-", |p| p[1].as_str()),
+            matches(half_up),
+            matches(half_even),
+        );
+    }
+
+    // Delete only what this run created (own id, own marker, status 100).
+    let mut undeleted: Vec<i64> = Vec::new();
+    for (case, id, note) in &created {
+        let (status, text) = ctx
+            .raw(Method::GET, &format!("/CreditNote/{id}"), None, None)
+            .await;
+        let head = if status < 300 {
+            raw_one(&text)
+        } else {
+            Value::Null
+        };
+        let own = text_of(&head, "id") == id.to_string()
+            && text_of(&head, "customerInternalNote") == *note
+            && text_of(&head, "status") == "100";
+        if !own {
+            eprintln!(
+                "UNDELETED\tcase {case} id {id}: read-back is not own marker/status 100, not deleting"
+            );
+            undeleted.push(*id);
+            continue;
+        }
+        match ctx.c.delete_credit_note(CreditNoteId::new(*id)).await {
+            Ok(()) => eprintln!("DELETED\tCreditNote {id} (case {case})"),
+            Err(e) => {
+                eprintln!("UNDELETED\tcase {case} id {id}: delete failed: {e}; not retrying");
+                undeleted.push(*id);
+            }
+        }
+    }
+
+    // Confirm they are gone.
+    for (case, id, _) in &created {
+        let (status, text) = ctx
+            .raw(
+                Method::GET,
+                &format!("/CreditNote/{id}"),
+                None,
+                Some(&format!("half_cent_{case}_after_delete")),
+            )
+            .await;
+        let gone = status == 404
+            || (status < 300 && matches!(raw_objects(&text), Value::Null))
+            || (status < 300 && raw_objects(&text).as_array().is_some_and(Vec::is_empty));
+        eprintln!(
+            "{}\tCreditNote {id} (case {case}) HTTP {status}",
+            if gone { "GONE" } else { "STILL-THERE" }
+        );
+    }
+    let left = drafts_by_marker(&ctx, &ctx.marker, "half_cent_list_after_delete").await;
+    eprintln!(
+        "GONE-LIST\tcredit notes with marker {} after delete: {left:?}",
+        ctx.marker
+    );
+    let (seq_after, number_after) = credit_sequence(&ctx, "half_cent_sequence_after").await;
+    eprintln!(
+        "SEQUENCE\t{number_before} -> {number_after}\traw unchanged={}",
+        seq_before == seq_after
+    );
+    for id in &undeleted {
+        eprintln!("UNDELETED-DRAFT\tCreditNote {id} must be reported to the coordinator");
+    }
+    assert!(
+        undeleted.is_empty(),
+        "drafts left on the test account: {undeleted:?}"
+    );
+    assert_eq!(created.len(), cases.len(), "not every draft was saved");
 }

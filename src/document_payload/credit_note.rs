@@ -58,7 +58,9 @@ pub struct CreditNoteOptions {
     pub delivery_date_until: Option<OffsetDateTime>,
     pub head_text: Option<String>,
     pub foot_text: Option<String>,
-    /// The invoice this credit note refers to.
+    /// The invoice this credit note refers to. sevDesk refuses a save (HTTP
+    /// 422, code 455) when the credit notes referencing the invoice, drafts
+    /// included, would together exceed its gross (measured 2026-11-22).
     pub ref_src_invoice: Option<ObjectRef<InvoiceId>>,
     pub address_name: Option<String>,
     pub address_street: Option<String>,

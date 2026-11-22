@@ -20,7 +20,10 @@ pub enum KnownCode {
     PartlyPaid,
     /// 421: the invoice is already cancelled (HTTP 422).
     AlreadyCancelled,
-    /// 455: the credit notes' sum would exceed the invoice they refer to.
+    /// 455: the credit notes referencing an invoice would together exceed its
+    /// gross (HTTP 422). sevDesk checks it already when SAVING a credit note
+    /// draft, and a first credit note equal to the gross is accepted, so the
+    /// cap is "not above the invoice's gross" (measured 2026-11-22).
     CreditSumExceedsInvoice,
     /// 251: a credit note refers (`refSrcInvoice`) to an invoice that is still
     /// a draft (HTTP 422, `saveCreditNote`; measured 2026-11-05).
