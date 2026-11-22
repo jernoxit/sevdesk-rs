@@ -41,7 +41,7 @@ let invoice: InvoiceWire = serde_json::from_str(&body)?;   // all-None object pa
 
 ## A response type maps every field its call returns
 
-Every key of the recorded answers plus the fields the OpenAPI spec names, explored live where the shape is unclear (project owner, 2026-11-22); the consumer decides what it needs. For read fields this overrides "Simplicity First". An embedded full object stays an `ObjectRef`. A completeness test without network keeps type and recordings in step: every key of every recorded answer is read or stands on a named list, compared by exact equality.
+Every key of the recorded answers plus the fields the OpenAPI spec names, explored live where the shape is unclear (project owner, 2026-11-22); the consumer decides what it needs. For read fields this overrides "Simplicity First". An embedded full object stays an `ObjectRef` when another call of the crate returns that object, otherwise it becomes a read type of its own (widening a reference later is a type change). A field no measurement has shown filled gets the spec's type if the spec names one; with neither it stands on a named list "form unmeasured" until a measurement shows it (project owner, 2026-11-22). A completeness test without network keeps type and recordings in step: every key of every recorded answer is read or stands on a named list, compared by exact equality.
 
 ```text
 bad:  Invoice reads 15 of the 90 keys of GET /Invoice/{id}; a consumer needs addressName -> release

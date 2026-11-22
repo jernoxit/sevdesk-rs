@@ -234,9 +234,15 @@ field-poking.
   spec names, explored live where the shape is unclear. The consumer decides
   what it needs; leaving fields out cost two releases (0.3.0, 0.4.0). For read
   fields this overrides "Simplicity First". An embedded full object stays a
-  reference (`ObjectRef`). A completeness test without network keeps type and
-  recordings in step: every key of every recorded answer is read or stands on
-  a named list, compared by exact equality.
+  reference (`ObjectRef`) when another call of the crate returns that object;
+  otherwise it becomes a read type of its own, because widening a reference
+  later is a type change (project owner, 2026-11-22). A field that no
+  measurement has ever shown filled gets the spec's type if the spec names
+  one; with neither spec nor measurement it stands on a named list "form
+  unmeasured" and becomes a field once a measurement shows it (project owner,
+  2026-11-22). A completeness test without network keeps type and recordings
+  in step: every key of every recorded answer is read or stands on a named
+  list, compared by exact equality.
 - **Enums carry every value the spec names plus the measured ones, and stay
   tolerant:** a spec typo or an unseen value becomes `Other(…)`, never a
   failed decode. A variant known only from the spec says so in its doc;
