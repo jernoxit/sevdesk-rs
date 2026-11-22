@@ -5,10 +5,13 @@ use super::*;
 #[tokio::test]
 async fn resetting_an_invoice_or_credit_note_to_open_is_a_bodyless_put() {
     let server = MockServer::start().await;
-    for document in ["Invoice/5", "CreditNote/6"] {
+    for (document, recorded) in [
+        ("Invoice/5", "answer_invoice_resetToOpen"),
+        ("CreditNote/6", "answer_credit_note_resetToOpen"),
+    ] {
         Mock::given(method("PUT"))
             .and(path(format!("/{document}/resetToOpen")))
-            .respond_with(answer(json!({"objects": {"id": "5"}})))
+            .respond_with(ResponseTemplate::new(200).set_body_string(fixture(recorded)))
             .expect(1)
             .mount(&server)
             .await;

@@ -4,7 +4,9 @@ use crate::error::SevdeskError;
 use crate::ids::CreditNoteId;
 use crate::payload::BookDocumentAmount;
 use crate::query::CreditNoteQuery;
-use crate::wire::{CreditNote, DocumentPdf, SavedCreditNote, xml_from_body};
+use crate::wire::{
+    CreditNote, CreditNoteLog, DocumentParameters, DocumentPdf, SavedCreditNote, xml_from_body,
+};
 use reqwest::Method;
 
 impl SevdeskClient {
@@ -22,19 +24,20 @@ impl SevdeskClient {
     }
 
     /// `PUT /CreditNote/{id}/bookAmount`; the amount carries the sign of the
-    /// transaction (measured: −58.31 pays a credit note of 58.31).
+    /// transaction (measured: −58.31 pays a credit note of 58.31). Answers with
+    /// the booking as a [`CreditNoteLog`] (measured 2026-11-22).
     pub async fn book_credit_note_amount(
         &self,
         id: CreditNoteId,
         booking: &BookDocumentAmount,
-    ) -> Result<(), SevdeskError> {
+    ) -> Result<CreditNoteLog, SevdeskError> {
         self.send_json(
             Method::PUT,
             &format!("/CreditNote/{id}/bookAmount"),
             booking,
         )
-        .await
-        .map(drop)
+        .await?
+        .one()
     }
 }
 
@@ -70,28 +73,33 @@ impl SevdeskClient {
 
 impl SevdeskClient {
     /// `PUT /CreditNote/{id}/changeParameter`, e.g. the document language.
+    /// The answer is the document's parameters and the re-rendered PDF, see
+    /// [`DocumentParameters`].
     pub async fn change_credit_note_parameter(
         &self,
         id: CreditNoteId,
         parameter: DocumentParameter,
-    ) -> Result<(), SevdeskError> {
+    ) -> Result<DocumentParameters, SevdeskError> {
         self.send_json(
             Method::PUT,
             &format!("/CreditNote/{id}/changeParameter"),
             &parameter,
         )
-        .await
-        .map(drop)
+        .await?
+        .one()
     }
 }
 
 impl SevdeskClient {
     /// `PUT /CreditNote/{id}/resetToOpen`: takes back all bookings (the
-    /// transactions return to status 100).
-    pub async fn reset_credit_note_to_open(&self, id: CreditNoteId) -> Result<(), SevdeskError> {
+    /// transactions return to status 100). Answers with the credit note.
+    pub async fn reset_credit_note_to_open(
+        &self,
+        id: CreditNoteId,
+    ) -> Result<CreditNote, SevdeskError> {
         self.send_empty(Method::PUT, &format!("/CreditNote/{id}/resetToOpen"))
-            .await
-            .map(drop)
+            .await?
+            .one()
     }
 }
 

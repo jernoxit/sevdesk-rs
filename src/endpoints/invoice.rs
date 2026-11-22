@@ -4,7 +4,9 @@ use crate::error::SevdeskError;
 use crate::ids::InvoiceId;
 use crate::payload::BookDocumentAmount;
 use crate::query::InvoiceQuery;
-use crate::wire::{DocumentPdf, Invoice, SavedInvoice, xml_from_body};
+use crate::wire::{
+    DocumentParameters, DocumentPdf, Invoice, InvoiceLog, SavedInvoice, xml_from_body,
+};
 use reqwest::Method;
 
 impl SevdeskClient {
@@ -37,15 +39,16 @@ impl SevdeskClient {
         self.get(&format!("/Invoice/{id}"), &[]).await?.one()
     }
 
-    /// `PUT /Invoice/{id}/bookAmount`.
+    /// `PUT /Invoice/{id}/bookAmount`; sevDesk answers with the booking as an
+    /// [`InvoiceLog`] (measured 2026-11-22).
     pub async fn book_invoice_amount(
         &self,
         id: InvoiceId,
         booking: &BookDocumentAmount,
-    ) -> Result<(), SevdeskError> {
+    ) -> Result<InvoiceLog, SevdeskError> {
         self.send_json(Method::PUT, &format!("/Invoice/{id}/bookAmount"), booking)
-            .await
-            .map(drop)
+            .await?
+            .one()
     }
 }
 
@@ -78,30 +81,32 @@ impl SevdeskClient {
     /// `PUT /Invoice/{id}/changeParameter`, e.g. the document language.
     /// Measured 2026-10-01: `en_US` alone, without a render call, makes the
     /// next PDF English, before `sendBy` and after it. On an e-invoice DRAFT it
-    /// fails like [`Self::invoice_pdf`]: change it after finalizing.
+    /// fails like [`Self::invoice_pdf`]: change it after finalizing. The answer
+    /// is the document's parameters and the re-rendered PDF, see
+    /// [`DocumentParameters`].
     pub async fn change_invoice_parameter(
         &self,
         id: InvoiceId,
         parameter: DocumentParameter,
-    ) -> Result<(), SevdeskError> {
+    ) -> Result<DocumentParameters, SevdeskError> {
         self.send_json(
             Method::PUT,
             &format!("/Invoice/{id}/changeParameter"),
             &parameter,
         )
-        .await
-        .map(drop)
+        .await?
+        .one()
     }
 }
 
 impl SevdeskClient {
     /// `PUT /Invoice/{id}/resetToOpen`: takes back all bookings (the
     /// transactions return to status 100). Refused with code 170 when a
-    /// credit note stands beside the invoice.
-    pub async fn reset_invoice_to_open(&self, id: InvoiceId) -> Result<(), SevdeskError> {
+    /// credit note stands beside the invoice. Answers with the invoice.
+    pub async fn reset_invoice_to_open(&self, id: InvoiceId) -> Result<Invoice, SevdeskError> {
         self.send_empty(Method::PUT, &format!("/Invoice/{id}/resetToOpen"))
-            .await
-            .map(drop)
+            .await?
+            .one()
     }
 }
 

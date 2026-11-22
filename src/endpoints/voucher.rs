@@ -90,11 +90,11 @@ impl SevdeskClient {
     /// `PUT /Voucher/{id}/resetToDraft`: a released voucher (status 100) back
     /// to a draft. Measured: `saveVoucher` refuses to update anything but a
     /// draft (400, code 90400 "Use resetToDraft first"), and only a draft can
-    /// be deleted (409, code 159).
-    pub async fn reset_voucher_to_draft(&self, id: VoucherId) -> Result<(), SevdeskError> {
+    /// be deleted (409, code 159). Answers with the voucher.
+    pub async fn reset_voucher_to_draft(&self, id: VoucherId) -> Result<Voucher, SevdeskError> {
         self.send_empty(Method::PUT, &format!("/Voucher/{id}/resetToDraft"))
-            .await
-            .map(drop)
+            .await?
+            .one()
     }
 
     /// `DELETE /Voucher/{id}`. Measured: only a draft deletes (409, code 159

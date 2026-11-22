@@ -1,0 +1,1 @@
+{"objects":{"id":"4264509","objectName":"CreditNoteLog","additionalInformation":null,"create":"2026-11-22T19:11:07+01:00","creditNote":{"id":"3117350","objectName":"CreditNote"},"fromStatus":"200","toStatus":"1000","ammountPayed":"-5.95","bookingDate":"2026-11-05T12:00:00+01:00","sevClient":{"id":"1303847","objectName":"SevClient"}}}

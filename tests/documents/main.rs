@@ -11,7 +11,7 @@ mod live_fixtures;
 mod queries;
 mod saving;
 
-use common::{client, credit_note_draft, invoice_draft, position};
+use common::{client, credit_note_draft, fixture, invoice_draft, position};
 use serde_json::json;
 use sevdesk::Amount;
 use sevdesk::*;

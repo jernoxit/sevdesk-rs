@@ -97,12 +97,12 @@ async fn live_write_21_b2b_einvoice_chain_with_credit_note() {
         // English, WITHOUT a render call, then enshrine.
         let english = DocumentParameter::Language(DocumentLanguage::EnUs);
         match ctx.c.change_invoice_parameter(inv.id, english).await {
-            Ok(()) => measured("changeParameter language on an e-invoice draft: ok"),
+            Ok(_) => measured("changeParameter language on an e-invoice draft: ok"),
             Err(e) => measured(&format!("changeParameter language on an e-invoice draft: {e}")),
         }
         let sent = ctx.c.send_invoice_by(inv.id, &SendBy::FINALIZE).await.unwrap();
         match ctx.c.change_invoice_parameter(inv.id, english).await {
-            Ok(()) => measured("changeParameter language on the enshrined e-invoice: ok"),
+            Ok(_) => measured("changeParameter language on the enshrined e-invoice: ok"),
             Err(e) => measured(&format!("changeParameter language on the enshrined e-invoice: {e}")),
         }
         assert_eq!(sent.status, Some(InvoiceStatus::Open));

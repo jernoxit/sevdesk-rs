@@ -41,6 +41,16 @@ const SEV_USER_FORM_UNMEASURED: &[(&str, bool)] = &[
 pub(super) fn covered() -> Vec<Covered> {
     vec![
         (
+            "answer_invoice_changeParameter",
+            unread::<DocumentParameters>("answer_invoice_changeParameter"),
+            &[],
+        ),
+        (
+            "answer_credit_note_changeParameter",
+            unread::<DocumentParameters>("answer_credit_note_changeParameter"),
+            &[],
+        ),
+        (
             "payment_method_list",
             unread::<PaymentMethod>("payment_method_list"),
             &["objects.*.objectName"],

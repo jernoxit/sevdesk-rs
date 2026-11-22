@@ -51,7 +51,7 @@ pub use codec::{format_decimal, parse_amount};
 pub use currency::{CurrencyCode, InvalidCurrencyCode};
 pub use decimal::{Decimal, ParseDecimalError};
 pub use document_payload::*;
-pub use error::{KnownCode, SevdeskError};
+pub use error::{DecodeError, KnownCode, SevdeskError};
 pub use ids::*;
 pub use pacing::Pacing;
 pub use payload::*;
@@ -59,8 +59,9 @@ pub use query::{CreditNoteQuery, InvoiceQuery, Page, TransactionQuery, VoucherQu
 pub use status::*;
 pub use wire::{
     AdditionalInformation, AllowedTaxRule, BookedDocument, CheckAccount, CommunicationWay, Contact,
-    ContactAddress, CreditNote, CreditNotePosition, Document, DocumentPdf, Invoice,
-    InvoicePosition, PaymentMethod, ReceiptGuidance, SavedCreditNote, SavedInvoice, SavedVoucher,
-    SevSequence, SevUser, Transaction, TransactionLogEntry, UploadedFile, Voucher, VoucherLog,
-    VoucherPosition,
+    ContactAddress, CreditNote, CreditNoteLog, CreditNotePosition, Document, DocumentMetaData,
+    DocumentParameterChoice, DocumentParameterInfo, DocumentParameters, DocumentPdf, Invoice,
+    InvoiceLog, InvoicePosition, PaymentMethod, ReceiptGuidance, SavedCreditNote, SavedInvoice,
+    SavedVoucher, SevSequence, SevUser, Transaction, TransactionLogEntry, UploadedFile, Voucher,
+    VoucherLog, VoucherPosition,
 };

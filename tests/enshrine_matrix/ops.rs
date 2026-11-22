@@ -171,18 +171,18 @@ impl Env {
             check_account_transaction: ObjectRef::new(tx),
         };
         let r = match doc.kind {
-            Kind::Invoice => {
-                self.ctx
-                    .c
-                    .book_invoice_amount(InvoiceId::new(doc.id), &booking)
-                    .await
-            }
-            Kind::CreditNote => {
-                self.ctx
-                    .c
-                    .book_credit_note_amount(CreditNoteId::new(doc.id), &booking)
-                    .await
-            }
+            Kind::Invoice => self
+                .ctx
+                .c
+                .book_invoice_amount(InvoiceId::new(doc.id), &booking)
+                .await
+                .map(drop),
+            Kind::CreditNote => self
+                .ctx
+                .c
+                .book_credit_note_amount(CreditNoteId::new(doc.id), &booking)
+                .await
+                .map(drop),
         };
         match r {
             Ok(()) => {
@@ -235,7 +235,7 @@ impl Env {
                         Kind::Invoice => c.change_invoice_parameter(inv, p).await,
                         Kind::CreditNote => c.change_credit_note_parameter(cn, p).await,
                     }
-                    .map(|()| "ok".to_owned()),
+                    .map(|_| "ok".to_owned()),
                 )
             }
             Op::Enshrine => {
@@ -278,8 +278,8 @@ impl Env {
             }
             Op::ResetOpen => Self::outcome_of(
                 match doc.kind {
-                    Kind::Invoice => c.reset_invoice_to_open(inv).await,
-                    Kind::CreditNote => c.reset_credit_note_to_open(cn).await,
+                    Kind::Invoice => c.reset_invoice_to_open(inv).await.map(drop),
+                    Kind::CreditNote => c.reset_credit_note_to_open(cn).await.map(drop),
                 }
                 .map(|()| "ok".to_owned()),
             ),

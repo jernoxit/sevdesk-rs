@@ -168,8 +168,9 @@ async fn book_amounts_carry_the_transactions_sign_and_endpoint_specific_dates() 
             "checkAccount": {"id": 6306017, "objectName": "CheckAccount"},
             "checkAccountTransaction": {"id": 1897813785, "objectName": "CheckAccountTransaction"}
         })))
-        // Synthetic: credit note bookings were measured but not recorded; only the request matters.
-        .respond_with(ResponseTemplate::new(200).set_body_string(r#"{"objects":{}}"#))
+        .respond_with(
+            ResponseTemplate::new(200).set_body_string(fixture("answer_credit_note_bookAmount")),
+        )
         .expect(1)
         .mount(&server)
         .await;
@@ -193,18 +194,20 @@ async fn book_amounts_carry_the_transactions_sign_and_endpoint_specific_dates() 
     assert_eq!(log.id, VoucherLogId::new(148586846));
     assert_eq!(log.amount_payed, Some(eur(45)));
     assert_eq!(log.to_status, Some(VoucherStatus::Paid));
-    c.book_credit_note_amount(
-        CreditNoteId::new(2996041),
-        &BookDocumentAmount {
-            amount: eur(-5831),
-            date: datetime!(2026-08-25 12:00 +2),
-            booking_type: BookingType::FullPayment,
-            check_account: account,
-            check_account_transaction: transaction,
-        },
-    )
-    .await
-    .unwrap();
+    let log = c
+        .book_credit_note_amount(
+            CreditNoteId::new(2996041),
+            &BookDocumentAmount {
+                amount: eur(-5831),
+                date: datetime!(2026-08-25 12:00 +2),
+                booking_type: BookingType::FullPayment,
+                check_account: account,
+                check_account_transaction: transaction,
+            },
+        )
+        .await
+        .unwrap();
+    assert_eq!(log.id, CreditNoteLogId::new(4264509));
 }
 
 #[tokio::test]
@@ -333,7 +336,8 @@ async fn reset_and_delete_answers_decode_from_real_captures() {
     let reset = c.reset_voucher_to_open(VoucherId::new(1)).await.unwrap();
     assert_eq!(reset.id, VoucherId::new(156270656));
     assert_eq!(reset.status, Some(VoucherStatus::Open));
-    c.reset_voucher_to_draft(VoucherId::new(1)).await.unwrap();
+    let draft = c.reset_voucher_to_draft(VoucherId::new(1)).await.unwrap();
+    assert_eq!(draft.id, VoucherId::new(156270656));
 }
 
 #[tokio::test]

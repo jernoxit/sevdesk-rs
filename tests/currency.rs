@@ -77,8 +77,12 @@ async fn read_all(with: Option<Value>) -> Vec<(&'static str, Result<(), SevdeskE
 fn assert_currency_decode_error(results: Vec<(&str, Result<(), SevdeskError>)>) {
     for (name, result) in results {
         match result {
-            Err(SevdeskError::Decode { source, .. }) => {
-                assert!(source.to_string().contains("currency"), "{name}: {source}")
+            Err(SevdeskError::Decode(e)) => {
+                assert!(
+                    e.source.to_string().contains("currency"),
+                    "{name}: {}",
+                    e.source
+                )
             }
             other => panic!("{name}: expected a decode error, got {other:?}"),
         }
@@ -95,7 +99,7 @@ async fn a_null_currency_is_a_decode_error_not_a_default() {
     let results = read_all(Some(Value::Null)).await;
     for (name, result) in &results {
         assert!(
-            matches!(result, Err(SevdeskError::Decode { .. })),
+            matches!(result, Err(SevdeskError::Decode(_))),
             "{name}: {result:?}"
         );
     }

@@ -1,0 +1,1 @@
+{"objects":{"id":"227377056","objectName":"InvoiceLog","additionalInformation":null,"create":"2026-11-22T19:10:50+01:00","invoice":{"id":"140050379","objectName":"Invoice"},"fromStatus":"200","toStatus":"1000","ammountPayed":"11.9","bookingDate":"2026-11-05T12:00:00+01:00","sevClient":{"id":"1303847","objectName":"SevClient"}}}

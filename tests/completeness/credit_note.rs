@@ -24,6 +24,11 @@ const CREDIT_NOTE_FORM_UNMEASURED: &[(&str, bool)] = &[
     ("vatNumber", true),      // not in the spec; null in all 196 survey objects
 ];
 
+/// CreditNoteLog keys of the same kind.
+const CREDIT_NOTE_LOG_FORM_UNMEASURED: &[(&str, bool)] = &[
+    ("additionalInformation", true), // not in the spec; null in the recording
+];
+
 /// CreditNotePos keys of the same kind (all `null` in the 206 surveyed positions).
 const CREDIT_NOTE_POSITION_FORM_UNMEASURED: &[(&str, bool)] = &[
     ("additionalInformation", true), // not in the spec; null in all 206 survey objects
@@ -45,6 +50,45 @@ pub(super) fn covered() -> Vec<Covered> {
                 "objects.*.refSrcInvoice.objectName",
                 "objects.*.sevClient.objectName",
                 "objects.*.taxRule.objectName",
+            ],
+        ),
+        (
+            "answer_credit_note_sendBy",
+            unread::<CreditNote>("answer_credit_note_sendBy"),
+            &[
+                "objects.addressCountry.objectName",
+                "objects.contact.objectName",
+                "objects.contactPerson.objectName",
+                "objects.createUser.objectName",
+                "objects.objectName",
+                "objects.paymentMethod.objectName",
+                "objects.refSrcInvoice.objectName",
+                "objects.sevClient.objectName",
+                "objects.taxRule.objectName",
+            ],
+        ),
+        (
+            "answer_credit_note_resetToOpen",
+            unread::<CreditNote>("answer_credit_note_resetToOpen"),
+            &[
+                "objects.addressCountry.objectName",
+                "objects.contact.objectName",
+                "objects.contactPerson.objectName",
+                "objects.createUser.objectName",
+                "objects.objectName",
+                "objects.paymentMethod.objectName",
+                "objects.refSrcInvoice.objectName",
+                "objects.sevClient.objectName",
+                "objects.taxRule.objectName",
+            ],
+        ),
+        (
+            "answer_credit_note_bookAmount",
+            unread::<CreditNoteLog>("answer_credit_note_bookAmount"),
+            &[
+                "objects.creditNote.objectName",
+                "objects.objectName",
+                "objects.sevClient.objectName",
             ],
         ),
         (
@@ -103,6 +147,10 @@ pub(super) fn form_unmeasured(fixture: &str) -> Option<Vec<(String, bool)>> {
         "credit_note" | "sample_credit_note_list" => {
             under("objects.*.", CREDIT_NOTE_FORM_UNMEASURED)
         }
+        "answer_credit_note_sendBy" | "answer_credit_note_resetToOpen" => {
+            under("objects.", CREDIT_NOTE_FORM_UNMEASURED)
+        }
+        "answer_credit_note_bookAmount" => under("objects.", CREDIT_NOTE_LOG_FORM_UNMEASURED),
         "sample_credit_note_pos_list" => under("objects.*.", CREDIT_NOTE_POSITION_FORM_UNMEASURED),
         "write_credit_note_save" => {
             let mut keys = under("objects.creditNote.", CREDIT_NOTE_FORM_UNMEASURED);

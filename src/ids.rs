@@ -69,8 +69,18 @@ resource_id!(
     "VoucherLog"
 );
 resource_id!(InvoiceId, "Invoice");
+resource_id!(
+    /// A booking log entry of an invoice (`bookAmount` answer).
+    InvoiceLogId,
+    "InvoiceLog"
+);
 resource_id!(InvoicePositionId, "InvoicePos");
 resource_id!(CreditNoteId, "CreditNote");
+resource_id!(
+    /// A booking log entry of a credit note (`bookAmount` answer).
+    CreditNoteLogId,
+    "CreditNoteLog"
+);
 resource_id!(CreditNotePositionId, "CreditNotePos");
 resource_id!(
     /// An accounting type (`accountingType` of a credit note).

@@ -5,6 +5,7 @@
 #[path = "../common/mod.rs"]
 mod common;
 
+mod answers;
 mod check_account;
 mod contact;
 mod credit_note;

@@ -113,6 +113,16 @@ pub(super) fn covered() -> Vec<Covered> {
             ],
         ),
         (
+            "answer_voucher_resetToDraft",
+            unread::<Voucher>("answer_voucher_resetToDraft"),
+            &[
+                "objects.createUser.objectName",
+                "objects.objectName",
+                "objects.sevClient.objectName",
+                "objects.taxRule.objectName",
+            ],
+        ),
+        (
             "write_voucher_book_amount",
             unread::<VoucherLog>("write_voucher_book_amount"),
             &[
@@ -167,7 +177,9 @@ pub(super) fn form_unmeasured(fixture: &str) -> Option<Vec<(String, bool)>> {
         "voucher_positions" | "sample_voucher_pos_list" => {
             under("objects.*.", VOUCHER_POSITION_FORM_UNMEASURED)
         }
-        "write_voucher_reset_to_open" => under("objects.", VOUCHER_FORM_UNMEASURED),
+        "write_voucher_reset_to_open" | "answer_voucher_resetToDraft" => {
+            under("objects.", VOUCHER_FORM_UNMEASURED)
+        }
         "write_voucher_book_amount" => under("objects.", VOUCHER_LOG_FORM_UNMEASURED),
         "write_voucher_save_create" | "write_voucher_save_update_release_attach" => {
             let mut keys = under("objects.voucher.", VOUCHER_FORM_UNMEASURED);

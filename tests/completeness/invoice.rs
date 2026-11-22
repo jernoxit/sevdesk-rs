@@ -16,10 +16,16 @@ const INVOICE_FORM_UNMEASURED: &[(&str, bool)] = &[
     ("addressParentName", true), // not in the spec; null in all 313 survey objects
     ("addressParentName2", true), // not in the spec; null in all 313 survey objects
     ("datevConnectOnline", false), // spec: an object without fields; in no recording
+    ("propertyEInvoiceMail", true), // not in the spec; null in the one recording that has it
     ("propertyIsBookkeepingV1", true), // not in the spec; null in both recordings that have it
     ("sepaCreditorId", true), // not in the spec; null in all 313 survey objects
     ("sepaMandateReference", true), // not in the spec; null in all 313 survey objects
     ("sepaPayerIban", true),  // not in the spec; null in all 313 survey objects
+];
+
+/// InvoiceLog keys of the same kind.
+const INVOICE_LOG_FORM_UNMEASURED: &[(&str, bool)] = &[
+    ("additionalInformation", true), // not in the spec; null in the recording
 ];
 
 /// InvoicePos keys of the same kind.
@@ -33,6 +39,13 @@ const INVOICE_POSITION_FORM_UNMEASURED: &[(&str, bool)] = &[
 pub(super) fn embedded_objects(fixture: &str) -> &'static [&'static str] {
     match fixture {
         "write_invoice_cancel" => &["objects.contact", "objects.taxRule"],
+        "answer_cancelInvoice" => &[
+            "objects.addressCountry",
+            "objects.contact",
+            "objects.origin",
+            "objects.paymentMethod",
+            "objects.taxRule",
+        ],
         "write_invoice_save" | "quantity_probe_save" => {
             &["objects.invoicePos.*.invoice", "objects.invoicePos.*.unity"]
         }
@@ -109,6 +122,58 @@ pub(super) fn covered() -> Vec<Covered> {
             ],
         ),
         (
+            "answer_invoice_sendBy",
+            unread::<Invoice>("answer_invoice_sendBy"),
+            &[
+                "objects.addressCountry.objectName",
+                "objects.contact.objectName",
+                "objects.contactPerson.objectName",
+                "objects.createUser.objectName",
+                "objects.objectName",
+                "objects.paymentMethod.objectName",
+                "objects.sevClient.objectName",
+                "objects.taxRule.objectName",
+            ],
+        ),
+        (
+            "answer_invoice_resetToOpen",
+            unread::<Invoice>("answer_invoice_resetToOpen"),
+            &[
+                "objects.addressCountry.objectName",
+                "objects.contact.objectName",
+                "objects.contactPerson.objectName",
+                "objects.createUser.objectName",
+                "objects.objectName",
+                "objects.paymentMethod.objectName",
+                "objects.sevClient.objectName",
+                "objects.taxRule.objectName",
+            ],
+        ),
+        (
+            "answer_cancelInvoice",
+            unread::<Invoice>("answer_cancelInvoice"),
+            &[
+                "objects.addressCountry.<embedded object>",
+                "objects.contact.<embedded object>",
+                "objects.contactPerson.objectName",
+                "objects.createUser.objectName",
+                "objects.objectName",
+                "objects.origin.<embedded object>",
+                "objects.paymentMethod.<embedded object>",
+                "objects.sevClient.objectName",
+                "objects.taxRule.<embedded object>",
+            ],
+        ),
+        (
+            "answer_invoice_bookAmount",
+            unread::<InvoiceLog>("answer_invoice_bookAmount"),
+            &[
+                "objects.invoice.objectName",
+                "objects.objectName",
+                "objects.sevClient.objectName",
+            ],
+        ),
+        (
             "write_invoice_cancel",
             unread::<Invoice>("write_invoice_cancel"),
             &[
@@ -175,7 +240,11 @@ pub(super) fn form_unmeasured(fixture: &str) -> Option<Vec<(String, bool)>> {
         "invoice_draft" | "invoice_enshrined" | "invoice_list" | "sample_invoice_list" => {
             under("objects.*.", INVOICE_FORM_UNMEASURED)
         }
-        "write_invoice_cancel" => under("objects.", INVOICE_FORM_UNMEASURED),
+        "write_invoice_cancel"
+        | "answer_invoice_sendBy"
+        | "answer_invoice_resetToOpen"
+        | "answer_cancelInvoice" => under("objects.", INVOICE_FORM_UNMEASURED),
+        "answer_invoice_bookAmount" => under("objects.", INVOICE_LOG_FORM_UNMEASURED),
         "write_invoice_save" | "quantity_probe_save" => {
             let mut keys = under("objects.invoice.", INVOICE_FORM_UNMEASURED);
             keys.extend(under(

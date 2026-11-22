@@ -153,7 +153,7 @@ async fn drift_guard_rejects_objects_without_their_load_bearing_fields() {
     // Another shape entirely: no id.
     let (_s, c) = serve_body(r#"{"objects":[{"foo":"bar"}]}"#).await;
     let err = c.voucher(VoucherId::new(1)).await.unwrap_err();
-    assert!(matches!(err, SevdeskError::Decode { .. }), "{err:?}");
+    assert!(matches!(err, SevdeskError::Decode(_)), "{err:?}");
 }
 
 #[tokio::test]
