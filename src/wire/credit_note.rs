@@ -1,5 +1,5 @@
 use super::Guard;
-use crate::codec::amount_opt;
+use crate::codec::{amount_opt, string_opt};
 use crate::ids::*;
 use crate::status::*;
 use crate::{Amount, CurrencyCode};
@@ -24,6 +24,18 @@ pub struct CreditNote {
     pub currency: CurrencyCode,
     #[serde(default)]
     pub customer_internal_note: Option<String>,
+    /// The document address sevDesk froze from these fields when the document
+    /// was saved; read here, the draft payloads write them.
+    #[serde(default, deserialize_with = "string_opt")]
+    pub address_name: Option<String>,
+    #[serde(default, deserialize_with = "string_opt")]
+    pub address_street: Option<String>,
+    #[serde(default, deserialize_with = "string_opt")]
+    pub address_zip: Option<String>,
+    #[serde(default, deserialize_with = "string_opt")]
+    pub address_city: Option<String>,
+    #[serde(default)]
+    pub address_country: Option<ObjectRef<CountryId>>,
     /// Set only by `createFromInvoice` (measured); a credit note saved with
     /// `refSrcInvoice` has none.
     #[serde(default)]

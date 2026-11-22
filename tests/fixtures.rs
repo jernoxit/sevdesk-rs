@@ -175,6 +175,13 @@ async fn invoice_list_with_cancellation_pointing_to_origin() {
     assert_eq!(re.invoice_type, Some(InvoiceType::Invoice));
     assert!(re.origin.is_none());
     assert_eq!(re.customer_internal_note, sr.customer_internal_note);
+    assert_probe_address(
+        re.address_name.as_deref(),
+        re.address_street.as_deref(),
+        re.address_zip.as_deref(),
+        re.address_city.as_deref(),
+        re.address_country,
+    );
 }
 
 #[tokio::test]
@@ -233,6 +240,45 @@ async fn enshrined_invoice_has_number_update_and_enshrined() {
 }
 
 #[tokio::test]
+async fn invoice_draft_has_null_address_strings_and_a_country() {
+    let (_s, c) = serving("/Invoice/135169163", "invoice_draft").await;
+    let i = c.invoice(InvoiceId::new(135169163)).await.unwrap();
+    assert_eq!(i.address_name, None);
+    assert_eq!(i.address_street, None);
+    assert_eq!(i.address_zip, None);
+    assert_eq!(i.address_city, None);
+    assert_eq!(i.address_country, Some(ObjectRef::new(CountryId::new(1))));
+}
+
+fn assert_probe_address(
+    name: Option<&str>,
+    street: Option<&str>,
+    zip: Option<&str>,
+    city: Option<&str>,
+    country: Option<ObjectRef<CountryId>>,
+) {
+    assert_eq!(name, Some("Probe Practice GmbH PROBE-R1"));
+    assert_eq!(street, Some("Probestrasse 1"));
+    assert_eq!(zip, Some("10115"));
+    assert_eq!(city, Some("Berlin"));
+    assert_eq!(country, Some(ObjectRef::new(CountryId::new(1))));
+}
+
+#[test]
+fn address_strings_read_empty_null_and_absent_as_none() {
+    let read = |extra: &str| -> Invoice {
+        serde_json::from_str(&format!(r#"{{"id": "1", "currency": "EUR"{extra}}}"#)).unwrap()
+    };
+    assert_eq!(read(r#", "addressName": """#).address_name, None);
+    assert_eq!(read(r#", "addressName": null"#).address_name, None);
+    assert_eq!(read("").address_name, None);
+    assert_eq!(
+        read(r#", "addressName": "x""#).address_name.as_deref(),
+        Some("x")
+    );
+}
+
+#[tokio::test]
 async fn credit_note() {
     let (_s, c) = serving("/CreditNote/2996041", "credit_note").await;
     let n = c.credit_note(CreditNoteId::new(2996041)).await.unwrap();
@@ -241,6 +287,13 @@ async fn credit_note() {
     assert_eq!(n.currency, CurrencyCode::EUR);
     assert_eq!(n.status, Some(CreditNoteStatus::Paid));
     assert_eq!(n.origin.unwrap().id, InvoiceId::new(135171965));
+    assert_probe_address(
+        n.address_name.as_deref(),
+        n.address_street.as_deref(),
+        n.address_zip.as_deref(),
+        n.address_city.as_deref(),
+        n.address_country,
+    );
 }
 
 #[tokio::test]

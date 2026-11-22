@@ -74,6 +74,11 @@ pub(crate) fn amount_opt<'de, D: Deserializer<'de>>(d: D) -> Result<Option<Amoun
         .transpose()
 }
 
+/// A string where a missing, `null` or empty (`""`) value is `None`.
+pub(crate) fn string_opt<'de, D: Deserializer<'de>>(d: D) -> Result<Option<String>, D::Error> {
+    Ok(Option::<String>::deserialize(d)?.filter(|s| !s.is_empty()))
+}
+
 pub(crate) fn serialize_amount<S: Serializer>(amount: &Amount, s: S) -> Result<S::Ok, S::Error> {
     s.serialize_str(&format_decimal(*amount))
 }
