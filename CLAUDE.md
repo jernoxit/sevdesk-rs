@@ -254,7 +254,19 @@ field-poking.
   measured form.
 - **Read types and their enums are `#[non_exhaustive]`** (project owner,
   2026-11-22): a field or variant added later is no breaking change. Not on
-  query and draft types — there it would break `..Default::default()`.
+  query types — there it would break `..Default::default()`.
+- **A request type maps every writable field of its call, and none of them
+  must be filled to build a sensible request** (project owner, 2026-11-22).
+  A draft is split: the REQUIRED part stays exhaustive named fields (what a
+  request cannot do without, and what would otherwise be a silent sevDesk
+  default — e.g. contact, date, currency, `show_net`, `tax_rule`); everything
+  optional lives in an `options` struct with `Default` and
+  `#[non_exhaustive]`, set by assignment (`draft.options.foot_text =
+  Some(…)`), so a new writable field is no breaking change. A writable field
+  enters the API only after a write measurement shows sevDesk stores it
+  (stored / ignored / refused, written into its doc); a filter only after a
+  read measurement shows it narrows the result — sevDesk silently ignores
+  what it does not understand.
 - Pin the API version: an explicit `X-Version` header on every request.
 - Ad-hoc exception: none. If sevDesk needs non-standard encoding, the typed
   param struct owns the encoding in one place.

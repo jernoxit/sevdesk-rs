@@ -68,7 +68,17 @@ good: isPercentage "2" -> SevdeskError::Decode naming `isPercentage`
 
 ## Read types and their enums are `#[non_exhaustive]`
 
-A field or variant added later is no breaking change (project owner, 2026-11-22). Not on query and draft types: there it would break `..Default::default()` for consumers.
+A field or variant added later is no breaking change (project owner, 2026-11-22). Not on query types: there it would break `..Default::default()` for consumers.
+
+## A request type maps every writable field, and none must be filled
+
+A draft splits into a required part of exhaustive named fields (what a request cannot do without, or what would be a silent sevDesk default) and an `options` struct with `Default` and `#[non_exhaustive]`, set by assignment (project owner, 2026-11-22). A writable field enters the API only after a write measurement shows sevDesk stores it; a filter only after a read measurement shows it narrows the result — sevDesk silently ignores what it does not understand.
+
+```rust
+// good
+let mut draft = InvoiceDraft { contact, invoice_date, currency, show_net: true, /* required */ options: InvoiceOptions::default() };
+draft.options.foot_text = Some("…".into());
+```
 
 ## Where a measurement contradicts the OpenAPI spec, the measurement wins
 
