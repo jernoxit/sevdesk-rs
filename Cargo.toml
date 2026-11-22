@@ -123,6 +123,17 @@ name = "filter_setup_probe"
 path = "tests/filter_setup_probe/main.rs"
 test = false
 
+# Writes PERMANENT objects (an invoice draft, a credit note draft, a voucher
+# draft, a contact with address and communication way, a transaction) through
+# the crate's own request types and checks every field and every new query
+# parameter; never part of a plain `cargo test`; run with
+# `just test-live --test request_gate case1` (`just test-live` appends
+# `-- --ignored --nocapture` itself).
+[[test]]
+name = "request_gate"
+path = "tests/request_gate/main.rs"
+test = false
+
 # Keeps the target name `fixtures` (tests/fixtures/ holds the JSON recordings).
 [[test]]
 name = "fixtures"
