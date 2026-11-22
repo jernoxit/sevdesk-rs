@@ -31,9 +31,9 @@ fn new_organisation_contact_body() {
         body(&c),
         json!({"name": "Praxis GmbH", "category": {"id": 3, "objectName": "Category"}, "status": 1000})
     );
-    c.buyer_reference = Some("-".into());
-    c.vat_number = Some("DE999999999".into());
-    c.customer_number = Some("K-1".into());
+    c.options.buyer_reference = Some("-".into());
+    c.options.vat_number = Some("DE999999999".into());
+    c.options.customer_number = Some("K-1".into());
     assert_eq!(
         body(&c),
         json!({
@@ -70,6 +70,7 @@ fn contact_update_sends_only_what_is_set() {
         name: Some("N".into()),
         surename: Some("S".into()),
         familyname: Some("F".into()),
+        ..Default::default()
     };
     assert_eq!(
         body(&u),
@@ -87,6 +88,7 @@ fn new_contact_address_body_matches_the_measured_one() {
         city: "Berlin".into(),
         country: ObjectRef::new(GERMANY),
         category: ObjectRef::new(AddressCategoryId::new(43)),
+        options: Default::default(),
     };
     assert_eq!(
         body(&a),
@@ -108,6 +110,7 @@ fn contact_address_update_sends_only_what_is_set() {
         city: Some("C".into()),
         country: Some(ObjectRef::new(GERMANY)),
         category: Some(ObjectRef::new(AddressCategoryId::new(47))),
+        ..Default::default()
     };
     assert_eq!(
         body(&u),
@@ -142,6 +145,7 @@ fn communication_way_update_sends_only_what_is_set() {
         value: Some("a@example.com".into()),
         key: Some(ObjectRef::new(CommunicationWayKeyId::new(8))),
         main: Some(false),
+        ..Default::default()
     };
     assert_eq!(
         body(&u),
@@ -254,6 +258,7 @@ async fn create_contact_address_decodes_the_measured_answer() {
             city: "Berlin".into(),
             country: ObjectRef::new(GERMANY),
             category: ObjectRef::new(AddressCategoryId::new(43)),
+            options: Default::default(),
         })
         .await
         .unwrap();
@@ -363,4 +368,119 @@ async fn listings_send_the_contact_filter_and_keep_only_that_contacts_rows() {
     let ways = c.communication_ways(ContactId::new(9)).await.unwrap();
     assert_eq!(ways.len(), 1);
     assert_eq!(ways[0].value.as_deref(), Some("a@example.com"));
+}
+
+#[test]
+fn new_contact_with_all_options_sends_every_field_as_measured() {
+    let mut c = NewContact::new(ContactName::Person {
+        surename: "Probe".into(),
+        familyname: "Halter".into(),
+    });
+    let o = &mut c.options;
+    o.status = Some(ContactStatus::Pending);
+    o.buyer_reference = Some("B".into());
+    o.vat_number = Some("DE1".into());
+    o.customer_number = Some("K".into());
+    o.parent = Some(ObjectRef::new(ContactId::new(141661521)));
+    o.titel = Some("Probe-Titel".into());
+    o.description = Some("probe description".into());
+    o.academic_title = Some("Dr.".into());
+    o.gender = Some("m".into());
+    o.name2 = Some("Probe-Name2".into());
+    o.birthday = Some(time::macros::date!(1990 - 05 - 17));
+    o.bank_account = Some("DE02120300000000202051".into());
+    o.bank_number = Some("12030000".into());
+    o.default_cashback_time = Some(14);
+    o.default_cashback_percent_bp = Some(250);
+    o.default_time_to_pay = Some(21);
+    o.tax_number = Some("12/345/67890".into());
+    o.tax_office = Some("Finanzamt Probe".into());
+    o.exempt_vat = Some(true);
+    o.default_discount_amount = Some(Amount::from_minor(500));
+    o.government_agency = Some(true);
+    assert_eq!(
+        body(&c),
+        json!({
+            "surename": "Probe", "familyname": "Halter",
+            "category": {"id": 3, "objectName": "Category"},
+            "status": 500,
+            "buyerReference": "B", "vatNumber": "DE1", "customerNumber": "K",
+            "parent": {"id": 141661521, "objectName": "Contact"},
+            "titel": "Probe-Titel", "description": "probe description",
+            "academicTitle": "Dr.", "gender": "m", "name2": "Probe-Name2",
+            "birthday": "1990-05-17",
+            "bankAccount": "DE02120300000000202051", "bankNumber": "12030000",
+            "defaultCashbackTime": 14, "defaultCashbackPercent": "2.50",
+            "defaultTimeToPay": 21,
+            "taxNumber": "12/345/67890", "taxOffice": "Finanzamt Probe",
+            "exemptVat": true, "defaultDiscountAmount": "5.00",
+            "governmentAgency": true
+        })
+    );
+}
+
+#[test]
+fn contact_update_with_the_measured_fields_sends_them() {
+    let u = ContactUpdate {
+        status: Some(ContactStatus::Pending),
+        category: Some(ObjectRef::new(ContactCategoryId::new(2))),
+        parent: Some(ObjectRef::new(ContactId::new(9))),
+        titel: Some("T".into()),
+        description: Some("D".into()),
+        academic_title: Some("Dr.".into()),
+        gender: Some("m".into()),
+        name2: Some("N2".into()),
+        birthday: Some(time::macros::date!(1990 - 05 - 17)),
+        bank_account: Some("DE02".into()),
+        bank_number: Some("1".into()),
+        default_cashback_time: Some(14),
+        default_cashback_percent_bp: Some(250),
+        default_time_to_pay: Some(21),
+        tax_number: Some("TN".into()),
+        tax_office: Some("TO".into()),
+        exempt_vat: Some(true),
+        default_discount_amount: Some(Amount::from_minor(500)),
+        government_agency: Some(false),
+        ..Default::default()
+    };
+    assert_eq!(
+        body(&u),
+        json!({
+            "category": {"id": 2, "objectName": "Category"},
+            "status": 500,
+            "parent": {"id": 9, "objectName": "Contact"},
+            "titel": "T", "description": "D", "academicTitle": "Dr.",
+            "gender": "m", "name2": "N2", "birthday": "1990-05-17",
+            "bankAccount": "DE02", "bankNumber": "1",
+            "defaultCashbackTime": 14, "defaultCashbackPercent": "2.50",
+            "defaultTimeToPay": 21, "taxNumber": "TN", "taxOffice": "TO",
+            "exemptVat": true, "defaultDiscountAmount": "5.00",
+            "governmentAgency": false
+        })
+    );
+}
+
+#[test]
+fn address_name_and_communication_way_type_are_sent_when_set() {
+    let mut a = NewContactAddress {
+        contact: ObjectRef::new(ContactId::new(1)),
+        street: "S".into(),
+        zip: "Z".into(),
+        city: "C".into(),
+        country: ObjectRef::new(GERMANY),
+        category: ObjectRef::new(AddressCategoryId::new(43)),
+        options: Default::default(),
+    };
+    a.options.name = Some("Probe Name".into());
+    assert_eq!(body(&a)["name"], json!("Probe Name"));
+    let u = ContactAddressUpdate {
+        name: Some("Probe Name".into()),
+        ..Default::default()
+    };
+    assert_eq!(body(&u), json!({"name": "Probe Name"}));
+    let w = CommunicationWayUpdate {
+        kind: Some(CommunicationWayType::Phone),
+        ..Default::default()
+    };
+    assert_eq!(body(&w), json!({"type": "PHONE"}));
 }

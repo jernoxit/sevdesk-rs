@@ -156,6 +156,7 @@ pub(crate) fn new_address(contact: ContactId) -> NewContactAddress {
         city: CITY.into(),
         country: ObjectRef::new(GERMANY),
         category: ObjectRef::new(BILLING_ADDRESS),
+        options: Default::default(),
     }
 }
 
@@ -181,8 +182,8 @@ pub(crate) async fn b2b_customer(ctx: &Ctx, record: bool) -> Customer {
     let rec = |name: &'static str| record.then_some(name);
     let name = format!("SDRS-LIVE Testkunde GmbH {}", ctx.marker);
     let mut new = NewContact::new(ContactName::Organisation { name: name.clone() });
-    new.buyer_reference = Some("-".into());
-    new.customer_number = Some(ctx.marker.clone());
+    new.options.buyer_reference = Some("-".into());
+    new.options.customer_number = Some(ctx.marker.clone());
     let contact: Contact = objects_one(&ok(ctx
         .raw(
             Method::POST,

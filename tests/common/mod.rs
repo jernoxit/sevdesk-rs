@@ -43,17 +43,16 @@ pub fn eur(minor: i64) -> Amount {
 }
 
 pub fn new_transaction() -> NewTransaction {
-    NewTransaction {
+    let mut new = NewTransaction {
         value_date: datetime!(2026-08-15 12:00 +2),
-        entry_date: None,
         amount: eur(1),
         payee_payer_name: "Stripe Payments Europe, Limited".into(),
-        paymt_purpose: Some("txn_1".into()),
         status: TransactionStatus::Created,
         check_account: ObjectRef::new(CheckAccountId::new(6306017)),
-        source_transaction: None,
-        target_transaction: None,
-    }
+        options: Default::default(),
+    };
+    new.options.paymt_purpose = Some("txn_1".into());
+    new
 }
 
 /// A minimal gross invoice draft: every optional absent.

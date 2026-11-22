@@ -254,17 +254,15 @@ async fn transaction_create_update_and_check_account_update_payloads() {
         .mount(&server)
         .await;
     let c = client(&server);
-    let new = NewTransaction {
+    let mut new = NewTransaction {
         value_date: datetime!(2026-08-15 12:00 +2),
-        entry_date: None,
         amount: eur(-1500),
         payee_payer_name: "Stripe Payments Europe, Limited".into(),
-        paymt_purpose: Some("txn_1".into()),
         status: TransactionStatus::Created,
         check_account: ObjectRef::new(CheckAccountId::new(6306017)),
-        source_transaction: None,
-        target_transaction: None,
+        options: Default::default(),
     };
+    new.options.paymt_purpose = Some("txn_1".into());
     c.create_transaction(&new).await.unwrap();
     c.update_transaction(
         TransactionId::new(1897813785),
@@ -386,7 +384,7 @@ async fn posted_transaction_body(new: &NewTransaction) -> serde_json::Value {
 #[tokio::test]
 async fn transaction_create_sends_entry_date_in_the_value_date_format_when_set() {
     let mut new = common::new_transaction();
-    new.entry_date = Some(datetime!(2026-10-10 12:00 +2));
+    new.options.entry_date = Some(datetime!(2026-10-10 12:00 +2));
     let body = posted_transaction_body(&new).await;
     assert_eq!(body["valueDate"], "2026-08-15T12:00:00+02:00");
     assert_eq!(body["entryDate"], "2026-10-10T12:00:00+02:00");
@@ -396,4 +394,86 @@ async fn transaction_create_sends_entry_date_in_the_value_date_format_when_set()
 async fn transaction_create_omits_entry_date_when_none() {
     let body = posted_transaction_body(&common::new_transaction()).await;
     assert!(body.as_object().unwrap().get("entryDate").is_none());
+}
+
+#[allow(clippy::unwrap_used)] // helper: clippy exempts only `#[test]` fns
+fn to_json(v: &impl serde::Serialize) -> serde_json::Value {
+    serde_json::to_value(v).unwrap()
+}
+
+#[test]
+fn transaction_create_with_all_options_sends_every_field() {
+    let mut new = common::new_transaction();
+    new.options.entry_date = Some(datetime!(2026-11-20 12:00 +1));
+    new.options.payee_payer_acct_no = Some("DE89370400440532013000".into());
+    new.options.payee_payer_bank_code = Some("COBADEFFXXX".into());
+    new.options.source_transaction = Some(ObjectRef::new(TransactionId::new(1)));
+    new.options.target_transaction = Some(ObjectRef::new(TransactionId::new(2)));
+    assert_eq!(
+        to_json(&new),
+        json!({
+            "valueDate": "2026-08-15T12:00:00+02:00",
+            "amount": "0.01",
+            "payeePayerName": "Stripe Payments Europe, Limited",
+            "status": 100,
+            "checkAccount": {"id": 6306017, "objectName": "CheckAccount"},
+            "entryDate": "2026-11-20T12:00:00+01:00",
+            "paymtPurpose": "txn_1",
+            "payeePayerAcctNo": "DE89370400440532013000",
+            "payeePayerBankCode": "COBADEFFXXX",
+            "sourceTransaction": {"id": 1, "objectName": "CheckAccountTransaction"},
+            "targetTransaction": {"id": 2, "objectName": "CheckAccountTransaction"}
+        })
+    );
+}
+
+#[test]
+fn transaction_update_with_all_fields_sends_every_field() {
+    let update = TransactionUpdate {
+        status: Some(TransactionStatus::Booked),
+        source_transaction: Some(ObjectRef::new(TransactionId::new(1))),
+        target_transaction: Some(ObjectRef::new(TransactionId::new(2))),
+        value_date: Some(datetime!(2026-11-20 12:00 +1)),
+        entry_date: Some(datetime!(2026-11-21 12:00 +1)),
+        paymt_purpose: Some("p".into()),
+        amount: Some(eur(6123)),
+        payee_payer_name: Some("Probe Payee".into()),
+        payee_payer_acct_no: Some("DE89370400440532013000".into()),
+        payee_payer_bank_code: Some("COBADEFFXXX".into()),
+        check_account: Some(ObjectRef::new(CheckAccountId::new(6306699))),
+    };
+    assert_eq!(
+        to_json(&update),
+        json!({
+            "status": 400,
+            "sourceTransaction": {"id": 1, "objectName": "CheckAccountTransaction"},
+            "targetTransaction": {"id": 2, "objectName": "CheckAccountTransaction"},
+            "valueDate": "2026-11-20T12:00:00+01:00",
+            "entryDate": "2026-11-21T12:00:00+01:00",
+            "paymtPurpose": "p",
+            "amount": "61.23",
+            "payeePayerName": "Probe Payee",
+            "payeePayerAcctNo": "DE89370400440532013000",
+            "payeePayerBankCode": "COBADEFFXXX",
+            "checkAccount": {"id": 6306699, "objectName": "CheckAccount"}
+        })
+    );
+    assert_eq!(to_json(&TransactionUpdate::default()), json!({}));
+}
+
+#[test]
+fn file_import_account_options_are_optional_and_serialize() {
+    let mut new = CreateFileImportAccount {
+        name: "Konto".into(),
+        import_type: ImportType::Csv,
+        options: Default::default(),
+    };
+    assert_eq!(to_json(&new), json!({"name": "Konto", "importType": "CSV"}));
+    new.options.accounting_number = Some(1201);
+    new.options.iban = Some("DE02120300000000202051".into());
+    assert_eq!(
+        to_json(&new),
+        json!({"name": "Konto", "importType": "CSV",
+               "accountingNumber": 1201, "iban": "DE02120300000000202051"})
+    );
 }

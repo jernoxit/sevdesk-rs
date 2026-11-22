@@ -204,17 +204,16 @@ impl Ctx {
         minor: i64,
         at: OffsetDateTime,
     ) -> NewTransaction {
-        NewTransaction {
+        let mut new = NewTransaction {
             value_date: at,
-            entry_date: None,
             amount: eur(minor),
             payee_payer_name: SUPPLIER.into(),
-            paymt_purpose: Some(self.marker.clone()),
             status: TransactionStatus::Created,
             check_account: ObjectRef::new(account(on)),
-            source_transaction: None,
-            target_transaction: None,
-        }
+            options: Default::default(),
+        };
+        new.options.paymt_purpose = Some(self.marker.clone());
+        new
     }
 
     pub(crate) fn draft(&self) -> VoucherDraft {

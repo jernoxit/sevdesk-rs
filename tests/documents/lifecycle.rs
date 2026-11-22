@@ -360,14 +360,15 @@ async fn send_via_email_posts_the_typed_body_and_ignores_the_answer() {
             .mount(&server)
             .await;
     }
-    let mail = SendViaEmail {
+    let mut mail = SendViaEmail {
         to_email: "kunde@example.invalid".into(),
         subject: "Rechnung".into(),
         text: "<p>Hallo</p>".into(),
         copy: true,
-        additional_attachments: Some("12,13".into()),
-        send_xml: true,
+        options: SendViaEmailOptions::default(),
     };
+    mail.options.additional_attachments = Some("12,13".into());
+    mail.options.send_xml = true;
     let c = client(&server);
     c.send_invoice_via_email(InvoiceId::new(5), &mail)
         .await
@@ -394,8 +395,7 @@ async fn send_via_email_leaves_absent_optionals_out() {
         subject: "S".into(),
         text: "T".into(),
         copy: false,
-        additional_attachments: None,
-        send_xml: false,
+        options: SendViaEmailOptions::default(),
     };
     client(&server)
         .send_invoice_via_email(InvoiceId::new(5), &mail)

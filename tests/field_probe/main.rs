@@ -393,7 +393,7 @@ async fn case1_writable_fields() {
         surename: "SDRS-FLD".into(),
         familyname: format!("Probe {}", ctx.marker),
     });
-    new.customer_number = Some(ctx.marker.clone());
+    new.options.customer_number = Some(ctx.marker.clone());
     let contact = ctx.c.create_contact(&new).await.unwrap();
     let contact_id = contact.id.get();
     created("Contact", contact_id);

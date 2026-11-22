@@ -1,7 +1,7 @@
 //! The `sendBy` payload.
 
 use crate::status::*;
-use serde::Serialize;
+use serde::{Serialize, Serializer};
 
 /// `PUT /Invoice/{id}/sendBy` and `PUT /CreditNote/{id}/sendBy`.
 #[derive(Debug, Clone, Copy, Serialize)]
@@ -33,8 +33,7 @@ impl SendBy {
 /// `POST /Invoice/{id}/sendViaEmail` and `POST /CreditNote/{id}/sendViaEmail`.
 ///
 /// Per spec, unmeasured.
-#[derive(Debug, Clone, Serialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Debug, Clone)]
 pub struct SendViaEmail {
     pub to_email: String,
     pub subject: String,
@@ -42,11 +41,59 @@ pub struct SendViaEmail {
     pub text: String,
     /// Send a copy to the sender.
     pub copy: bool,
+    pub options: SendViaEmailOptions,
+}
+
+/// The optional fields of a [`SendViaEmail`]; unmeasured like the call.
+#[derive(Debug, Clone, Default)]
+#[non_exhaustive]
+pub struct SendViaEmailOptions {
     /// Further documents to attach, as the spec's comma-separated list of ids;
     /// left out when `None`.
-    #[serde(skip_serializing_if = "Option::is_none")]
     pub additional_attachments: Option<String>,
     /// Attach the e-invoice XML; sent only when `true`.
-    #[serde(skip_serializing_if = "std::ops::Not::not")]
     pub send_xml: bool,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct SendViaEmailWire {
+    to_email: String,
+    subject: String,
+    text: String,
+    copy: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    additional_attachments: Option<String>,
+    #[serde(skip_serializing_if = "std::ops::Not::not")]
+    send_xml: bool,
+}
+
+impl From<SendViaEmail> for SendViaEmailWire {
+    fn from(mail: SendViaEmail) -> Self {
+        let SendViaEmail {
+            to_email,
+            subject,
+            text,
+            copy,
+            options,
+        } = mail;
+        let SendViaEmailOptions {
+            additional_attachments,
+            send_xml,
+        } = options;
+        Self {
+            to_email,
+            subject,
+            text,
+            copy,
+            additional_attachments,
+            send_xml,
+        }
+    }
+}
+
+impl Serialize for SendViaEmail {
+    fn serialize<S: Serializer>(&self, s: S) -> Result<S::Ok, S::Error> {
+        SendViaEmailWire::from(self.clone()).serialize(s)
+    }
 }

@@ -81,17 +81,16 @@ async fn error_422_offline_account() {
 }
 
 fn sample_transaction() -> NewTransaction {
-    NewTransaction {
+    let mut new = NewTransaction {
         value_date: time::macros::datetime!(2026-08-15 12:00 +2),
-        entry_date: None,
         amount: eur(-100),
         payee_payer_name: "Stripe Payments Europe, Limited".into(),
-        paymt_purpose: Some("x".into()),
         status: TransactionStatus::Created,
         check_account: ObjectRef::new(CheckAccountId::new(6306016)),
-        source_transaction: None,
-        target_transaction: None,
-    }
+        options: Default::default(),
+    };
+    new.options.paymt_purpose = Some("x".into());
+    new
 }
 
 #[test]
