@@ -52,7 +52,7 @@ pub use codec::{format_decimal, parse_amount};
 pub use currency::{CurrencyCode, InvalidCurrencyCode};
 pub use decimal::{Decimal, ParseDecimalError};
 pub use document_payload::*;
-pub use error::{DecodeError, KnownCode, SevdeskError};
+pub use error::{KnownCode, SevdeskError};
 pub use ids::*;
 pub use pacing::Pacing;
 pub use payload::*;

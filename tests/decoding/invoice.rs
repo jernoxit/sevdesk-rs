@@ -171,12 +171,14 @@ async fn decode_error_names_the_field_path_and_the_status() {
         .await
         .unwrap_err();
     match &err {
-        SevdeskError::Decode(e) => {
-            assert_eq!(
-                (e.status, e.path.as_str(), e.context),
-                (200, "[0].sumNet", "Invoice")
-            );
-            // The message is the one the unboxed variant had.
+        SevdeskError::Decode {
+            context,
+            status,
+            path,
+            ..
+        } => {
+            assert_eq!((*status, &**path, *context), (200, "[0].sumNet", "Invoice"));
+            // The message the variant renders.
             assert!(
                 err.to_string().starts_with(
                     "sevDesk response does not decode (Invoice, HTTP 200) at `[0].sumNet`: "

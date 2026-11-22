@@ -7,7 +7,7 @@
 //! status. What a body's `objects` look like is decoded one layer up.
 
 use crate::Amount;
-use crate::error::{ApiErrorBody, DecodeError, SevdeskError};
+use crate::error::{ApiErrorBody, SevdeskError};
 use crate::pacing::{Pacer, Pacing};
 use crate::wire::Guard;
 use reqwest::header::{ACCEPT, AUTHORIZATION, HeaderMap, HeaderValue, RETRY_AFTER};
@@ -253,13 +253,11 @@ fn decode<T: DeserializeOwned>(
     context: &'static str,
     status: u16,
 ) -> Result<T, SevdeskError> {
-    let fail = |path: String, source| {
-        SevdeskError::from(DecodeError {
-            context,
-            status,
-            path,
-            source,
-        })
+    let fail = |path: String, source| SevdeskError::Decode {
+        context,
+        status,
+        path: path.into(),
+        source,
     };
     let mut de = serde_json::Deserializer::from_str(text);
     let value = serde_path_to_error::deserialize(&mut de)
@@ -270,14 +268,13 @@ fn decode<T: DeserializeOwned>(
 
 impl Body {
     fn objects(&self, context: &'static str) -> Result<Box<RawValue>, SevdeskError> {
-        let envelope: Envelope = serde_json::from_str(&self.text).map_err(|source| {
-            SevdeskError::from(DecodeError {
+        let envelope: Envelope =
+            serde_json::from_str(&self.text).map_err(|source| SevdeskError::Decode {
                 context,
                 status: self.status,
                 path: ".".into(),
                 source,
-            })
-        })?;
+            })?;
         match envelope.objects {
             Some(raw) if raw.get() != "null" => Ok(raw),
             _ => Err(SevdeskError::DriftGuard {

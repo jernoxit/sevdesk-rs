@@ -88,33 +88,6 @@ impl KnownCode {
     }
 }
 
-/// Details of a body that is valid JSON but not the shape this crate reads.
-///
-/// `path` is the field path inside the body (`[0].sumNet`, `.` for the
-/// root) and `status` the HTTP status of the response. After a write a
-/// decode error does NOT mean "not written": the write was answered
-/// (`status`), only its answer is unreadable, so re-read before retrying.
-///
-/// The fields are public: this is plain data the consumer matches on, and the
-/// type is `#[non_exhaustive]`, so only this crate builds it and a new field
-/// is not a breaking change. It sits behind a `Box` in
-/// [`SevdeskError::Decode`] so that the error stays small.
-#[derive(Debug, thiserror::Error)]
-#[non_exhaustive]
-#[error("sevDesk response does not decode ({context}, HTTP {status}) at `{path}`: {source}")]
-pub struct DecodeError {
-    pub context: &'static str,
-    pub status: u16,
-    pub path: String,
-    pub source: serde_json::Error,
-}
-
-impl From<DecodeError> for SevdeskError {
-    fn from(error: DecodeError) -> Self {
-        Self::Decode(Box::new(error))
-    }
-}
-
 /// Marked `#[non_exhaustive]`: a new variant is not a breaking change, so
 /// callers match with a `_` arm.
 #[derive(Debug, thiserror::Error)]
@@ -134,10 +107,20 @@ pub enum SevdeskError {
     /// No usable answer: connection, timeout, unreadable body.
     #[error("sevDesk transport: {0}")]
     Transport(#[from] reqwest::Error),
-    /// The body is valid JSON but not the shape this crate reads. Boxed to keep
-    /// `SevdeskError` small; see [`DecodeError`].
-    #[error(transparent)]
-    Decode(Box<DecodeError>),
+    /// The body is valid JSON but not the shape this crate reads.
+    ///
+    /// `context` names what was being read, `status` is the HTTP status of the
+    /// response, `path` the field path inside the body (`[0].sumNet`, `.` for
+    /// the root) and `source` the serde error. After a write a decode error
+    /// does NOT mean "not written": the write was answered (`status`), only
+    /// its answer is unreadable, so re-read before retrying.
+    #[error("sevDesk response does not decode ({context}, HTTP {status}) at `{path}`: {source}")]
+    Decode {
+        context: &'static str,
+        status: u16,
+        path: Box<str>,
+        source: serde_json::Error,
+    },
     /// The body decoded but none of the fields this crate relies on is there:
     /// sevDesk changed shape, and a defaulted object would be a lie.
     #[error("sevDesk response drifted ({context}): {detail}")]
@@ -229,9 +212,9 @@ mod tests {
     use super::SevdeskError;
 
     /// A consumer that returns `Result<T, SevdeskError>` everywhere reports
-    /// `clippy::result_large_err` when the error is large. `Decode` is boxed to
-    /// keep it small; this pins the size so a new large payload on any variant
-    /// fails here instead of in every consumer. Measured after boxing `Decode`
+    /// `clippy::result_large_err` when the error is large. `Decode` carries its
+    /// path as `Box<str>` to stay small; this pins the size so a new large payload on any variant
+    /// fails here instead of in every consumer. Measured with the unboxed `Decode`
     /// (the largest remaining variant is `Api`: status, code, message).
     const MAX_ERROR_SIZE: usize = 48;
 
