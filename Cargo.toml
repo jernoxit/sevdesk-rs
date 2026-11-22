@@ -113,6 +113,16 @@ name = "field_probe"
 path = "tests/field_probe/main.rs"
 test = false
 
+# Writes PERMANENT objects (a voucher draft, a tag, a cost centre, a recurring
+# invoice draft, tag relations) to the test account and measures the list
+# filters that needed such data; never part of a plain `cargo test`; run with
+# `just test-live --test filter_setup_probe case1` (`just test-live` appends
+# `-- --ignored --nocapture` itself).
+[[test]]
+name = "filter_setup_probe"
+path = "tests/filter_setup_probe/main.rs"
+test = false
+
 # Keeps the target name `fixtures` (tests/fixtures/ holds the JSON recordings).
 [[test]]
 name = "fixtures"
