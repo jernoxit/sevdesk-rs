@@ -75,7 +75,8 @@ Where a measurement contradicts sevDesk's OpenAPI spec, the measurement wins.
   answers 422/322 ("Already enshrined by payment") and deleting the transaction
   409/159.
 - **Other refusals:** `cancelInvoice` on a draft is an error in HTTP 200 (code
-  423); a credit note with `refSrcInvoice` on a draft invoice answers 422/251.
+  423); a credit note with `refSrcInvoice` on a draft invoice answers 422/251; one that sets `deliveryDateUntil` while that invoice has none
+  answers 422/463.
 - **Timeouts inside sevDesk** can come as an error body such as `cURL error 28
   … 10001 milliseconds`. The write may have happened: re-read before retrying.
 - **The transaction log** (`CheckAccountTransactionLog`, undocumented) filters

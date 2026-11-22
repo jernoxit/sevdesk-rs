@@ -90,23 +90,27 @@ async fn existing_customer(ctx: &Ctx) -> Customer {
 }
 
 /// An EXISTING enshrined invoice (read-only list) that no cancellation invoice
-/// cancels and that is big enough for the credit note.
+/// cancels and that is big enough for the credit note. One with a
+/// `deliveryDateUntil` is preferred: sevDesk refuses a credit note's
+/// `deliveryDateUntil` (422, code 463) when the source invoice has none.
 async fn existing_origin(ctx: &Ctx) -> Invoice {
     let query = InvoiceQuery {
         page: Some(Page::new(1000, 0).unwrap()),
         ..Default::default()
     };
     let all = ctx.c.list_invoices(&query).await.unwrap();
+    let usable = |i: &&Invoice| {
+        i.invoice_type == Some(InvoiceType::Invoice)
+            && i.enshrined.is_some()
+            && matches!(i.status, Some(InvoiceStatus::Open | InvoiceStatus::Paid))
+            && i.contact.is_some()
+            && i.sum_gross
+                .is_some_and(|g| g.minor() >= CREDIT_NET * 119 / 100)
+            && !all.iter().any(|other| other.cancels(i.id))
+    };
     all.iter()
-        .find(|i| {
-            i.invoice_type == Some(InvoiceType::Invoice)
-                && i.enshrined.is_some()
-                && matches!(i.status, Some(InvoiceStatus::Open | InvoiceStatus::Paid))
-                && i.contact.is_some()
-                && i.sum_gross
-                    .is_some_and(|g| g.minor() >= CREDIT_NET * 119 / 100)
-                && !all.iter().any(|other| other.cancels(i.id))
-        })
+        .find(|i| usable(i) && i.delivery_date_until.is_some())
+        .or_else(|| all.iter().find(usable))
         .cloned()
         .unwrap_or_else(|| {
             panic!(

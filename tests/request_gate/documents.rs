@@ -191,6 +191,7 @@ pub(crate) async fn credit_note(g: &mut Gate<'_>) -> serde_json::Value {
         Ok(number) => number,
         Err(e) => panic!("next_credit_note_number failed: {e}"),
     };
+    let origin_until = g.inp.origin.delivery_date_until;
     let mut draft = CreditNoteDraft {
         credit_note_number: number.clone(),
         contact: ObjectRef::new(origin_contact),
@@ -207,7 +208,9 @@ pub(crate) async fn credit_note(g: &mut Gate<'_>) -> serde_json::Value {
         options: Default::default(),
     };
     let o = &mut draft.options;
-    o.delivery_date_until = Some(datetime!(2026-10-29 0:00 +1));
+    // The source invoice's own value: sevDesk refuses it (422, 463) when the
+    // source has none.
+    o.delivery_date_until = origin_until;
     o.head_text = Some("Gate credit head text".into());
     o.foot_text = Some("Gate credit foot text".into());
     o.ref_src_invoice = Some(ObjectRef::new(origin_id));
@@ -259,7 +262,13 @@ pub(crate) async fn credit_note(g: &mut Gate<'_>) -> serde_json::Value {
             "sendDate",
             "sendType",
         ],
-        &[],
+        // No source invoice with a `deliveryDateUntil` in the account: left
+        // unset, reported as UNTESTED.
+        if origin_until.is_none() {
+            &["deliveryDateUntil"]
+        } else {
+            &[]
+        },
     );
     expect_keys(
         "save_credit_note/pos",

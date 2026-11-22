@@ -52,7 +52,9 @@ pub struct CreditNoteDraft {
 #[derive(Debug, Clone, Default)]
 #[non_exhaustive]
 pub struct CreditNoteOptions {
-    /// End of the service period.
+    /// End of the service period. With `ref_src_invoice` set, sevDesk refuses
+    /// it (HTTP 422, code 463) when the source invoice has no
+    /// `deliveryDateUntil` (measured 2026-11-22).
     pub delivery_date_until: Option<OffsetDateTime>,
     pub head_text: Option<String>,
     pub foot_text: Option<String>,

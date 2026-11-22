@@ -37,6 +37,10 @@ pub enum KnownCode {
     /// 456: a credit note's tax rate differs from its origin invoice's. Also
     /// the answer to an `UNDERACHIEVEMENT` credit note without `refSrcInvoice`.
     TaxRateDiffersFromOrigin,
+    /// 463: a credit note sets `deliveryDateUntil` while its source invoice
+    /// (`refSrcInvoice`) has none (HTTP 422, `saveCreditNote`; measured
+    /// 2026-11-22).
+    CreditNoteDeliveryDateUntilNotInSource,
     /// 750: the invoice is already paid.
     InvoiceAlreadyPaid,
     /// 751: the voucher is already paid (booking over the total is refused).
@@ -71,6 +75,7 @@ impl KnownCode {
             322 => Some(Self::EnshrinedLock),
             423 => Some(Self::CancelOnDraft),
             456 => Some(Self::TaxRateDiffersFromOrigin),
+            463 => Some(Self::CreditNoteDeliveryDateUntilNotInSource),
             750 => Some(Self::InvoiceAlreadyPaid),
             751 => Some(Self::VoucherAlreadyPaid),
             7200 => Some(Self::CreditNoteBookingRefused),
