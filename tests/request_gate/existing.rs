@@ -119,7 +119,7 @@ pub(crate) async fn facts(ctx: &Ctx) -> (Facts, Option<String>) {
         get_all(
             ctx,
             &format!(
-                "/Transaction?checkAccount[id]={BANK}&checkAccount[objectName]=CheckAccount&limit=1000"
+                "/CheckAccountTransaction?checkAccount[id]={BANK}&checkAccount[objectName]=CheckAccount&limit=1000"
             ),
         )
         .await,
