@@ -33,6 +33,9 @@ mod filter_cases;
 mod filter_judge;
 mod filter_table;
 mod filters;
+mod filters_followup;
+mod followup_hyp;
+mod followup_more;
 #[path = "../live_write/harness.rs"]
 mod harness;
 mod sample;
