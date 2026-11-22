@@ -94,6 +94,15 @@ name = "quantity_probe"
 path = "tests/quantity_probe/main.rs"
 test = false
 
+# Writes PERMANENT documents (an invoice, its cancellation, a credit note) to the
+# test account; never part of a plain `cargo test`; run with
+# `just test-live --test answer_probe case1` (`just test-live` appends
+# `-- --ignored --nocapture` itself).
+[[test]]
+name = "answer_probe"
+path = "tests/answer_probe/main.rs"
+test = false
+
 # Keeps the target name `fixtures` (tests/fixtures/ holds the JSON recordings).
 [[test]]
 name = "fixtures"
