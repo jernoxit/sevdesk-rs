@@ -70,7 +70,6 @@ pub(super) fn save_invoice() -> SaveInvoice {
     o.is_e_invoice = true;
     o.address = text();
     o.small_settlement = Some(true);
-    o.tax_set = Some(ObjectRef::new(TaxSetId::new(1)));
     o.send_date = Some(day());
     o.pay_date = Some(day());
     o.send_type = Some(SendType::Vpdf);
@@ -109,7 +108,6 @@ pub(super) fn save_credit_note() -> SaveCreditNote {
     o.is_e_invoice = true;
     o.address = text();
     o.small_settlement = Some(true);
-    o.tax_set = Some(ObjectRef::new(TaxSetId::new(1)));
     o.send_date = Some(day());
     o.send_type = Some(SendType::Vpdf);
     SaveCreditNote::new(draft, vec![position()])

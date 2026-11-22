@@ -67,9 +67,6 @@ pub struct InvoiceOptions {
     /// Small-business scheme (`smallSettlement`); measured: stored
     /// (2026-11-22).
     pub small_settlement: Option<bool>,
-    /// The tax set of the "Update 1.0" tax model; measured: stored
-    /// (2026-11-22). `tax_rule` stays the model this crate uses.
-    pub tax_set: Option<ObjectRef<TaxSetId>>,
     /// Only records a date on the draft; it does not send anything (measured
     /// 2026-11-22: stored, status stays 100). Sent as `dd.mm.yyyy`.
     #[deprecated(
@@ -146,8 +143,6 @@ struct InvoiceWire {
     address: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     small_settlement: Option<bool>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    tax_set: Option<ObjectRef<TaxSetId>>,
     #[serde(
         skip_serializing_if = "Option::is_none",
         serialize_with = "ser_german_date_opt"
@@ -199,7 +194,6 @@ impl From<InvoiceDraft> for InvoiceWire {
             is_e_invoice,
             address,
             small_settlement,
-            tax_set,
             send_date,
             pay_date,
             send_type,
@@ -235,7 +229,6 @@ impl From<InvoiceDraft> for InvoiceWire {
             is_e_invoice,
             address,
             small_settlement,
-            tax_set,
             send_date,
             pay_date,
             send_type,

@@ -103,6 +103,14 @@ pub(super) const SPEC_WRITABLE_NOT_SENT: &[(&str, &str)] = &[
         "ignored by sevDesk (measured 2026-11-22)",
     ),
     (
+        "Model_Invoice.taxSet",
+        "refused on create with taxRule: 422 code 255 'TaxSet is not allowed in new bookkeeping' (measured 2026-11-22)",
+    ),
+    (
+        "Model_creditNote.taxSet",
+        "refused on create with taxRule: 422 code 255 'TaxSet is not allowed in new bookkeeping' (measured 2026-11-22)",
+    ),
+    (
         "Model_Voucher.costCentre",
         "untestable: the test account has no such object (measured 2026-11-22)",
     ),

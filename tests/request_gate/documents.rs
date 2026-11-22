@@ -58,12 +58,7 @@ fn set_deprecated_credit_note_options(o: &mut CreditNoteOptions) {
 pub(crate) async fn invoice(g: &mut Gate<'_>) -> (serde_json::Value, String) {
     let ctx = g.ctx;
     let n = ctx.marker.clone();
-    let (contact, person, pm, tax_set) = (
-        g.inp.customer.contact.id,
-        g.inp.person,
-        g.inp.pm,
-        g.inp.tax_set,
-    );
+    let (contact, person, pm) = (g.inp.customer.contact.id, g.inp.person, g.inp.pm);
     let custom_number = format!("{n}-INV");
     let mut draft = InvoiceDraft {
         contact: ObjectRef::new(contact),
@@ -92,7 +87,6 @@ pub(crate) async fn invoice(g: &mut Gate<'_>) -> (serde_json::Value, String) {
     o.is_e_invoice = true;
     o.address = Some("Gate Address Line 1\nGate Address Line 2".into());
     o.small_settlement = Some(true);
-    o.tax_set = tax_set.map(ObjectRef::new);
     o.pay_date = Some(date!(2026 - 10 - 09));
     set_deprecated_invoice_options(o, custom_number.clone());
     let save = SaveInvoice::new(draft, vec![position(&n, 3, 1234)]);
@@ -128,13 +122,12 @@ pub(crate) async fn invoice(g: &mut Gate<'_>) -> (serde_json::Value, String) {
             "propertyIsEInvoice",
             "address",
             "smallSettlement",
-            "taxSet",
             "sendDate",
             "payDate",
             "sendType",
             "invoiceNumber",
         ],
-        &["taxSet"],
+        &[],
     );
     expect_keys(
         "save_invoice/pos",
@@ -186,7 +179,7 @@ pub(crate) async fn invoice(g: &mut Gate<'_>) -> (serde_json::Value, String) {
 pub(crate) async fn credit_note(g: &mut Gate<'_>) -> serde_json::Value {
     let ctx = g.ctx;
     let n = ctx.marker.clone();
-    let (person, pm, tax_set) = (g.inp.person, g.inp.pm, g.inp.tax_set);
+    let (person, pm) = (g.inp.person, g.inp.pm);
     let origin_id = g.inp.origin.id;
     let origin_contact = g
         .inp
@@ -227,7 +220,6 @@ pub(crate) async fn credit_note(g: &mut Gate<'_>) -> serde_json::Value {
     o.is_e_invoice = true;
     o.address = Some("Gate Credit Line 1\nGate Credit Line 2".into());
     o.small_settlement = Some(true);
-    o.tax_set = tax_set.map(ObjectRef::new);
     set_deprecated_credit_note_options(o);
     let save = SaveCreditNote::new(draft, vec![position(&n, 1, CREDIT_NET)]);
     let sent = serde_json::to_value(&save).unwrap();
@@ -264,11 +256,10 @@ pub(crate) async fn credit_note(g: &mut Gate<'_>) -> serde_json::Value {
             "propertyIsEInvoice",
             "address",
             "smallSettlement",
-            "taxSet",
             "sendDate",
             "sendType",
         ],
-        &["taxSet"],
+        &[],
     );
     expect_keys(
         "save_credit_note/pos",

@@ -21,7 +21,6 @@ pub(crate) struct Inputs {
     pub(crate) pm: PaymentMethodId,
     /// An existing enshrined invoice the credit note refers to.
     pub(crate) origin: Invoice,
-    pub(crate) tax_set: Option<TaxSetId>,
     pub(crate) document: Option<DocumentId>,
     pub(crate) accounting_type: Option<AccountingTypeId>,
     /// A second organisation, the parent of the contact after its update.
@@ -129,7 +128,6 @@ impl Inputs {
         let person = contact_person(ctx).await;
         let origin = existing_origin(ctx).await;
         let own = customer.contact.id.get();
-        let tax_set = one_id(ctx, "/TaxSet?limit=20", &[]).await;
         let document = one_id(ctx, "/Document?limit=20", &[]).await;
         let accounting_type = one_id(ctx, "/AccountingType?limit=20", &[]).await;
         let other_org = one_id(ctx, "/Contact?limit=20", &[own]).await;
@@ -153,7 +151,6 @@ impl Inputs {
             person,
             pm,
             origin,
-            tax_set: tax_set.map(TaxSetId::new),
             document: document.map(DocumentId::new),
             accounting_type: accounting_type.map(AccountingTypeId::new),
             other_org: other_org.map(ContactId::new),

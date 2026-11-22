@@ -213,7 +213,6 @@ fn every_measured_invoice_option_serializes_with_its_measured_encoding() {
     let mut draft = invoice_draft(CurrencyCode::EUR);
     draft.options.address = Some("SDRS Probe\nProbestrasse 9\n10115 Berlin\nGermany".into());
     draft.options.small_settlement = Some(true);
-    draft.options.tax_set = Some(ObjectRef::new(TaxSetId::new(89398)));
     draft.options.pay_date = Some(date!(2026 - 11 - 20));
     #[allow(
         deprecated,
@@ -233,10 +232,6 @@ fn every_measured_invoice_option_serializes_with_its_measured_encoding() {
         json!("SDRS Probe\nProbestrasse 9\n10115 Berlin\nGermany")
     );
     assert_eq!(invoice["smallSettlement"], json!(true));
-    assert_eq!(
-        invoice["taxSet"],
-        json!({"id": 89398, "objectName": "TaxSet"})
-    );
     assert_eq!(invoice["sendDate"], json!("20.11.2026"));
     assert_eq!(invoice["payDate"], json!("20.11.2026"));
     assert_eq!(invoice["sendType"], json!("VPDF"));
@@ -249,7 +244,6 @@ fn every_measured_credit_note_option_serializes_with_its_measured_encoding() {
     let mut draft = credit_note_draft("GU-1", CurrencyCode::EUR);
     draft.options.address = Some("SDRS Probe\nProbestrasse 9".into());
     draft.options.small_settlement = Some(true);
-    draft.options.tax_set = Some(ObjectRef::new(TaxSetId::new(89398)));
     #[allow(
         deprecated,
         reason = "the test pins the encoding of the deprecated options"
@@ -264,7 +258,6 @@ fn every_measured_credit_note_option_serializes_with_its_measured_encoding() {
     let note = &body["creditNote"];
     assert_eq!(note["address"], json!("SDRS Probe\nProbestrasse 9"));
     assert_eq!(note["smallSettlement"], json!(true));
-    assert_eq!(note["taxSet"], json!({"id": 89398, "objectName": "TaxSet"}));
     assert_eq!(note["sendDate"], json!("20.11.2026"));
     assert_eq!(note["sendType"], json!("VPDF"));
     assert_eq!(body["creditNotePosSave"][0]["positionNumber"], json!(3));
@@ -281,7 +274,6 @@ fn an_untouched_options_struct_adds_none_of_the_new_keys() {
     for absent in [
         "address",
         "smallSettlement",
-        "taxSet",
         "sendDate",
         "payDate",
         "sendType",
