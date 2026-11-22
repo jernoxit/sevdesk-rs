@@ -5,6 +5,7 @@ use crate::document_payload::{
 };
 use crate::error::SevdeskError;
 use crate::ids::*;
+use crate::query::ContactQuery;
 use crate::wire::{CommunicationWay, Contact, ContactAddress};
 use reqwest::Method;
 
@@ -17,12 +18,20 @@ fn contact_filter(contact: ContactId) -> [(&'static str, String); 2] {
 }
 
 impl SevdeskClient {
-    /// `GET /Contact?name=…`. The `name` filter is not measured to be an exact
-    /// match: compare on the result.
+    /// `GET /Contact` with the filters of [`ContactQuery`]. The default list
+    /// holds organisations only; see [`crate::ContactDepth`].
+    pub async fn list_contacts(&self, query: &ContactQuery) -> Result<Vec<Contact>, SevdeskError> {
+        self.get("/Contact", &query.pairs()).await?.list()
+    }
+
+    /// `GET /Contact?name=…`. The `name` filter is a SUBSTRING match, ignoring
+    /// case: compare on the result.
     pub async fn list_contacts_by_name(&self, name: &str) -> Result<Vec<Contact>, SevdeskError> {
-        self.get("/Contact", &[("name", name.to_owned())])
-            .await?
-            .list()
+        self.list_contacts(&ContactQuery {
+            name: Some(name.to_owned()),
+            ..Default::default()
+        })
+        .await
     }
 
     /// `GET /Contact/{id}`.
@@ -41,12 +50,11 @@ impl SevdeskClient {
         customer_number: &str,
     ) -> Result<Option<Contact>, SevdeskError> {
         let found = self
-            .get(
-                "/Contact",
-                &[("customerNumber", customer_number.to_owned())],
-            )
-            .await?
-            .list::<Contact>()?;
+            .list_contacts(&ContactQuery {
+                customer_number: Some(customer_number.to_owned()),
+                ..Default::default()
+            })
+            .await?;
         let mut exact = found
             .into_iter()
             .filter(|c| c.customer_number.as_deref() == Some(customer_number));

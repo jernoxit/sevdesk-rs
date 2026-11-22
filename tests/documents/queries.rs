@@ -20,7 +20,7 @@ async fn the_credit_note_filters_use_the_measured_spelling() {
         .list_credit_notes(&CreditNoteQuery {
             customer_internal_note: Some("SS-LIVE-REF-2".into()),
             credit_note_number: Some("GU-1011".into()),
-            page: None,
+            ..Default::default()
         })
         .await
         .unwrap();

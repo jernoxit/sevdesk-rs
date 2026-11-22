@@ -87,6 +87,11 @@ resource_id!(
     AccountingTypeId,
     "AccountingType"
 );
+resource_id!(
+    /// A `Tag`; only used as a list filter.
+    TagId,
+    "Tag"
+);
 resource_id!(DocumentId, "Document");
 resource_id!(ContactId, "Contact");
 resource_id!(ContactCategoryId, "Category");

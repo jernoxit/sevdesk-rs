@@ -56,7 +56,10 @@ pub use error::{DecodeError, KnownCode, SevdeskError};
 pub use ids::*;
 pub use pacing::Pacing;
 pub use payload::*;
-pub use query::{CreditNoteQuery, InvoiceQuery, Page, TransactionQuery, VoucherQuery};
+pub use query::{
+    ContactDepth, ContactQuery, CreditNoteQuery, InvoiceQuery, Page, SortOrder, TransactionQuery,
+    VoucherQuery,
+};
 pub use status::*;
 pub use voucher_payload::*;
 pub use wire::{

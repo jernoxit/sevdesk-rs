@@ -77,7 +77,7 @@ async fn voucher_filter_keys() {
     let q = VoucherQuery {
         description_like: Some("M11".into()),
         status: Some(VoucherStatus::Draft),
-        page: None,
+        ..Default::default()
     };
     client(&server).list_vouchers(&q).await.unwrap();
 }

@@ -30,6 +30,14 @@ Where a measurement contradicts sevDesk's OpenAPI spec, the measurement wins.
   invoice together with its cancellation invoice). `paymtPurpose` and
   `descriptionLike` match SUBSTRINGS. `isBooked=false` is ignored; filter on
   `status` instead.
+- **Query types carry only measured filters** (`InvoiceQuery`,
+  `CreditNoteQuery`, `VoucherQuery`, `ContactQuery`, `TransactionQuery`), each
+  field documented with its measured semantics. Date bounds go out as Unix
+  seconds and are inclusive, except `VoucherQuery::end_date` (exclusive);
+  `…Greater`/`…Smaller` number filters compare the whole number as text;
+  `onlyCredit` selects negative amounts; `ContactQuery::depth` widens the
+  list instead of narrowing it. Filters judged ignored or unclear are
+  commented next to each query type.
 - **`autoMapTransaction`** on a check account is singular; the spec's plural
   is ignored.
 - **Deleted transactions** are still returned by id, with `deletedAt` set; the
