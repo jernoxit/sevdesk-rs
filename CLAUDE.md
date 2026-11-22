@@ -229,6 +229,26 @@ field-poking.
 - Anchor the shape against reality: a live-captured payload as test fixture.
   sevDesk's OpenAPI spec has wrong enums and a misspelled filter — **where a
   measurement contradicts the spec, the measurement wins.**
+- **A response type maps every field its call returns** (project owner,
+  2026-11-22): every key of the recorded answers plus the fields the OpenAPI
+  spec names, explored live where the shape is unclear. The consumer decides
+  what it needs; leaving fields out cost two releases (0.3.0, 0.4.0). For read
+  fields this overrides "Simplicity First". An embedded full object stays a
+  reference (`ObjectRef`). A completeness test without network keeps type and
+  recordings in step: every key of every recorded answer is read or stands on
+  a named list, compared by exact equality.
+- **Enums carry every value the spec names plus the measured ones, and stay
+  tolerant:** a spec typo or an unseen value becomes `Other(…)`, never a
+  failed decode. A variant known only from the spec says so in its doc;
+  where it is sent (filters, drafts), it is unmeasured.
+- **A field value in a form no reader knows is a decode error naming the
+  field** (project owner, 2026-11-22), never a silent `None` — that would be
+  indistinguishable from a real `null`. Hence one broad reader per kind
+  (switch, integer, timestamp, amount) in `src/codec.rs`, accepting every
+  measured form.
+- **Read types and their enums are `#[non_exhaustive]`** (project owner,
+  2026-11-22): a field or variant added later is no breaking change. Not on
+  query and draft types — there it would break `..Default::default()`.
 - Pin the API version: an explicit `X-Version` header on every request.
 - Ad-hoc exception: none. If sevDesk needs non-standard encoding, the typed
   param struct owns the encoding in one place.

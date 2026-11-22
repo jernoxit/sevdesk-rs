@@ -11,7 +11,7 @@ paths:
   - "src/query.rs"
 ---
 
-<!-- Condensed from CLAUDE.md sections "External-Service APIs: typed boundaries, both directions", "Intern und extern sind zwei Typen, verbunden durch `From`", "Fehler tragen Information, keine Handlungsanweisung"; CLAUDE.md remains the full version, both are kept in step. -->
+<!-- Condensed from CLAUDE.md sections "External-Service APIs: typed boundaries, both directions" (incl. the 2026-11-22 rules on complete read types), "Intern und extern sind zwei Typen, verbunden durch `From`", "Fehler tragen Information, keine Handlungsanweisung"; CLAUDE.md remains the full version, both are kept in step. -->
 
 # sevDesk API boundary
 
@@ -39,14 +39,36 @@ let invoice: InvoiceWire = serde_json::from_str(&body)?;   // all-None object pa
 // good: the check in src/wire/guard.rs, error in src/error.rs
 ```
 
+## A response type maps every field its call returns
+
+Every key of the recorded answers plus the fields the OpenAPI spec names, explored live where the shape is unclear (project owner, 2026-11-22); the consumer decides what it needs. For read fields this overrides "Simplicity First". An embedded full object stays an `ObjectRef`. A completeness test without network keeps type and recordings in step: every key of every recorded answer is read or stands on a named list, compared by exact equality.
+
+```text
+bad:  Invoice reads 15 of the 90 keys of GET /Invoice/{id}; a consumer needs addressName -> release
+good: every key is a field, or on the named list (embedded full objects)
+```
+
 ## A closed set of wire values parses totally
 
-An unknown value becomes a named catch-all arm, not an `Err`.
+Enums carry every value the spec names plus the measured ones; an unknown value (a spec typo, an unseen value) becomes a named catch-all arm, not an `Err`. A variant known only from the spec says so in its doc; where it is sent (filters, drafts), it is unmeasured.
 
 ```rust
 // src/status.rs
 Other(i64),   // from_code: code => Self::Other(code)
 ```
+
+## A field value in a form no reader knows is a decode error naming the field
+
+Never a silent `None`, which is indistinguishable from a real `null` (project owner, 2026-11-22). One broad reader per kind (switch, integer, timestamp, amount) in `src/codec.rs`, accepting every measured form.
+
+```text
+bad:  isPercentage "2" -> None
+good: isPercentage "2" -> SevdeskError::Decode naming `isPercentage`
+```
+
+## Read types and their enums are `#[non_exhaustive]`
+
+A field or variant added later is no breaking change (project owner, 2026-11-22). Not on query and draft types: there it would break `..Default::default()` for consumers.
 
 ## Where a measurement contradicts the OpenAPI spec, the measurement wins
 
