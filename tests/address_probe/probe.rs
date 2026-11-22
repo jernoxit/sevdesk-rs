@@ -276,7 +276,7 @@ impl Probe {
         let saved = match kind {
             Kind::Invoice => {
                 let mut save = self.env.invoice_save(note.clone(), 1);
-                let d = &mut save.invoice;
+                let d = &mut save.invoice.options;
                 d.address_name = Some(name);
                 d.address_street = Some(street);
                 d.address_zip = Some(zip);
@@ -292,7 +292,7 @@ impl Probe {
                 let mut save = self
                     .env
                     .credit_note_save(number, note.clone(), self.env.origin);
-                let d = &mut save.credit_note;
+                let d = &mut save.credit_note.options;
                 d.address_name = Some(name);
                 d.address_street = Some(street);
                 d.address_zip = Some(zip);

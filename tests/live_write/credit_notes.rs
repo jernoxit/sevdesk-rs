@@ -21,31 +21,31 @@ fn draft(
     is_e_invoice: bool,
     payment_method: PaymentMethodId,
 ) -> CreditNoteDraft {
-    CreditNoteDraft {
+    let mut draft = CreditNoteDraft {
         credit_note_number: number,
         contact: ObjectRef::new(spec.customer.contact.id),
         contact_person: ObjectRef::new(spec.person),
         credit_note_date: date!(2026 - 10 - 01),
         delivery_date: datetime!(2026-10-01 0:00 +2),
-        delivery_date_until: Some(datetime!(2026-10-31 0:00 +1)),
         header: note.clone(),
-        head_text: None,
-        foot_text: None,
         tax_rule: ObjectRef::new(TaxRuleId::new(1)),
         tax_text: "Umsatzsteuer 19%".into(),
         booking_category: CreditNoteCategory::Underachievement,
-        ref_src_invoice: Some(ObjectRef::new(invoice.id)),
         currency: CurrencyCode::EUR,
         show_net: true,
         customer_internal_note: note,
-        address_name: Some(spec.customer.name.clone()),
-        address_street: Some(spec.customer.street.into()),
-        address_zip: Some(spec.customer.zip.into()),
-        address_city: Some(spec.customer.city.into()),
-        address_country: Some(ObjectRef::new(GERMANY)),
-        payment_method: is_e_invoice.then(|| ObjectRef::new(payment_method)),
-        is_e_invoice,
-    }
+        options: Default::default(),
+    };
+    draft.options.delivery_date_until = Some(datetime!(2026-10-31 0:00 +1));
+    draft.options.ref_src_invoice = Some(ObjectRef::new(invoice.id));
+    draft.options.address_name = Some(spec.customer.name.clone());
+    draft.options.address_street = Some(spec.customer.street.into());
+    draft.options.address_zip = Some(spec.customer.zip.into());
+    draft.options.address_city = Some(spec.customer.city.into());
+    draft.options.address_country = Some(ObjectRef::new(GERMANY));
+    draft.options.payment_method = is_e_invoice.then(|| ObjectRef::new(payment_method));
+    draft.options.is_e_invoice = is_e_invoice;
+    draft
 }
 
 /// `invoice` is the enshrined invoice of the chain (net 55.00).

@@ -122,6 +122,12 @@ in its voucher's. The drafts (`InvoiceDraft`, `CreditNoteDraft`,
 `CurrencyCode` is three uppercase letters (ISO 4217): `"eur"` is rejected,
 an unknown but well-formed code is kept. No conversion, no exchange rates.
 
+A draft (`InvoiceDraft`, `CreditNoteDraft`, `DocumentPositionDraft`,
+`VoucherDraft`, `VoucherPositionDraft`) has named fields for what a request
+cannot do without and an `options` struct for everything else; set an option by
+assignment (`draft.options.foot_text = Some(...)`), a field left `None` is not
+sent.
+
 Only EUR is measured. Documents also carry `sum*ForeignCurrency` (not read);
 whether a document in another currency reports `sumGross` in that currency or
 in the account's is open, and a voucher in another currency needs an exchange

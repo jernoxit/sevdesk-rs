@@ -253,30 +253,32 @@ impl Env {
     ) -> SaveCreditNote {
         let c = &self.customer;
         SaveCreditNote::new(
-            CreditNoteDraft {
-                credit_note_number: number,
-                contact: ObjectRef::new(c.contact.id),
-                contact_person: ObjectRef::new(self.person),
-                credit_note_date: date!(2026 - 10 - 01),
-                delivery_date: datetime!(2026-10-01 0:00 +2),
-                delivery_date_until: Some(datetime!(2026-10-31 0:00 +1)),
-                header: note.clone(),
-                head_text: None,
-                foot_text: None,
-                tax_rule: ObjectRef::new(TaxRuleId::new(1)),
-                tax_text: "Umsatzsteuer 19%".into(),
-                booking_category: CreditNoteCategory::Underachievement,
-                ref_src_invoice: Some(ObjectRef::new(origin)),
-                currency: CurrencyCode::EUR,
-                show_net: true,
-                customer_internal_note: note,
-                address_name: Some(c.name.clone()),
-                address_street: Some(c.street.into()),
-                address_zip: Some(c.zip.into()),
-                address_city: Some(c.city.into()),
-                address_country: Some(ObjectRef::new(GERMANY)),
-                payment_method: Some(ObjectRef::new(self.pm)),
-                is_e_invoice: true,
+            {
+                let mut draft = CreditNoteDraft {
+                    credit_note_number: number,
+                    contact: ObjectRef::new(c.contact.id),
+                    contact_person: ObjectRef::new(self.person),
+                    credit_note_date: date!(2026 - 10 - 01),
+                    delivery_date: datetime!(2026-10-01 0:00 +2),
+                    header: note.clone(),
+                    tax_rule: ObjectRef::new(TaxRuleId::new(1)),
+                    tax_text: "Umsatzsteuer 19%".into(),
+                    booking_category: CreditNoteCategory::Underachievement,
+                    currency: CurrencyCode::EUR,
+                    show_net: true,
+                    customer_internal_note: note,
+                    options: Default::default(),
+                };
+                draft.options.delivery_date_until = Some(datetime!(2026-10-31 0:00 +1));
+                draft.options.ref_src_invoice = Some(ObjectRef::new(origin));
+                draft.options.address_name = Some(c.name.clone());
+                draft.options.address_street = Some(c.street.into());
+                draft.options.address_zip = Some(c.zip.into());
+                draft.options.address_city = Some(c.city.into());
+                draft.options.address_country = Some(ObjectRef::new(GERMANY));
+                draft.options.payment_method = Some(ObjectRef::new(self.pm));
+                draft.options.is_e_invoice = true;
+                draft
             },
             vec![net_position(1, 500, "SDRS-ENSH Position", None)],
         )

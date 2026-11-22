@@ -58,58 +58,43 @@ pub fn new_transaction() -> NewTransaction {
 
 /// A minimal gross invoice draft: every optional absent.
 pub fn invoice_draft(currency: CurrencyCode) -> InvoiceDraft {
-    InvoiceDraft {
+    let mut draft = InvoiceDraft {
         contact: ObjectRef::new(ContactId::new(7)),
         contact_person: ObjectRef::new(SevUserId::new(9)),
         invoice_date: date!(2026 - 09 - 29),
         delivery_date: datetime!(2026-09-29 0:00 +2),
-        delivery_date_until: None,
         header: "SS-LIVE-1".into(),
-        head_text: None,
-        foot_text: None,
         tax_rule: ObjectRef::new(TaxRuleId::new(1)),
         tax_text: "Umsatzsteuer 19%".into(),
         currency,
         show_net: false,
         time_to_pay: 14,
         customer_internal_note: "SS-LIVE-REF-1".into(),
-        address_name: None,
-        address_street: None,
-        address_zip: None,
-        address_city: None,
-        address_country: None,
-        payment_method: None,
-        is_e_invoice: false,
-    }
+        options: Default::default(),
+    };
+    draft.options.is_e_invoice = false;
+    draft
 }
 
 /// A minimal gross credit note draft without an invoice reference.
 pub fn credit_note_draft(number: &str, currency: CurrencyCode) -> CreditNoteDraft {
-    CreditNoteDraft {
+    let mut draft = CreditNoteDraft {
         credit_note_number: number.into(),
         contact: ObjectRef::new(ContactId::new(7)),
         contact_person: ObjectRef::new(SevUserId::new(9)),
         credit_note_date: date!(2026 - 09 - 29),
         delivery_date: datetime!(2026-09-29 0:00 +2),
-        delivery_date_until: None,
         header: "SS-LIVE-2".into(),
-        head_text: None,
-        foot_text: None,
         tax_rule: ObjectRef::new(TaxRuleId::new(9)),
         tax_text: "Umsatzsteuer 19%".into(),
         booking_category: CreditNoteCategory::Provision,
-        ref_src_invoice: None,
         currency,
         show_net: false,
         customer_internal_note: "SS-LIVE-REF-2".into(),
-        address_name: None,
-        address_street: None,
-        address_zip: None,
-        address_city: None,
-        address_country: None,
-        payment_method: None,
-        is_e_invoice: false,
-    }
+        options: Default::default(),
+    };
+    draft.options.is_e_invoice = false;
+    draft
 }
 
 /// One piece at `price` cents with 19 % tax.
@@ -118,8 +103,8 @@ pub fn position(name: &str, price: i64) -> DocumentPositionDraft {
         quantity: 1,
         price: eur(price),
         name: name.into(),
-        text: None,
         unity: UnityId::new(1),
         tax_rate_bp: 1900,
+        options: Default::default(),
     }
 }

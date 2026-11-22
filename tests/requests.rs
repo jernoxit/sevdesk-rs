@@ -120,8 +120,8 @@ async fn save_voucher_update_sends_every_position_with_its_id_and_exact_amounts(
         TaxRuleId::new(14),
         CurrencyCode::EUR,
     );
-    voucher.id = Some(VoucherId::new(156244013));
-    voucher.delivery_date = Some(date!(2026 - 08 - 31));
+    voucher.options.id = Some(VoucherId::new(156244013));
+    voucher.options.delivery_date = Some(date!(2026 - 08 - 31));
     let position = |id: i64, cents: i64, comment: &str| {
         VoucherPositionDraft::new(AccountDatevId::new(4285), 0, eur(cents), comment)
             .with_id(VoucherPositionId::new(id))

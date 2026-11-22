@@ -37,7 +37,7 @@ async fn live_write_2_voucher_draft_update_and_attach() {
 
         // Update: ALL positions with their ids, plus a second one.
         let mut voucher = ctx.draft();
-        voucher.id = Some(id);
+        voucher.options.id = Some(id);
         let mut positions = with_ids(&saved, &[(35, "fee")]);
         positions.push(position(10, "fee2"));
         let updated = ctx
@@ -95,7 +95,7 @@ async fn live_write_3_release_book_log_reset() {
         let id = saved.voucher.id;
         // Release through the API (the flow leaves it to the human, but it works).
         let mut released = ctx.draft();
-        released.id = Some(id);
+        released.options.id = Some(id);
         released.status = VoucherStatus::Open;
         let saved = ctx
             .c

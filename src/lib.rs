@@ -41,6 +41,7 @@ mod pacing;
 mod payload;
 mod query;
 mod status;
+mod voucher_payload;
 mod wire;
 
 pub use amount::Amount;
@@ -57,6 +58,7 @@ pub use pacing::Pacing;
 pub use payload::*;
 pub use query::{CreditNoteQuery, InvoiceQuery, Page, TransactionQuery, VoucherQuery};
 pub use status::*;
+pub use voucher_payload::*;
 pub use wire::{
     AdditionalInformation, AllowedTaxRule, BookedDocument, CheckAccount, CommunicationWay, Contact,
     ContactAddress, CreditNote, CreditNoteLog, CreditNotePosition, Document, DocumentMetaData,

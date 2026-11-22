@@ -1,8 +1,9 @@
 use crate::client::SevdeskClient;
 use crate::error::SevdeskError;
 use crate::ids::{Resource, VoucherId};
-use crate::payload::{BookVoucherAmount, SaveVoucher};
+use crate::payload::BookVoucherAmount;
 use crate::query::VoucherQuery;
+use crate::voucher_payload::SaveVoucher;
 use crate::wire::{SavedVoucher, UploadedFile, Voucher, VoucherLog, VoucherPosition};
 use reqwest::{Method, multipart};
 

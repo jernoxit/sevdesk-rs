@@ -257,14 +257,16 @@ pub(crate) fn net_position(
     name: &str,
     text: Option<&str>,
 ) -> DocumentPositionDraft {
-    DocumentPositionDraft {
+    let mut position = DocumentPositionDraft {
         quantity,
         price: eur(minor),
         name: name.into(),
-        text: text.map(Into::into),
         unity: PIECE,
         tax_rate_bp: 1900,
-    }
+        options: Default::default(),
+    };
+    position.options.text = text.map(Into::into);
+    position
 }
 
 pub(crate) struct InvoiceSpec<'a> {
@@ -280,28 +282,30 @@ pub(crate) struct InvoiceSpec<'a> {
 /// 2026-10-31 (Berlin midnights, CEST then CET).
 pub(crate) fn invoice_draft(s: &InvoiceSpec<'_>) -> InvoiceDraft {
     let addr = |v: &str| s.with_address.then(|| v.to_owned());
-    InvoiceDraft {
-        contact: ObjectRef::new(s.customer.contact.id),
-        contact_person: ObjectRef::new(s.person),
-        invoice_date: date!(2026 - 10 - 01),
-        delivery_date: datetime!(2026-10-01 0:00 +2),
-        delivery_date_until: Some(datetime!(2026-10-31 0:00 +1)),
-        header: s.note.clone(),
-        head_text: None,
-        foot_text: None,
-        tax_rule: ObjectRef::new(TaxRuleId::new(1)),
-        tax_text: "Umsatzsteuer 19%".into(),
-        currency: CurrencyCode::EUR,
-        show_net: s.b2b,
-        time_to_pay: 14,
-        customer_internal_note: s.note.clone(),
-        address_name: addr(&s.customer.name),
-        address_street: addr(s.customer.street),
-        address_zip: addr(s.customer.zip),
-        address_city: addr(s.customer.city),
-        address_country: s.with_address.then(|| ObjectRef::new(GERMANY)),
-        payment_method: s.payment_method.map(ObjectRef::new),
-        is_e_invoice: s.b2b,
+    {
+        let mut draft = InvoiceDraft {
+            contact: ObjectRef::new(s.customer.contact.id),
+            contact_person: ObjectRef::new(s.person),
+            invoice_date: date!(2026 - 10 - 01),
+            delivery_date: datetime!(2026-10-01 0:00 +2),
+            header: s.note.clone(),
+            tax_rule: ObjectRef::new(TaxRuleId::new(1)),
+            tax_text: "Umsatzsteuer 19%".into(),
+            currency: CurrencyCode::EUR,
+            show_net: s.b2b,
+            time_to_pay: 14,
+            customer_internal_note: s.note.clone(),
+            options: Default::default(),
+        };
+        draft.options.delivery_date_until = Some(datetime!(2026-10-31 0:00 +1));
+        draft.options.address_name = addr(&s.customer.name);
+        draft.options.address_street = addr(s.customer.street);
+        draft.options.address_zip = addr(s.customer.zip);
+        draft.options.address_city = addr(s.customer.city);
+        draft.options.address_country = s.with_address.then(|| ObjectRef::new(GERMANY));
+        draft.options.payment_method = s.payment_method.map(ObjectRef::new);
+        draft.options.is_e_invoice = s.b2b;
+        draft
     }
 }
 

@@ -20,11 +20,24 @@ pub struct DocumentPositionDraft {
     /// The unit price, gross when the document has `show_net: false`.
     pub price: Amount,
     pub name: String,
-    /// Free text under the position name; left out when `None`.
-    pub text: Option<String>,
     pub unity: UnityId,
     /// Basis points: `1900` for 19 %.
     pub tax_rate_bp: i64,
+    pub options: PositionOptions,
+}
+
+/// The optional fields of a [`DocumentPositionDraft`].
+///
+/// Every field is optional; a field left `None` is not sent. Set them by
+/// assignment: `position.options.text = Some("…".into())`.
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+#[non_exhaustive]
+pub struct PositionOptions {
+    /// Free text under the position name.
+    pub text: Option<String>,
+    /// The position's place among the others (`positionNumber`); measured:
+    /// stored (2026-11-22).
+    pub position_number: Option<i64>,
 }
 
 /// Which document a position belongs to; names the `objectName` on the wire.
@@ -60,6 +73,8 @@ pub(super) struct PositionWire {
     unity: ObjectRef<UnityId>,
     #[serde(rename = "taxRate", serialize_with = "ser_percent_bp")]
     tax_rate_bp: i64,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    position_number: Option<i64>,
 }
 
 impl PositionWire {
@@ -68,10 +83,14 @@ impl PositionWire {
             quantity,
             price,
             name,
-            text,
             unity,
             tax_rate_bp,
+            options,
         } = draft;
+        let PositionOptions {
+            text,
+            position_number,
+        } = options;
         Self {
             object_name: kind.object_name(),
             map_all: true,
@@ -81,6 +100,7 @@ impl PositionWire {
             text,
             unity: ObjectRef::new(unity),
             tax_rate_bp,
+            position_number,
         }
     }
 }

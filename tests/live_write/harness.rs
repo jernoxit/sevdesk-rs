@@ -225,7 +225,7 @@ impl Ctx {
             TaxRuleId::new(14),
             CurrencyCode::EUR,
         );
-        v.delivery_date = Some(date!(2026 - 09 - 29));
+        v.options.delivery_date = Some(date!(2026 - 09 - 29));
         v
     }
 }

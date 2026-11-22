@@ -104,7 +104,7 @@ async fn live_write_6_record_raw_write_bodies() {
             .map(|p| p["id"].as_str().unwrap().parse().unwrap())
             .collect();
         let mut voucher = ctx.draft();
-        voucher.id = Some(VoucherId::new(vid));
+        voucher.options.id = Some(VoucherId::new(vid));
         voucher.status = VoucherStatus::Open;
         let positions = vec![
             position(35, "fee").with_id(VoucherPositionId::new(pids[0])),

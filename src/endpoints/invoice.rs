@@ -54,6 +54,11 @@ impl SevdeskClient {
 
 impl SevdeskClient {
     /// `POST /Invoice/Factory/saveInvoice`: creates a DRAFT without a number.
+    ///
+    /// Not for updating a draft: measured 2026-11-22, saving an invoice DRAFT
+    /// again through this factory with its id gave it a number from the
+    /// sequence (RE-1321) before `sendBy`. The crate has no `PUT /Invoice/{id}`
+    /// update call, so there is no preferred alternative yet.
     pub async fn save_invoice(&self, save: &SaveInvoice) -> Result<SavedInvoice, SevdeskError> {
         self.send_json(Method::POST, "/Invoice/Factory/saveInvoice", save)
             .await?

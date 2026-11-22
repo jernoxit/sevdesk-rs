@@ -13,12 +13,14 @@ use super::DocumentPositionDraft;
 use super::position::{PositionKind, PositionWire};
 use crate::CurrencyCode;
 use crate::ids::*;
-use crate::payload::{ser_german_date, ser_unix, ser_unix_opt};
+use crate::payload::{ser_german_date, ser_german_date_opt, ser_unix, ser_unix_opt};
 use crate::status::*;
 use serde::{Serialize, Serializer};
 use time::{Date, OffsetDateTime};
 
-/// The document part of `saveCreditNote`. Every business value is the
+/// The document part of `saveCreditNote`. The named fields are what a request
+/// cannot do without (and what sevDesk would otherwise default silently);
+/// everything else is in [`Self::options`]. Every business value is the
 /// caller's; nothing is defaulted.
 #[derive(Debug, Clone)]
 pub struct CreditNoteDraft {
@@ -31,21 +33,31 @@ pub struct CreditNoteDraft {
     pub credit_note_date: Date,
     /// Start of the service period, as for [`crate::InvoiceDraft`].
     pub delivery_date: OffsetDateTime,
-    /// End of the service period; left out when `None`.
-    pub delivery_date_until: Option<OffsetDateTime>,
     pub header: String,
-    pub head_text: Option<String>,
-    pub foot_text: Option<String>,
     pub tax_rule: ObjectRef<TaxRuleId>,
     pub tax_text: String,
     pub booking_category: CreditNoteCategory,
-    /// The invoice this credit note refers to; left out when `None`.
-    pub ref_src_invoice: Option<ObjectRef<InvoiceId>>,
     pub currency: CurrencyCode,
     /// `false`: the positions carry gross prices.
     pub show_net: bool,
     /// A free reference; `GET /CreditNote` filters on it EXACTLY.
     pub customer_internal_note: String,
+    pub options: CreditNoteOptions,
+}
+
+/// The optional fields of a [`CreditNoteDraft`].
+///
+/// Every field is optional; a field left `None` is not sent. Set them by
+/// assignment: `draft.options.foot_text = Some("…".into())`.
+#[derive(Debug, Clone, Default)]
+#[non_exhaustive]
+pub struct CreditNoteOptions {
+    /// End of the service period.
+    pub delivery_date_until: Option<OffsetDateTime>,
+    pub head_text: Option<String>,
+    pub foot_text: Option<String>,
+    /// The invoice this credit note refers to.
+    pub ref_src_invoice: Option<ObjectRef<InvoiceId>>,
     pub address_name: Option<String>,
     pub address_street: Option<String>,
     pub address_zip: Option<String>,
@@ -58,6 +70,27 @@ pub struct CreditNoteDraft {
     /// Sent as `propertyIsEInvoice: true` when set, left out otherwise.
     /// sevDesk reads it back as `null`, so the credit note does not report it.
     pub is_e_invoice: bool,
+    /// The whole address as one text, lines separated by `\n`; measured:
+    /// stored (2026-11-22). Independent of the single `address_*` fields.
+    pub address: Option<String>,
+    /// Small-business scheme (`smallSettlement`); measured: stored
+    /// (2026-11-22).
+    pub small_settlement: Option<bool>,
+    /// The tax set of the "Update 1.0" tax model; measured: stored
+    /// (2026-11-22). `tax_rule` stays the model this crate uses.
+    pub tax_set: Option<ObjectRef<TaxSetId>>,
+    /// Only records a date on the draft; it does not send anything (measured
+    /// 2026-11-22: stored, status stays 100). Sent as `dd.mm.yyyy`.
+    #[deprecated(
+        note = "DO NOT USE: only records a send date on the draft without sending anything; sendBy sets it when it finalizes (measured 2026-11-22)"
+    )]
+    pub send_date: Option<Date>,
+    /// Only records how the draft was "sent"; it does not finalize it
+    /// (measured 2026-11-22: stored, status stays 100).
+    #[deprecated(
+        note = "DO NOT USE: only records a send type on the draft without sending anything; sendBy sets it when it finalizes (measured 2026-11-22)"
+    )]
+    pub send_type: Option<SendType>,
 }
 
 #[derive(Debug, Serialize)]
@@ -111,9 +144,28 @@ struct CreditNoteWire {
         skip_serializing_if = "std::ops::Not::not"
     )]
     is_e_invoice: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    address: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    small_settlement: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    tax_set: Option<ObjectRef<TaxSetId>>,
+    #[serde(
+        skip_serializing_if = "Option::is_none",
+        serialize_with = "ser_german_date_opt"
+    )]
+    send_date: Option<Date>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    send_type: Option<SendType>,
 }
 
 impl From<CreditNoteDraft> for CreditNoteWire {
+    // The crate itself is the one place that reads the deprecated
+    // `send_date` and `send_type`: the wire form must carry them when set.
+    #[allow(
+        deprecated,
+        reason = "encodes the deprecated send_date and send_type options"
+    )]
     fn from(draft: CreditNoteDraft) -> Self {
         let CreditNoteDraft {
             credit_note_number,
@@ -121,17 +173,20 @@ impl From<CreditNoteDraft> for CreditNoteWire {
             contact_person,
             credit_note_date,
             delivery_date,
-            delivery_date_until,
             header,
-            head_text,
-            foot_text,
             tax_rule,
             tax_text,
             booking_category,
-            ref_src_invoice,
             currency,
             show_net,
             customer_internal_note,
+            options,
+        } = draft;
+        let CreditNoteOptions {
+            delivery_date_until,
+            head_text,
+            foot_text,
+            ref_src_invoice,
             address_name,
             address_street,
             address_zip,
@@ -139,7 +194,12 @@ impl From<CreditNoteDraft> for CreditNoteWire {
             address_country,
             payment_method,
             is_e_invoice,
-        } = draft;
+            address,
+            small_settlement,
+            tax_set,
+            send_date,
+            send_type,
+        } = options;
         Self {
             object_name: "CreditNote",
             map_all: true,
@@ -170,6 +230,11 @@ impl From<CreditNoteDraft> for CreditNoteWire {
             address_country,
             payment_method,
             is_e_invoice,
+            address,
+            small_settlement,
+            tax_set,
+            send_date,
+            send_type,
         }
     }
 }
