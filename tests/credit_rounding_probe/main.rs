@@ -420,7 +420,9 @@ const NEEDED_GROSS_THOUSANDTHS: i64 = 2390;
 /// Read-only; aborts when none qualifies.
 async fn enshrined_invoice(ctx: &Ctx) -> InvoiceId {
     let enshrined = |v: &Value| !matches!(v["enshrined"], Value::Null);
-    let (status, text) = ctx.raw(Method::GET, "/Invoice?limit=200", None, None).await;
+    let (status, text) = ctx
+        .raw(Method::GET, "/Invoice?limit=1000", None, None)
+        .await;
     assert!(status < 300, "GET /Invoice answered {status}");
     let invoices: Vec<Value> = serde_json::from_value(raw_objects(&text)).unwrap();
     let (status, text) = ctx
@@ -430,14 +432,29 @@ async fn enshrined_invoice(ctx: &Ctx) -> InvoiceId {
     let credits: Vec<Value> = serde_json::from_value(raw_objects(&text)).unwrap_or_default();
     // (invoice id, credit notes referencing it, room left in thousandths)
     let mut best: Option<(i64, usize, i64)> = None;
+    // Skip counts per reason, printed when nothing qualifies.
+    let (mut not_enshrined, mut not_net, mut not_re, mut bad_id, mut bad_gross) = (0, 0, 0, 0, 0);
+    let (mut bad_credit, mut no_room) = (0, 0);
     for inv in &invoices {
-        if !enshrined(inv) || text_of(inv, "showNet") != "true" {
+        if !enshrined(inv) {
+            not_enshrined += 1;
+            continue;
+        }
+        // sevDesk answers the flag as "1" (measured); "true" covers a JSON bool.
+        if !matches!(text_of(inv, "showNet").as_str(), "1" | "true") {
+            not_net += 1;
+            continue;
+        }
+        if text_of(inv, "invoiceType") != "RE" {
+            not_re += 1;
             continue;
         }
         let Some(id) = inv["id"].as_str().and_then(|s| s.parse::<i64>().ok()) else {
+            bad_id += 1;
             continue;
         };
         let Some(gross) = thousandths(&text_of(inv, "sumGross")) else {
+            bad_gross += 1;
             continue;
         };
         let refs: Vec<&Value> = credits
@@ -448,9 +465,13 @@ async fn enshrined_invoice(ctx: &Ctx) -> InvoiceId {
             .iter()
             .map(|c| thousandths(&text_of(c, "sumGross")))
             .sum();
-        let Some(used) = used else { continue };
+        let Some(used) = used else {
+            bad_credit += 1;
+            continue;
+        };
         let room = gross - used;
         if room < NEEDED_GROSS_THOUSANDTHS {
+            no_room += 1;
             continue;
         }
         let better = best.is_none_or(|(_, n, r)| (refs.len(), -room) < (n, -r));
@@ -458,8 +479,17 @@ async fn enshrined_invoice(ctx: &Ctx) -> InvoiceId {
             best = Some((id, refs.len(), room));
         }
     }
-    let (id, n, room) =
-        best.expect("no enshrined net invoice with enough room below its gross: aborting");
+    let Some((id, n, room)) = best else {
+        eprintln!(
+            "REF-INVOICE\tnone of {} invoices qualifies (and {} credit notes read): \
+             not enshrined {not_enshrined}, not net {not_net}, not RE {not_re}, \
+             unreadable id {bad_id}, unreadable gross {bad_gross}, \
+             unreadable credit note gross {bad_credit}, too little room {no_room}",
+            invoices.len(),
+            credits.len(),
+        );
+        panic!("no enshrined net invoice with enough room below its gross: aborting");
+    };
     eprintln!("REF-INVOICE\t{id}: {n} credit notes, room {room} thousandths");
     InvoiceId::new(id)
 }
@@ -480,9 +510,43 @@ async fn credit_sequence(ctx: &Ctx, name: &str) -> (String, String) {
     (scrub::scrub_capture(&text), next)
 }
 
-/// Cents of a decimal string (`"0.285"` -> 28.5 as thousandths: 285).
+/// Thousandths of a decimal string, parsed exactly (`"0.285"` -> 285,
+/// `"-5.95"` -> -5950); `None` for anything but up to three decimals.
 fn thousandths(s: &str) -> Option<i64> {
-    s.parse::<f64>().ok().map(|v| (v * 1000.0).round() as i64)
+    let (neg, digits) = match s.strip_prefix('-') {
+        Some(rest) => (true, rest),
+        None => (false, s),
+    };
+    let (int, frac) = digits.split_once('.').unwrap_or((digits, ""));
+    let all_digits = |t: &str| t.bytes().all(|b| b.is_ascii_digit());
+    if int.is_empty() || frac.len() > 3 || !all_digits(int) || !all_digits(frac) {
+        return None;
+    }
+    let frac_thousandths: i64 = format!("{frac:0<3}").parse().ok()?;
+    let v = int.parse::<i64>().ok()?.checked_mul(1000)? + frac_thousandths;
+    Some(if neg { -v } else { v })
+}
+
+#[test]
+fn thousandths_parses_sevdesk_amounts_exactly() {
+    for (text, want) in [
+        ("65.45", Some(65_450)),
+        ("11.9", Some(11_900)),
+        ("238", Some(238_000)),
+        ("-5.95", Some(-5_950)),
+        ("0.285", Some(285)),
+        ("2.39", Some(2_390)),
+        ("-", None),
+        ("", None),
+        ("1.2345", None),
+        ("1e3", None),
+    ] {
+        assert_eq!(thousandths(text), want, "{text}");
+    }
+    // A JSON number reaches the parser through `text_of`.
+    let v: Value = serde_json::from_str(r#"{"a": 11.9, "b": 238}"#).unwrap();
+    assert_eq!(thousandths(&text_of(&v, "a")), Some(11_900));
+    assert_eq!(thousandths(&text_of(&v, "b")), Some(238_000));
 }
 
 /// Raw list of credit notes carrying `marker`, filtered client-side because
