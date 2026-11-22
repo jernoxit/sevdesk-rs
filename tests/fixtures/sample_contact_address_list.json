@@ -1,0 +1,31 @@
+{
+  "objects": [
+    {
+      "additionalInformation": null,
+      "category": {
+        "id": "43",
+        "objectName": "Category"
+      },
+      "city": "Berlin",
+      "contact": {
+        "id": "138615465",
+        "objectName": "Contact"
+      },
+      "country": {
+        "id": "1",
+        "objectName": "StaticCountry"
+      },
+      "create": "2026-09-28T19:38:20+02:00",
+      "id": "120010251",
+      "name": null,
+      "objectName": "ContactAddress",
+      "sevClient": {
+        "id": "1303847",
+        "objectName": "SevClient"
+      },
+      "street": "REDACTED",
+      "update": "2026-09-28T19:38:20+02:00",
+      "zip": "10115"
+    }
+  ]
+}

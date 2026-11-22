@@ -11,6 +11,7 @@ use serde::de::{self, Visitor};
 use serde::{Deserialize, Deserializer, Serializer};
 use serde_json::value::RawValue;
 use std::fmt;
+use time::Date;
 
 /// `text` (a JSON number or a JSON string holding one) as cents.
 ///
@@ -77,6 +78,16 @@ pub(crate) fn amount_opt<'de, D: Deserializer<'de>>(d: D) -> Result<Option<Amoun
 /// A string where a missing, `null` or empty (`""`) value is `None`.
 pub(crate) fn string_opt<'de, D: Deserializer<'de>>(d: D) -> Result<Option<String>, D::Error> {
     Ok(Option::<String>::deserialize(d)?.filter(|s| !s.is_empty()))
+}
+
+/// A calendar date `YYYY-MM-DD` (the OpenAPI spec's `date`); `null` is `None`.
+/// Any other form is an error.
+pub(crate) fn date_opt<'de, D: Deserializer<'de>>(d: D) -> Result<Option<Date>, D::Error> {
+    let format = time::format_description::parse_borrowed::<2>("[year]-[month]-[day]")
+        .map_err(de::Error::custom)?;
+    Option::<String>::deserialize(d)?
+        .map(|text| Date::parse(&text, &format).map_err(de::Error::custom))
+        .transpose()
 }
 
 pub(crate) fn serialize_amount<S: Serializer>(amount: &Amount, s: S) -> Result<S::Ok, S::Error> {

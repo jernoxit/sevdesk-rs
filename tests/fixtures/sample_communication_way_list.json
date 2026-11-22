@@ -1,0 +1,26 @@
+{
+  "objects": [
+    {
+      "additionalInformation": null,
+      "contact": {
+        "id": "138615465",
+        "objectName": "Contact"
+      },
+      "create": "2026-09-28T19:38:22+02:00",
+      "id": "115284944",
+      "key": {
+        "id": "2",
+        "objectName": "CommunicationWayKey"
+      },
+      "main": "1",
+      "objectName": "CommunicationWay",
+      "sevClient": {
+        "id": "1303847",
+        "objectName": "SevClient"
+      },
+      "type": "EMAIL",
+      "update": "2026-09-28T19:38:22+02:00",
+      "value": "probe@example.com"
+    }
+  ]
+}

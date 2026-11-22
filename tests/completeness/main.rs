@@ -63,7 +63,7 @@ fn unread<T: DeserializeOwned>(name: &str) -> Vec<String> {
         serde_ignored::deserialize::<_, _, T>(&mut de, record)
             .unwrap_or_else(|e| panic!("{name}: {e}"));
     }
-    let embedded = invoice::embedded_objects(name);
+    let embedded = embedded_objects(name);
     found
         .into_iter()
         .map(
@@ -75,6 +75,16 @@ fn unread<T: DeserializeOwned>(name: &str) -> Vec<String> {
         .collect::<BTreeSet<_>>()
         .into_iter()
         .collect()
+}
+
+/// Paths of FULL objects embedded where the read type holds a reference.
+fn embedded_objects(fixture: &str) -> &'static [&'static str] {
+    let invoice = invoice::embedded_objects(fixture);
+    if invoice.is_empty() {
+        contact::embedded_objects(fixture)
+    } else {
+        invoice
+    }
 }
 
 /// Full paths of the form-unmeasured keys of `prefix` + each key of `keys`.
@@ -92,6 +102,7 @@ fn form_unmeasured(fixture: &str) -> Vec<(String, bool)> {
         .or_else(|| voucher::form_unmeasured(fixture))
         .or_else(|| transaction::form_unmeasured(fixture))
         .or_else(|| check_account::form_unmeasured(fixture))
+        .or_else(|| contact::form_unmeasured(fixture))
         .unwrap_or_default()
 }
 

@@ -98,6 +98,18 @@ coded_enum!(
 );
 
 coded_enum!(
+    /// `status` of a contact. `1000` is measured on every contact; `100` and
+    /// `500` are known only from the OpenAPI spec prose (no enumeration).
+    ContactStatus {
+        /// `100`; known only from the OpenAPI spec.
+        Lead = 100,
+        /// `500`; known only from the OpenAPI spec.
+        Pending = 500,
+        Active = 1000,
+    }
+);
+
+coded_enum!(
     /// Credit note status; measured: `200` open, `1000` paid.
     CreditNoteStatus {
         Draft = 100,
@@ -302,9 +314,16 @@ pub enum DocumentLanguage {
 }
 
 named_enum!(
-    /// The `type` of a communication way. Only `EMAIL` is measured.
+    /// The `type` of a communication way. Only `EMAIL` is measured; the rest
+    /// is known only from the OpenAPI spec.
     CommunicationWayType {
         Email = "EMAIL",
+        /// `PHONE`; known only from the OpenAPI spec.
+        Phone = "PHONE",
+        /// `WEB`; known only from the OpenAPI spec.
+        Web = "WEB",
+        /// `MOBILE`; known only from the OpenAPI spec.
+        Mobile = "MOBILE",
     }
 );
 
