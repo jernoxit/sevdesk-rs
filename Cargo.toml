@@ -134,6 +134,16 @@ name = "request_gate"
 path = "tests/request_gate/main.rs"
 test = false
 
+# Writes 2 PERMANENT documents (a net invoice, its full credit note) to the test
+# account and measures where sevDesk rounds the tax of two EUR 0.03 net
+# positions; never part of a plain `cargo test`; run with
+# `just test-live --test credit_rounding_probe case1` (`just test-live` appends
+# `-- --ignored --nocapture` itself).
+[[test]]
+name = "credit_rounding_probe"
+path = "tests/credit_rounding_probe/main.rs"
+test = false
+
 # Keeps the target name `fixtures` (tests/fixtures/ holds the JSON recordings).
 [[test]]
 name = "fixtures"
