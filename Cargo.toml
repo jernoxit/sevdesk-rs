@@ -20,12 +20,16 @@ time = { version = "0.3", features = ["serde", "parsing", "formatting"] }
 tokio = { version = "1", features = ["time"] }
 tracing = "0.1"
 base64 = "0.23.1"
+# Decode errors name the field path (`[0].sumNet`).
+serde_path_to_error = "0.1.20"
 
 [dev-dependencies]
 time = { version = "0.3", features = ["macros"] }
 # `test-util`: paused time for the pacing unit tests.
 tokio = { version = "1", features = ["macros", "rt-multi-thread", "sync", "test-util"] }
 wiremock = "0.6"
+# Completeness guard (tests/completeness.rs): every key a fixture carries and a read type ignores.
+serde_ignored = "0.1.14"
 
 [lints.rust]
 unsafe_code = "forbid"

@@ -32,6 +32,7 @@ mod amount;
 mod client;
 mod codec;
 mod currency;
+mod decimal;
 mod document_payload;
 mod endpoints;
 mod error;
@@ -48,6 +49,7 @@ pub use client::{
 };
 pub use codec::{format_decimal, parse_amount};
 pub use currency::{CurrencyCode, InvalidCurrencyCode};
+pub use decimal::{Decimal, ParseDecimalError};
 pub use document_payload::*;
 pub use error::{KnownCode, SevdeskError};
 pub use ids::*;

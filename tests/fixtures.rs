@@ -441,3 +441,38 @@ fn scrub_collapses_expanded_account_objects() {
         assert_eq!(collapse_account_objects(&mut v), 0, "{name}");
     }
 }
+
+#[tokio::test]
+async fn decode_error_names_the_field_path_and_the_status() {
+    let mut body: serde_json::Value = serde_json::from_str(&fixture("invoice_list")).unwrap();
+    body["objects"][0]["sumNet"] = serde_json::json!("1.234");
+    let server = MockServer::start().await;
+    Mock::given(method("GET"))
+        .and(path("/Invoice"))
+        .respond_with(ResponseTemplate::new(200).set_body_string(body.to_string()))
+        .mount(&server)
+        .await;
+    let err = client(&server)
+        .list_invoices(&InvoiceQuery::default())
+        .await
+        .unwrap_err();
+    match &err {
+        SevdeskError::Decode {
+            status,
+            path,
+            context,
+            ..
+        } => {
+            assert_eq!(
+                (*status, path.as_str(), *context),
+                (200, "[0].sumNet", "Invoice")
+            );
+        }
+        other => panic!("expected a decode error, got {other:?}"),
+    }
+    let message = err.to_string();
+    assert!(
+        message.contains("HTTP 200") && message.contains("at `[0].sumNet`"),
+        "{message}"
+    );
+}

@@ -99,9 +99,16 @@ pub enum SevdeskError {
     #[error("sevDesk transport: {0}")]
     Transport(#[from] reqwest::Error),
     /// The body is valid JSON but not the shape this crate reads.
-    #[error("sevDesk response does not decode ({context}): {source}")]
+    ///
+    /// `path` is the field path inside the body (`[0].sumNet`, `.` for the
+    /// root) and `status` the HTTP status of the response. After a write a
+    /// decode error does NOT mean "not written": the write was answered
+    /// (`status`), only its answer is unreadable, so re-read before retrying.
+    #[error("sevDesk response does not decode ({context}, HTTP {status}) at `{path}`: {source}")]
     Decode {
         context: &'static str,
+        status: u16,
+        path: String,
         source: serde_json::Error,
     },
     /// The body decoded but none of the fields this crate relies on is there:

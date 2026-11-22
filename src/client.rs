@@ -104,7 +104,11 @@ impl fmt::Debug for SevdeskClient {
 }
 
 /// A successful body, error-checked.
-pub(crate) struct Body(pub(crate) String);
+pub(crate) struct Body {
+    /// The HTTP status the body came with.
+    status: u16,
+    text: String,
+}
 
 impl SevdeskClient {
     pub fn new(config: SevdeskClientConfig) -> Result<Self, SevdeskError> {
@@ -233,7 +237,7 @@ pub(crate) fn check_body(status: u16, text: String) -> Result<Body, SevdeskError
             code: None,
             message: text.chars().take(200).collect(),
         }),
-        _ => Ok(Body(text)),
+        _ => Ok(Body { status, text }),
     }
 }
 
@@ -243,10 +247,34 @@ struct Envelope {
     objects: Option<Box<RawValue>>,
 }
 
+/// Decodes `text` into `T`, naming the field path on failure.
+fn decode<T: DeserializeOwned>(
+    text: &str,
+    context: &'static str,
+    status: u16,
+) -> Result<T, SevdeskError> {
+    let fail = |path: String, source| SevdeskError::Decode {
+        context,
+        status,
+        path,
+        source,
+    };
+    let mut de = serde_json::Deserializer::from_str(text);
+    let value = serde_path_to_error::deserialize(&mut de)
+        .map_err(|err| fail(err.path().to_string(), err.into_inner()))?;
+    de.end().map_err(|source| fail(".".into(), source))?;
+    Ok(value)
+}
+
 impl Body {
     fn objects(&self, context: &'static str) -> Result<Box<RawValue>, SevdeskError> {
-        let envelope: Envelope = serde_json::from_str(&self.0)
-            .map_err(|source| SevdeskError::Decode { context, source })?;
+        let envelope: Envelope =
+            serde_json::from_str(&self.text).map_err(|source| SevdeskError::Decode {
+                context,
+                status: self.status,
+                path: ".".into(),
+                source,
+            })?;
         match envelope.objects {
             Some(raw) if raw.get() != "null" => Ok(raw),
             _ => Err(SevdeskError::DriftGuard {
@@ -259,11 +287,7 @@ impl Body {
     /// `objects` as a list of `T`.
     pub(crate) fn list<T: DeserializeOwned + Guard>(&self) -> Result<Vec<T>, SevdeskError> {
         let raw = self.objects(T::NAME)?;
-        let items: Vec<T> =
-            serde_json::from_str(raw.get()).map_err(|source| SevdeskError::Decode {
-                context: T::NAME,
-                source,
-            })?;
+        let items: Vec<T> = decode(raw.get(), T::NAME, self.status)?;
         items.iter().try_for_each(guard)?;
         Ok(items)
     }
@@ -272,12 +296,6 @@ impl Body {
     /// and most factories with the bare object; both read.
     pub(crate) fn one<T: DeserializeOwned + Guard>(&self) -> Result<T, SevdeskError> {
         let raw = self.objects(T::NAME)?;
-        let decode = |text: &str| {
-            serde_json::from_str::<T>(text).map_err(|source| SevdeskError::Decode {
-                context: T::NAME,
-                source,
-            })
-        };
         let item = if raw.get().trim_start().starts_with('[') {
             self.list::<T>()?
                 .into_iter()
@@ -287,7 +305,7 @@ impl Body {
                     detail: "empty `objects` list".into(),
                 })?
         } else {
-            decode(raw.get())?
+            decode(raw.get(), T::NAME, self.status)?
         };
         guard(&item)?;
         Ok(item)
@@ -306,7 +324,7 @@ impl Body {
         context: &'static str,
     ) -> Result<T, SevdeskError> {
         let raw = self.objects(context)?;
-        serde_json::from_str(raw.get()).map_err(|source| SevdeskError::Decode { context, source })
+        decode(raw.get(), context, self.status)
     }
 }
 
