@@ -70,3 +70,11 @@ test = false
 name = "address_probe"
 path = "tests/address_probe/main.rs"
 test = false
+
+# Only READS the test account (GET, after verifying the account); never part of
+# a plain `cargo test`; run with `just test-live --test shape_survey survey_all`
+# (`just test-live` appends `-- --ignored --nocapture` itself).
+[[test]]
+name = "shape_survey"
+path = "tests/shape_survey/main.rs"
+test = false
