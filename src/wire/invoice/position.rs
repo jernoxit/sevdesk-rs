@@ -16,6 +16,7 @@ use time::OffsetDateTime;
 /// spec).
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[non_exhaustive]
 pub struct InvoicePosition {
     pub id: InvoicePositionId,
     /// `null` in the save answer, filled in the GET answer.

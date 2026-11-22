@@ -18,6 +18,7 @@ use time::OffsetDateTime;
 /// `sepaMandateReference`, `sepaPayerIban`) are not read.
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[non_exhaustive]
 pub struct Invoice {
     pub id: InvoiceId,
     /// Free-form object, `null` on most invoices; only `creditVoucher` is measured.

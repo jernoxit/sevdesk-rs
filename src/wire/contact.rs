@@ -14,6 +14,7 @@ use time::{Date, OffsetDateTime};
 /// and not in the spec (form unmeasured), so they are not read.
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[non_exhaustive]
 pub struct Contact {
     pub id: ContactId,
     #[serde(default, with = "time::serde::rfc3339::option")]
@@ -136,6 +137,7 @@ impl Guard for Contact {
 /// every measurement and not in the spec (form unmeasured), so it is not read.
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[non_exhaustive]
 pub struct ContactAddress {
     pub id: ContactAddressId,
     #[serde(default, with = "time::serde::rfc3339::option")]
@@ -186,6 +188,7 @@ impl Guard for ContactAddress {
 /// every measurement and not in the spec (form unmeasured), so it is not read.
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[non_exhaustive]
 pub struct CommunicationWay {
     pub id: CommunicationWayId,
     #[serde(default, with = "time::serde::rfc3339::option")]

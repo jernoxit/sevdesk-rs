@@ -14,6 +14,7 @@ use time::OffsetDateTime;
 /// `specialAccountingField5`, `sum`) are not read.
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[non_exhaustive]
 pub struct VoucherPosition {
     pub id: VoucherPositionId,
     #[serde(default, with = "time::serde::rfc3339::option")]

@@ -15,6 +15,7 @@ use time::OffsetDateTime;
 /// the spec).
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[non_exhaustive]
 pub struct CreditNotePosition {
     pub id: CreditNotePositionId,
     #[serde(default, with = "time::serde::rfc3339::option")]

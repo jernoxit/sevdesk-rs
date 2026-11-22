@@ -16,6 +16,7 @@ use time::OffsetDateTime;
 /// `restoredAt`, `score`) are not read.
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[non_exhaustive]
 pub struct Transaction {
     pub id: TransactionId,
     #[serde(default, with = "time::serde::rfc3339::option")]
@@ -87,6 +88,7 @@ impl Guard for Transaction {
 /// of a log entry's `object`. `Voucher`, `Invoice` and `CreditNote` are
 /// measured; those are the only two keys the reference carries.
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[non_exhaustive]
 pub enum BookedDocument {
     Voucher(VoucherId),
     Invoice(InvoiceId),
@@ -120,6 +122,7 @@ impl<'de> Deserialize<'de> for BookedDocument {
 /// OpenAPI spec (the endpoint has no schema), so it is not read.
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[non_exhaustive]
 pub struct TransactionLogEntry {
     pub id: TransactionLogId,
     #[serde(default, with = "time::serde::rfc3339::option")]

@@ -8,6 +8,7 @@ use time::OffsetDateTime;
 /// The `additionalInformation` object some documents carry (`null` on most).
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[non_exhaustive]
 pub struct AdditionalInformation {
     /// Measured once: `false` on a cancellation invoice. Other keys of the
     /// object are not measured.
@@ -21,6 +22,7 @@ pub struct AdditionalInformation {
 /// OpenAPI spec names too). `id` is a JSON number here, a string elsewhere.
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[non_exhaustive]
 pub struct AllowedTaxRule {
     pub id: TaxRuleId,
     /// A rule name such as `VORST_ABZUGSF_AUFW`.
@@ -40,6 +42,7 @@ pub struct AllowedTaxRule {
 /// is a field.
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[non_exhaustive]
 pub struct ReceiptGuidance {
     pub account_datev_id: AccountDatevId,
     /// The account number in the chart of accounts, e.g. `"4970"`.
@@ -71,6 +74,7 @@ impl Guard for ReceiptGuidance {
 /// `FORM_UNMEASURED` of the completeness test). The answer has no `id`.
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[non_exhaustive]
 pub struct UploadedFile {
     pub filename: String,
     /// `image/jpg` for an uploaded PDF (a preview image), measured once.
@@ -105,6 +109,7 @@ impl Guard for UploadedFile {
 /// `startDate`, `endDate`) are not read until a measurement shows them.
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[non_exhaustive]
 pub struct SevUser {
     pub id: SevUserId,
     #[serde(default, with = "time::serde::rfc3339::option")]
@@ -178,6 +183,7 @@ impl Guard for SevUser {
 /// unmeasured).
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[non_exhaustive]
 pub struct SevSequence {
     pub id: SevSequenceId,
     #[serde(default, with = "time::serde::rfc3339::option")]
@@ -226,6 +232,7 @@ impl Guard for SevSequence {
 /// form unmeasured).
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[non_exhaustive]
 pub struct PaymentMethod {
     pub id: PaymentMethodId,
     #[serde(default, with = "time::serde::rfc3339::option")]

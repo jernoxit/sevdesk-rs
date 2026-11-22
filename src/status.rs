@@ -9,6 +9,7 @@ macro_rules! coded_enum {
     ($(#[$meta:meta])* $name:ident { $($(#[$vmeta:meta])* $var:ident = $code:literal),+ $(,)? }) => {
         $(#[$meta])*
         #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+        #[non_exhaustive]
         pub enum $name {
             $($(#[$vmeta])* $var,)+
             /// A code this crate does not know.
@@ -42,6 +43,7 @@ macro_rules! named_enum {
     ($(#[$meta:meta])* $name:ident { $($(#[$vmeta:meta])* $var:ident = $text:literal),+ $(,)? }) => {
         $(#[$meta])*
         #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+        #[non_exhaustive]
         pub enum $name {
             $($(#[$vmeta])* $var,)+
             /// A value this crate does not know.

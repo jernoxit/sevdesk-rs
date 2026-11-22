@@ -12,6 +12,7 @@ use time::OffsetDateTime;
 /// is `null` in both recordings and not in the OpenAPI spec, so it is not read.
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[non_exhaustive]
 pub struct VoucherLog {
     pub id: VoucherLogId,
     #[serde(default, with = "time::serde::rfc3339::option")]

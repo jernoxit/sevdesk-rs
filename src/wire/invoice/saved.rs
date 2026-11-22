@@ -5,6 +5,7 @@ use serde::Deserialize;
 /// The answer of `saveInvoice`: the invoice and ALL its positions.
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[non_exhaustive]
 pub struct SavedInvoice {
     pub invoice: Invoice,
     /// The positions as saved; present in every recording, so a missing list reads empty.

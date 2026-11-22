@@ -13,6 +13,7 @@ use time::OffsetDateTime;
 /// not read.
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[non_exhaustive]
 pub struct Document {
     pub id: DocumentId,
     #[serde(default, with = "time::serde::rfc3339::option")]

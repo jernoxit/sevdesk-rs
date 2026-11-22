@@ -85,10 +85,11 @@ async fn the_recorded_cancellation_is_an_sr_pointing_to_its_original() {
     assert_eq!(cancelled.sum_gross, Some(eur(-2190)));
     assert_eq!(cancelled.currency, CurrencyCode::EUR);
     assert_eq!(
-        cancelled.additional_information,
-        Some(AdditionalInformation {
-            credit_voucher: Some(false)
-        })
+        cancelled
+            .additional_information
+            .as_ref()
+            .map(|info| info.credit_voucher),
+        Some(Some(false))
     );
     assert_eq!(cancelled.property_use_new_doc_server, Some(true));
     assert_eq!(cancelled.property_is_e_invoice, None);

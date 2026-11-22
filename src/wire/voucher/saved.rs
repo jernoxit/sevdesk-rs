@@ -5,6 +5,7 @@ use serde::Deserialize;
 /// The answer of `saveVoucher`: the voucher and ALL its positions.
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[non_exhaustive]
 pub struct SavedVoucher {
     pub voucher: Voucher,
     #[serde(default)]

@@ -16,6 +16,7 @@ use time::OffsetDateTime;
 /// `sendType`, `taxmaroStockAccount`, `vatNumber`) are not read.
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[non_exhaustive]
 pub struct Voucher {
     pub id: VoucherId,
     /// Form not measured; type from the OpenAPI spec (a request artifact there).

@@ -78,9 +78,28 @@ Where a measurement contradicts sevDesk's OpenAPI spec, the measurement wins.
   credit notes, although the spec allows `null` on vouchers and credit notes.
   Transactions, transaction log entries, voucher positions and bookings carry
   none.
+- **Invoices carry address fields the spec lacks:** `addressName`,
+  `addressStreet`, `addressZip` and `addressCity` are returned although the
+  spec does not list them.
+- **Switches typed `boolean` in the spec come as `"0"`/`"1"`.**
+- **Endpoints not in the spec:** `/SevUser`, `/PaymentMethod`,
+  `/CheckAccountTransactionLog` and `/SevSequence/Factory/getByType`.
+- **Save answers return a quantity of 0/1 as `false`/`true`.**
+- **Unit prices carry up to eight fraction digits**, and `priceGross` comes
+  unrounded.
 
 The crate docs (`just doc`, then `target/doc/sevdesk/index.html`) carry these
 details at the types and methods they concern.
+
+## Read types
+
+Every read type maps every field its call returns, taken from recorded
+answers, a read-only survey of the test account, and the OpenAPI spec. A field
+never seen filled carries the spec's type, and its docs say so. Read types and
+their enums are `#[non_exhaustive]`, so a new field or variant is not a
+breaking change; in tests, construct them by deserializing JSON. Decode errors
+name the field path and the HTTP status; an unreadable answer after a write
+does not mean "not written".
 
 ## Amounts and currency
 
@@ -102,6 +121,11 @@ Only EUR is measured. Documents also carry `sum*ForeignCurrency` (not read);
 whether a document in another currency reports `sumGross` in that currency or
 in the account's is open, and a voucher in another currency needs an exchange
 rate this crate does not send.
+
+Unit prices and quantities come with up to eight fraction digits (measured),
+so they are `sevdesk::Decimal`: the exact mantissa and scale, read from the
+JSON source text, no float, no arithmetic. Save answers return a quantity of 0
+or 1 as `false` or `true`, and it is read as such.
 
 ## Usage
 

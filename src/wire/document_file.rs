@@ -9,6 +9,7 @@ use serde::Deserialize;
 /// `filename` is `".pdf"` (no stem) on a draft, which has no number yet; it is
 /// returned as sevDesk sent it.
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[non_exhaustive]
 pub struct DocumentPdf {
     pub bytes: Vec<u8>,
     pub filename: String,

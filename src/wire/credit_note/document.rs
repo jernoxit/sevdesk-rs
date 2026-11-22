@@ -20,6 +20,7 @@ use time::OffsetDateTime;
 /// `timeToPay`, `vatNumber`) are not read.
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[non_exhaustive]
 pub struct CreditNote {
     pub id: CreditNoteId,
     #[serde(default)]

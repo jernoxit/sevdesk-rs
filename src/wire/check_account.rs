@@ -16,6 +16,7 @@ use time::OffsetDateTime;
 /// and is not read.
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[non_exhaustive]
 pub struct CheckAccount {
     pub id: CheckAccountId,
     #[serde(default, with = "time::serde::rfc3339::option")]

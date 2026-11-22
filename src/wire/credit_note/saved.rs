@@ -5,6 +5,7 @@ use serde::Deserialize;
 /// The answer of `saveCreditNote`: the credit note and ALL its positions.
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[non_exhaustive]
 pub struct SavedCreditNote {
     pub credit_note: CreditNote,
     /// The positions as saved; present in every recording, so a missing list reads empty.
