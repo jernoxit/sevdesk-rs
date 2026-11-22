@@ -24,6 +24,8 @@ pub struct Invoice {
     /// Free-form object, `null` on most invoices; only `creditVoucher` is measured.
     #[serde(default)]
     pub additional_information: Option<AdditionalInformation>,
+    /// May change at `sendBy` if the number was already taken (measured with
+    /// automatic enshrinement on); read it after finalizing.
     #[serde(default)]
     pub invoice_number: Option<String>,
     /// The customer. A full `Contact` object comes with `cancelInvoice`; only the id is read.

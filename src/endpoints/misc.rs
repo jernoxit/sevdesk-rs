@@ -25,6 +25,11 @@ impl SevdeskClient {
     /// The number the next credit note gets (`GU-1011`), from
     /// `GET /SevSequence/Factory/getByType`. The sequence only advances when
     /// a credit note is enshrined, so two drafts read the same number.
+    ///
+    /// Measured with automatic enshrinement on: a number already taken by
+    /// another finalized credit note is not refused but replaced by the next
+    /// sequence number at `sendBy`. The final number is therefore the one in
+    /// the `sendBy` answer or a GET afterwards, never the one read beforehand.
     pub async fn next_credit_note_number(&self) -> Result<String, SevdeskError> {
         let sequence: SevSequence = self
             .get(

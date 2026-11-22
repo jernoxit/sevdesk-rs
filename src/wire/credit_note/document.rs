@@ -23,6 +23,8 @@ use time::OffsetDateTime;
 #[non_exhaustive]
 pub struct CreditNote {
     pub id: CreditNoteId,
+    /// May change at `sendBy` if the number was already taken (measured with
+    /// automatic enshrinement on); read it after finalizing.
     #[serde(default)]
     pub credit_note_number: Option<String>,
     /// The customer. Only the id is read.

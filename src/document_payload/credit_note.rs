@@ -23,7 +23,8 @@ use time::{Date, OffsetDateTime};
 #[derive(Debug, Clone)]
 pub struct CreditNoteDraft {
     /// From [`crate::SevdeskClient::next_credit_note_number`]; without one,
-    /// `sendBy` fails.
+    /// `sendBy` fails. A number already taken is not refused but replaced at
+    /// `sendBy`.
     pub credit_note_number: String,
     pub contact: ObjectRef<ContactId>,
     pub contact_person: ObjectRef<SevUserId>,
