@@ -99,7 +99,8 @@ never seen filled carries the spec's type, and its docs say so. Read types and
 their enums are `#[non_exhaustive]`, so a new field or variant is not a
 breaking change; in tests, construct them by deserializing JSON. Decode errors
 name the field path and the HTTP status; an unreadable answer after a write
-does not mean "not written".
+does not mean "not written". `SevdeskError` and `KnownCode` are
+`#[non_exhaustive]` too; match them with a `_` arm.
 
 ## Amounts and currency
 

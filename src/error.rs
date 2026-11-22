@@ -5,6 +5,7 @@ use serde::Deserialize;
 
 /// Error codes sevDesk sends in `error.code`, as measured.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[non_exhaustive]
 pub enum KnownCode {
     /// 151: no such object.
     NotFound,
@@ -82,7 +83,10 @@ impl KnownCode {
     }
 }
 
+/// Marked `#[non_exhaustive]`: a new variant is not a breaking change, so
+/// callers match with a `_` arm.
 #[derive(Debug, thiserror::Error)]
+#[non_exhaustive]
 pub enum SevdeskError {
     /// sevDesk answered with an `error` object — with any HTTP status, also 200.
     #[error("sevDesk error (HTTP {status}, code {code:?}): {message}")]
