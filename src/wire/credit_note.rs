@@ -18,6 +18,8 @@ pub struct CreditNote {
     #[serde(default, with = "time::serde::rfc3339::option")]
     pub credit_note_date: Option<OffsetDateTime>,
     #[serde(default, deserialize_with = "amount_opt")]
+    pub sum_net: Option<Amount>,
+    #[serde(default, deserialize_with = "amount_opt")]
     pub sum_gross: Option<Amount>,
     #[serde(default, deserialize_with = "amount_opt")]
     pub paid_amount: Option<Amount>,

@@ -60,6 +60,7 @@ async fn the_recorded_save_credit_note_answer_refers_to_its_invoice() {
         .credit_note;
     assert_eq!(saved.status, Some(CreditNoteStatus::Draft));
     assert_eq!(saved.credit_note_number.as_deref(), Some("GU-1048"));
+    assert_eq!(saved.sum_net, Some(eur(1000)));
     assert_eq!(saved.sum_gross, Some(eur(1190)));
     assert!(saved.ref_src_invoice.is_some());
     assert!(saved.origin.is_none());

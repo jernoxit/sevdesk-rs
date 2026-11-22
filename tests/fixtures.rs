@@ -278,11 +278,18 @@ fn address_strings_read_empty_null_and_absent_as_none() {
     );
 }
 
+#[test]
+fn credit_note_without_sum_net_reads_none() {
+    let n: CreditNote = serde_json::from_str(r#"{"id": "1", "currency": "EUR"}"#).unwrap();
+    assert_eq!(n.sum_net, None);
+}
+
 #[tokio::test]
 async fn credit_note() {
     let (_s, c) = serving("/CreditNote/2996041", "credit_note").await;
     let n = c.credit_note(CreditNoteId::new(2996041)).await.unwrap();
     assert_eq!(n.credit_note_number.as_deref(), Some("GU-1006"));
+    assert_eq!(n.sum_net, Some(eur(4900)));
     assert_eq!(n.sum_gross, Some(eur(5831)));
     assert_eq!(n.currency, CurrencyCode::EUR);
     assert_eq!(n.status, Some(CreditNoteStatus::Paid));
