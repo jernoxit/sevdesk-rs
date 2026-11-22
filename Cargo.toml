@@ -78,3 +78,11 @@ test = false
 name = "shape_survey"
 path = "tests/shape_survey/main.rs"
 test = false
+
+# Writes ONE permanent invoice draft to the test account; never part of a plain
+# `cargo test`; run with `just test-live --test quantity_probe case1`
+# (`just test-live` appends `-- --ignored --nocapture` itself).
+[[test]]
+name = "quantity_probe"
+path = "tests/quantity_probe/main.rs"
+test = false
