@@ -1,0 +1,184 @@
+{
+  "objects": [
+    {
+      "additionalInformation": null,
+      "create": "2026-09-29T01:31:31+02:00",
+      "createNextPart": null,
+      "creditNote": {
+        "id": "2996042",
+        "objectName": "CreditNote"
+      },
+      "discount": "20",
+      "discountedValue": "20",
+      "id": "6134606",
+      "isPercentage": "1",
+      "name": "REDACTED",
+      "objectName": "CreditNotePos",
+      "positionNumber": "1000",
+      "price": "49",
+      "priceGross": "58.31",
+      "priceNet": "49",
+      "priceTax": "9.31",
+      "priority": "100",
+      "quantity": "1",
+      "sevClient": {
+        "id": "1303847",
+        "objectName": "SevClient"
+      },
+      "sumDiscount": "9.8",
+      "sumDiscountForeignCurrency": "0",
+      "sumGross": "46.65",
+      "sumGrossAccounting": "0",
+      "sumGrossForeignCurrency": "0",
+      "sumNet": "39.2",
+      "sumNetAccounting": "0",
+      "sumNetForeignCurrency": "0",
+      "sumTax": "7.45",
+      "sumTaxAccounting": "0",
+      "sumTaxForeignCurrency": "0",
+      "taxRate": "19",
+      "temporary": "0",
+      "text": null,
+      "unity": {
+        "id": "1",
+        "objectName": "Unity"
+      },
+      "update": "2026-09-29T01:31:31+02:00"
+    },
+    {
+      "additionalInformation": null,
+      "create": "2026-09-29T22:13:55+02:00",
+      "createNextPart": null,
+      "creditNote": {
+        "id": "2998960",
+        "objectName": "CreditNote"
+      },
+      "discount": "0",
+      "discountedValue": null,
+      "id": "6140013",
+      "isPercentage": "1",
+      "name": "REDACTED",
+      "objectName": "CreditNotePos",
+      "positionNumber": "0",
+      "price": "4",
+      "priceGross": "4",
+      "priceNet": "3.36134454",
+      "priceTax": "0.63865546",
+      "priority": "100",
+      "quantity": "1",
+      "sevClient": {
+        "id": "1303847",
+        "objectName": "SevClient"
+      },
+      "sumDiscount": "0",
+      "sumDiscountForeignCurrency": "0",
+      "sumGross": "4",
+      "sumGrossAccounting": "4",
+      "sumGrossForeignCurrency": "0",
+      "sumNet": "3.36",
+      "sumNetAccounting": "3.36",
+      "sumNetForeignCurrency": "0",
+      "sumTax": "0.64",
+      "sumTaxAccounting": "0.64",
+      "sumTaxForeignCurrency": "0",
+      "taxRate": "19",
+      "temporary": "0",
+      "text": null,
+      "unity": {
+        "id": "1",
+        "objectName": "Unity"
+      },
+      "update": "2026-09-29T22:13:55+02:00"
+    },
+    {
+      "additionalInformation": null,
+      "create": "2026-11-22T10:06:58+01:00",
+      "createNextPart": null,
+      "creditNote": {
+        "id": "3117097",
+        "objectName": "CreditNote"
+      },
+      "discount": "0",
+      "discountedValue": null,
+      "id": "6383119",
+      "isPercentage": "1",
+      "name": "REDACTED",
+      "objectName": "CreditNotePos",
+      "positionNumber": "1000",
+      "price": "5",
+      "priceGross": "5.95",
+      "priceNet": "5",
+      "priceTax": "0.95",
+      "priority": "100",
+      "quantity": "1",
+      "sevClient": {
+        "id": "1303847",
+        "objectName": "SevClient"
+      },
+      "sumDiscount": "0",
+      "sumDiscountForeignCurrency": "0",
+      "sumGross": "5.95",
+      "sumGrossAccounting": "5.95",
+      "sumGrossForeignCurrency": "0",
+      "sumNet": "5",
+      "sumNetAccounting": "5",
+      "sumNetForeignCurrency": "0",
+      "sumTax": "0.95",
+      "sumTaxAccounting": "0.95",
+      "sumTaxForeignCurrency": "0",
+      "taxRate": "19",
+      "temporary": "0",
+      "text": "SDRS-LEN-1795338407 [0020]„Tarif ä“ [003",
+      "unity": {
+        "id": "1",
+        "objectName": "Unity"
+      },
+      "update": "2026-11-22T10:06:58+01:00"
+    },
+    {
+      "additionalInformation": null,
+      "create": "2026-10-01T20:03:57+02:00",
+      "createNextPart": null,
+      "creditNote": {
+        "id": "3005278",
+        "objectName": "CreditNote"
+      },
+      "discount": "0",
+      "discountedValue": null,
+      "id": "6152387",
+      "isPercentage": "1",
+      "name": "REDACTED",
+      "objectName": "CreditNotePos",
+      "positionNumber": "1000",
+      "price": "10.05",
+      "priceGross": "10.05",
+      "priceNet": "8.44537815",
+      "priceTax": "1.60462185",
+      "priority": "100",
+      "quantity": "3",
+      "sevClient": {
+        "id": "1303847",
+        "objectName": "SevClient"
+      },
+      "sumDiscount": "0",
+      "sumDiscountForeignCurrency": "0",
+      "sumGross": "30.15",
+      "sumGrossAccounting": "30.15",
+      "sumGrossForeignCurrency": "0",
+      "sumNet": "25.34",
+      "sumNetAccounting": "25.34",
+      "sumNetForeignCurrency": "0",
+      "sumTax": "4.81",
+      "sumTaxAccounting": "4.81",
+      "sumTaxForeignCurrency": "0",
+      "taxRate": "19",
+      "temporary": "0",
+      "text": null,
+      "unity": {
+        "id": "1",
+        "objectName": "Unity"
+      },
+      "update": "2026-10-01T20:03:57+02:00"
+    }
+  ]
+}

@@ -136,7 +136,7 @@ fn form_unmeasured(fixture: &str) -> Vec<(String, bool)> {
             .collect()
     };
     match fixture {
-        "invoice_draft" | "invoice_enshrined" | "invoice_list" => {
+        "invoice_draft" | "invoice_enshrined" | "invoice_list" | "sample_invoice_list" => {
             under("objects.*.", INVOICE_FORM_UNMEASURED)
         }
         "write_invoice_cancel" => under("objects.", INVOICE_FORM_UNMEASURED),
@@ -148,8 +148,13 @@ fn form_unmeasured(fixture: &str) -> Vec<(String, bool)> {
             ));
             keys
         }
-        "quantity_probe_get_invoice_pos" => under("objects.*.", INVOICE_POSITION_FORM_UNMEASURED),
-        "credit_note" => under("objects.*.", CREDIT_NOTE_FORM_UNMEASURED),
+        "quantity_probe_get_invoice_pos" | "sample_invoice_pos_list" => {
+            under("objects.*.", INVOICE_POSITION_FORM_UNMEASURED)
+        }
+        "credit_note" | "sample_credit_note_list" => {
+            under("objects.*.", CREDIT_NOTE_FORM_UNMEASURED)
+        }
+        "sample_credit_note_pos_list" => under("objects.*.", CREDIT_NOTE_POSITION_FORM_UNMEASURED),
         "write_credit_note_save" => {
             let mut keys = under("objects.creditNote.", CREDIT_NOTE_FORM_UNMEASURED);
             keys.extend(under(
@@ -383,6 +388,58 @@ fn covered() -> Vec<(&'static str, Vec<String>, &'static [&'static str])> {
                 "objects.*.refSrcInvoice.objectName",
                 "objects.*.sevClient.objectName",
                 "objects.*.taxRule.objectName",
+            ],
+        ),
+        (
+            "sample_invoice_list",
+            unread::<Invoice>("sample_invoice_list"),
+            &[
+                "objects.*.addressCountry.objectName",
+                "objects.*.contact.objectName",
+                "objects.*.contactPerson.objectName",
+                "objects.*.createUser.objectName",
+                "objects.*.origin.objectName",
+                "objects.*.paymentMethod.objectName",
+                "objects.*.sevClient.objectName",
+                "objects.*.taxRule.objectName",
+                "objects.*.objectName",
+            ],
+        ),
+        (
+            "sample_invoice_pos_list",
+            unread::<InvoicePosition>("sample_invoice_pos_list"),
+            &[
+                "objects.*.invoice.objectName",
+                "objects.*.objectName",
+                "objects.*.sevClient.objectName",
+                "objects.*.unity.objectName",
+            ],
+        ),
+        (
+            "sample_credit_note_list",
+            unread::<CreditNote>("sample_credit_note_list"),
+            &[
+                "objects.*.accountingType.objectName",
+                "objects.*.addressCountry.objectName",
+                "objects.*.contact.objectName",
+                "objects.*.contactPerson.objectName",
+                "objects.*.createUser.objectName",
+                "objects.*.origin.objectName",
+                "objects.*.paymentMethod.objectName",
+                "objects.*.refSrcInvoice.objectName",
+                "objects.*.sevClient.objectName",
+                "objects.*.taxRule.objectName",
+                "objects.*.objectName",
+            ],
+        ),
+        (
+            "sample_credit_note_pos_list",
+            unread::<CreditNotePosition>("sample_credit_note_pos_list"),
+            &[
+                "objects.*.creditNote.objectName",
+                "objects.*.objectName",
+                "objects.*.sevClient.objectName",
+                "objects.*.unity.objectName",
             ],
         ),
         (

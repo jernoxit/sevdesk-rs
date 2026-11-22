@@ -1,0 +1,184 @@
+{
+  "objects": [
+    {
+      "additionalInformation": null,
+      "create": "2026-09-28T19:49:37+02:00",
+      "createNextPart": null,
+      "discount": "10",
+      "discountedValue": "10",
+      "id": "361892829",
+      "invoice": {
+        "id": "135169899",
+        "objectName": "Invoice"
+      },
+      "isPercentage": "1",
+      "name": "REDACTED",
+      "objectName": "InvoicePos",
+      "positionNumber": "1000",
+      "price": "50",
+      "priceGross": "59.5",
+      "priceNet": "50",
+      "priceTax": "9.5",
+      "priority": "100",
+      "quantity": "1",
+      "sevClient": {
+        "id": "1303847",
+        "objectName": "SevClient"
+      },
+      "sumDiscount": "5",
+      "sumDiscountForeignCurrency": "0",
+      "sumGross": "53.55",
+      "sumGrossAccounting": "53.55",
+      "sumGrossForeignCurrency": "0",
+      "sumNet": "45",
+      "sumNetAccounting": "45",
+      "sumNetForeignCurrency": "0",
+      "sumTax": "8.55",
+      "sumTaxAccounting": "8.55",
+      "sumTaxForeignCurrency": "0",
+      "taxRate": "19",
+      "temporary": "0",
+      "text": null,
+      "unity": {
+        "id": "1",
+        "objectName": "Unity"
+      },
+      "update": "2026-09-28T19:49:37+02:00"
+    },
+    {
+      "additionalInformation": null,
+      "create": "2026-09-28T20:35:52+02:00",
+      "createNextPart": null,
+      "discount": "0",
+      "discountedValue": null,
+      "id": "361902006",
+      "invoice": {
+        "id": "135173157",
+        "objectName": "Invoice"
+      },
+      "isPercentage": "1",
+      "name": "",
+      "objectName": "InvoicePos",
+      "positionNumber": "1000",
+      "price": "0",
+      "priceGross": "0",
+      "priceNet": "0",
+      "priceTax": "0",
+      "priority": "100",
+      "quantity": "1",
+      "sevClient": {
+        "id": "1303847",
+        "objectName": "SevClient"
+      },
+      "sumDiscount": "0",
+      "sumDiscountForeignCurrency": "0",
+      "sumGross": "0",
+      "sumGrossAccounting": "0",
+      "sumGrossForeignCurrency": "0",
+      "sumNet": "0",
+      "sumNetAccounting": "0",
+      "sumNetForeignCurrency": "0",
+      "sumTax": "0",
+      "sumTaxAccounting": "0",
+      "sumTaxForeignCurrency": "0",
+      "taxRate": "19",
+      "temporary": "0",
+      "text": null,
+      "unity": {
+        "id": "1",
+        "objectName": "Unity"
+      },
+      "update": "2026-09-28T20:39:17+02:00"
+    },
+    {
+      "additionalInformation": null,
+      "create": "2026-09-28T19:49:40+02:00",
+      "createNextPart": null,
+      "discount": "0",
+      "discountedValue": null,
+      "id": "361892841",
+      "invoice": {
+        "id": "135169905",
+        "objectName": "Invoice"
+      },
+      "isPercentage": "1",
+      "name": "REDACTED",
+      "objectName": "InvoicePos",
+      "positionNumber": "1000",
+      "price": "7.77",
+      "priceGross": "7.77",
+      "priceNet": "6.52941176",
+      "priceTax": "1.24058824",
+      "priority": "100",
+      "quantity": "0.5",
+      "sevClient": {
+        "id": "1303847",
+        "objectName": "SevClient"
+      },
+      "sumDiscount": "0",
+      "sumDiscountForeignCurrency": "0",
+      "sumGross": "3.89",
+      "sumGrossAccounting": "3.89",
+      "sumGrossForeignCurrency": "0",
+      "sumNet": "3.27",
+      "sumNetAccounting": "3.27",
+      "sumNetForeignCurrency": "0",
+      "sumTax": "0.62",
+      "sumTaxAccounting": "0.62",
+      "sumTaxForeignCurrency": "0",
+      "taxRate": "19",
+      "temporary": "0",
+      "text": null,
+      "unity": {
+        "id": "1",
+        "objectName": "Unity"
+      },
+      "update": "2026-09-28T19:49:40+02:00"
+    },
+    {
+      "additionalInformation": null,
+      "create": "2026-09-28T20:15:55+02:00",
+      "createNextPart": null,
+      "discount": "20",
+      "discountedValue": "20",
+      "id": "361897957",
+      "invoice": {
+        "id": "135171691",
+        "objectName": "Invoice"
+      },
+      "isPercentage": "1",
+      "name": "REDACTED",
+      "objectName": "InvoicePos",
+      "positionNumber": "1000",
+      "price": "49",
+      "priceGross": "58.31",
+      "priceNet": "49",
+      "priceTax": "9.31",
+      "priority": "100",
+      "quantity": "1",
+      "sevClient": {
+        "id": "1303847",
+        "objectName": "SevClient"
+      },
+      "sumDiscount": "9.8",
+      "sumDiscountForeignCurrency": "0",
+      "sumGross": "46.65",
+      "sumGrossAccounting": "46.65",
+      "sumGrossForeignCurrency": "0",
+      "sumNet": "39.2",
+      "sumNetAccounting": "39.2",
+      "sumNetForeignCurrency": "0",
+      "sumTax": "7.45",
+      "sumTaxAccounting": "7.45",
+      "sumTaxForeignCurrency": "0",
+      "taxRate": "19",
+      "temporary": "0",
+      "text": null,
+      "unity": {
+        "id": "1",
+        "objectName": "Unity"
+      },
+      "update": "2026-09-28T20:15:55+02:00"
+    }
+  ]
+}

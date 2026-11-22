@@ -627,3 +627,226 @@ async fn decode_error_names_the_field_path_and_the_status() {
         "{message}"
     );
 }
+
+// Shape-survey samples: up to four live objects per resource, scrubbed, chosen
+// to cover every measured (key, form) pair.
+
+fn sample_positions<T: serde::de::DeserializeOwned>(name: &str) -> Vec<T> {
+    #[derive(serde::Deserialize)]
+    struct Envelope<T> {
+        objects: Vec<T>,
+    }
+    serde_json::from_str::<Envelope<T>>(&fixture(name))
+        .unwrap_or_else(|e| panic!("{name}: {e}"))
+        .objects
+}
+
+#[tokio::test]
+async fn sample_invoice_list_reads_every_measured_form() {
+    let (_s, c) = serving("/Invoice", "sample_invoice_list").await;
+    let list = c.list_invoices(&InvoiceQuery::default()).await.unwrap();
+    assert_eq!(list.len(), 4);
+    let by_id = |id: i64| list.iter().find(|i| i.id == InvoiceId::new(id)).unwrap();
+
+    let open = by_id(135171669);
+    assert_eq!(open.invoice_type, Some(InvoiceType::Invoice));
+    assert_eq!(open.status, Some(InvoiceStatus::Open));
+    assert_eq!(open.sum_net, Some(eur(3900)));
+    assert_eq!(open.sum_tax, Some(eur(741)));
+    assert_eq!(open.sum_gross, Some(eur(4641)));
+    assert_eq!(open.show_net, Some(true));
+    assert_eq!(open.small_settlement, Some(false));
+    assert_eq!(open.send_type, Some(DocumentSendType::Vpdf));
+    assert_eq!(open.reminder_charge, Some(eur(0)));
+    assert_eq!(
+        open.enshrined,
+        Some(time::macros::datetime!(2026-09-28 20:15:44 +2))
+    );
+    assert_eq!(
+        open.delivery_date_until,
+        Some(time::macros::datetime!(2026-10-27 0:00:00 +1))
+    );
+
+    let draft = by_id(135173157);
+    assert_eq!(draft.status, Some(InvoiceStatus::Draft));
+    assert_eq!(draft.enshrined, None);
+    assert_eq!(draft.send_type, Some(DocumentSendType::Unset));
+    assert_eq!(draft.einvoice_reference.as_deref(), Some("CUSTOM"));
+    assert_eq!(draft.sum_gross, Some(eur(0)));
+    assert!(draft.contact.is_none());
+
+    let cancellation = by_id(135582249);
+    assert_eq!(cancellation.invoice_type, Some(InvoiceType::Cancellation));
+    assert_eq!(cancellation.origin.unwrap().id, InvoiceId::new(135582230));
+    assert_eq!(cancellation.sum_net, Some(eur(-1840)));
+    assert_eq!(cancellation.sum_tax, Some(eur(-350)));
+    assert_eq!(cancellation.sum_gross, Some(eur(-2190)));
+    assert_eq!(cancellation.show_net, Some(false));
+    assert_eq!(cancellation.status, Some(InvoiceStatus::Paid));
+
+    let paid = by_id(135169196);
+    assert_eq!(paid.status, Some(InvoiceStatus::Paid));
+    assert_eq!(
+        paid.pay_date,
+        Some(time::macros::datetime!(2026-09-28 0:00:00 +2))
+    );
+    assert_eq!(
+        paid.delivery_date,
+        Some(time::macros::datetime!(2026-09-01 0:00:01 +2))
+    );
+}
+
+#[test]
+fn sample_invoice_pos_list_reads_every_measured_form() {
+    let list = sample_positions::<InvoicePosition>("sample_invoice_pos_list");
+    assert_eq!(list.len(), 4);
+    let by_id = |id: i64| {
+        list.iter()
+            .find(|p| p.id == InvoicePositionId::new(id))
+            .unwrap()
+    };
+
+    let discounted = by_id(361892829);
+    assert_eq!(discounted.quantity, Some(Decimal::new(1, 0)));
+    assert_eq!(discounted.discount, Some(Decimal::new(10, 0)));
+    assert_eq!(discounted.discounted_value, Some(Decimal::new(10, 0)));
+    assert_eq!(discounted.is_percentage, Some(true));
+    assert_eq!(discounted.price_gross, Some(Decimal::new(595, 1)));
+    assert_eq!(discounted.sum_discount, Some(eur(500)));
+    assert_eq!(discounted.sum_gross, Some(eur(5355)));
+    assert_eq!(discounted.temporary, Some(false));
+    assert_eq!(discounted.tax_rate, Some(1900));
+    assert_eq!(discounted.position_number, Some(1000));
+    assert_eq!(
+        discounted.invoice,
+        Some(ObjectRef::new(InvoiceId::new(135169899)))
+    );
+    assert_eq!(discounted.unity, Some(ObjectRef::new(UnityId::new(1))));
+    assert_eq!(
+        discounted.create,
+        Some(time::macros::datetime!(2026-09-28 19:49:37 +2))
+    );
+
+    let empty = by_id(361902006);
+    assert_eq!(empty.name, None); // an empty string reads as None
+    assert_eq!(empty.price, Some(Decimal::new(0, 0)));
+
+    let gross = by_id(361892841);
+    assert_eq!(gross.quantity, Some(Decimal::new(5, 1)));
+    assert_eq!(gross.price, Some(Decimal::new(777, 2)));
+    assert_eq!(gross.price_net, Some(Decimal::new(652941176, 8)));
+    assert_eq!(gross.price_tax, Some(Decimal::new(124058824, 8)));
+    assert_eq!(gross.sum_net, Some(eur(327)));
+    assert_eq!(gross.sum_gross, Some(eur(389)));
+}
+
+#[tokio::test]
+async fn sample_credit_note_list_reads_every_measured_form() {
+    let (_s, c) = serving("/CreditNote", "sample_credit_note_list").await;
+    let list = c
+        .list_credit_notes(&CreditNoteQuery::default())
+        .await
+        .unwrap();
+    assert_eq!(list.len(), 4);
+    let by_id = |id: i64| list.iter().find(|n| n.id == CreditNoteId::new(id)).unwrap();
+
+    let linked = by_id(2995842);
+    assert_eq!(linked.credit_note_number.as_deref(), Some("GU-1004"));
+    assert_eq!(linked.status, Some(CreditNoteStatus::Open));
+    assert_eq!(
+        linked.booking_category,
+        Some(CreditNoteBookingCategory::Underachievement)
+    );
+    assert_eq!(linked.send_type, Some(DocumentSendType::Vpdf));
+    assert_eq!(linked.sum_net, Some(eur(900)));
+    assert_eq!(linked.sum_tax, Some(eur(171)));
+    assert_eq!(linked.sum_gross, Some(eur(1071)));
+    assert_eq!(linked.show_net, Some(true));
+    assert_eq!(linked.is_transferred, Some(false));
+    assert_eq!(
+        linked.ref_src_invoice,
+        Some(ObjectRef::new(InvoiceId::new(135171669)))
+    );
+    assert!(linked.origin.is_none());
+    assert!(linked.accounting_type.is_none());
+
+    let provision = by_id(2998960);
+    assert_eq!(
+        provision.booking_category,
+        Some(CreditNoteBookingCategory::Provision)
+    );
+    assert_eq!(
+        provision.accounting_type,
+        Some(ObjectRef::new(AccountingTypeId::new(32891)))
+    );
+    assert_eq!(provision.tax_rule, Some(ObjectRef::new(TaxRuleId::new(9))));
+    assert_eq!(provision.show_net, Some(false));
+    assert_eq!(provision.sum_net, Some(eur(336)));
+    assert_eq!(provision.sum_gross, Some(eur(400)));
+
+    let draft = by_id(3079457);
+    assert_eq!(draft.status, Some(CreditNoteStatus::Draft));
+    assert_eq!(draft.send_type, Some(DocumentSendType::Unset));
+    assert_eq!(draft.enshrined, None);
+    assert_eq!(draft.origin.unwrap().id, InvoiceId::new(138602752));
+    assert_eq!(draft.sum_gross, Some(eur(1190)));
+
+    let from_invoice = by_id(3083917);
+    assert_eq!(from_invoice.status, Some(CreditNoteStatus::Open));
+    assert_eq!(from_invoice.sum_gross, Some(eur(23800)));
+    assert_eq!(
+        from_invoice.enshrined,
+        Some(time::macros::datetime!(2026-11-07 1:18:15 +1))
+    );
+}
+
+#[test]
+fn sample_credit_note_pos_list_reads_every_measured_form() {
+    let list = sample_positions::<CreditNotePosition>("sample_credit_note_pos_list");
+    assert_eq!(list.len(), 4);
+    let by_id = |id: i64| {
+        list.iter()
+            .find(|p| p.id == CreditNotePositionId::new(id))
+            .unwrap()
+    };
+
+    let discounted = by_id(6134606);
+    assert_eq!(discounted.discount, Some(Decimal::new(20, 0)));
+    assert_eq!(discounted.discounted_value, Some(Decimal::new(20, 0)));
+    assert_eq!(discounted.sum_discount, Some(eur(980)));
+    assert_eq!(discounted.sum_gross, Some(eur(4665)));
+    assert_eq!(discounted.sum_gross_accounting, Some(eur(0)));
+    assert_eq!(
+        discounted.credit_note,
+        Some(ObjectRef::new(CreditNoteId::new(2996042)))
+    );
+
+    // Gross positions carry eight fraction digits in `priceNet`/`priceTax`.
+    let gross = by_id(6140013);
+    assert_eq!(gross.quantity, Some(Decimal::new(1, 0)));
+    assert_eq!(gross.price, Some(Decimal::new(4, 0)));
+    assert_eq!(gross.price_net, Some(Decimal::new(336134454, 8)));
+    assert_eq!(gross.price_tax, Some(Decimal::new(63865546, 8)));
+    assert_eq!(gross.position_number, Some(0));
+    assert_eq!(gross.sum_net, Some(eur(336)));
+
+    let texted = by_id(6383119);
+    assert_eq!(
+        texted.text.as_deref(),
+        Some("SDRS-LEN-1795338407 [0020]„Tarif ä“ [003")
+    );
+    assert_eq!(texted.is_percentage, Some(true));
+    assert_eq!(
+        texted.create,
+        Some(time::macros::datetime!(2026-11-22 10:06:58 +1))
+    );
+
+    let multi = by_id(6152387);
+    assert_eq!(multi.quantity, Some(Decimal::new(3, 0)));
+    assert_eq!(multi.price, Some(Decimal::new(1005, 2)));
+    assert_eq!(multi.price_net, Some(Decimal::new(844537815, 8)));
+    assert_eq!(multi.price_tax, Some(Decimal::new(160462185, 8)));
+    assert_eq!(multi.sum_gross, Some(eur(3015)));
+    assert_eq!(multi.tax_rate, Some(1900));
+    assert_eq!(multi.temporary, Some(false));
+}
