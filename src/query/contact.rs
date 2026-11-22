@@ -1,8 +1,5 @@
 use super::*;
 
-// Measured 2026-11-22 and NOT offered: `limit`/`offset` are not measured for
-// contacts, so there is no `page`.
-
 /// What `depth` selects. It WIDENS the list, it is not a narrowing filter
 /// (measured 2026-11-22: `0` 150 of 150 contacts, `1` 159: 9 more).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -17,6 +14,10 @@ pub enum ContactDepth {
 ///
 /// Every filter below is measured; sevDesk silently IGNORES a filter it does
 /// not understand. Date bounds are Unix seconds; text filters ignore case.
+///
+/// Without a [`Page`] sevDesk returns at most 100 contacts (measured
+/// 2026-11-22), so a longer list is silently truncated; set `page` and walk
+/// the offsets to read all of them.
 #[derive(Debug, Clone, Default)]
 pub struct ContactQuery {
     /// SUBSTRING match, ignoring case: compare exactly on the result.
@@ -50,6 +51,9 @@ pub struct ContactQuery {
     /// `orderByCustomerNumber`; `DESC` is the exact reverse of `ASC`; the key
     /// is presumably `customerNumber`, not determined (measured 2026-11-22).
     pub order_by_customer_number: Option<SortOrder>,
+    /// `limit` / `offset`; without it sevDesk returns at most 100 contacts
+    /// (measured 2026-11-22).
+    pub page: Option<Page>,
 }
 
 impl ContactQuery {
@@ -69,6 +73,7 @@ impl ContactQuery {
             tag,
             depth,
             order_by_customer_number,
+            page,
         } = self;
         let mut p = Pairs::new();
         push_text(&mut p, "name", name);
@@ -91,6 +96,7 @@ impl ContactQuery {
             p.push(("depth", code.into()));
         }
         push_order(&mut p, "orderByCustomerNumber", *order_by_customer_number);
+        Page::push(*page, &mut p);
         p
     }
 }
@@ -117,6 +123,7 @@ mod tests {
             tag: Some(TagId::new(5)),
             depth: Some(ContactDepth::WithPersons),
             order_by_customer_number: Some(SortOrder::Desc),
+            page: Some(Page::new(5, 10).unwrap()),
         };
         let expected: Vec<(&str, String)> = vec![
             ("name", "Acme".into()),
@@ -137,6 +144,8 @@ mod tests {
             ("tags[0][objectName]", "Tag".into()),
             ("depth", "1".into()),
             ("orderByCustomerNumber", "DESC".into()),
+            ("limit", "5".into()),
+            ("offset", "10".into()),
         ];
         assert_eq!(q.pairs(), expected);
     }

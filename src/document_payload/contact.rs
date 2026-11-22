@@ -45,11 +45,17 @@ pub struct NewContactOptions {
     /// The B2B buyer reference; a B2C contact has none.
     pub buyer_reference: Option<String>,
     pub vat_number: Option<String>,
-    /// Without one, sevDesk assigns the next free number (measured).
+    /// Without one, sevDesk assigns the next free number (measured). With a
+    /// `parent` the number sent is ignored: the contact gets the parent's
+    /// customer number (measured 2026-11-22); `update_contact` can set its own
+    /// afterwards.
     pub customer_number: Option<String>,
     /// `status`. Without one the contact is created active ([`ContactStatus::Active`], `1000`); measured: stored (2026-11-22; `500` was stored on update).
     pub status: Option<ContactStatus>,
     /// The parent contact; must be an organisation. Measured: stored (2026-11-22).
+    /// sevDesk gives a contact created with a parent the parent's customer
+    /// number and ignores the one sent (measured 2026-11-22); `update_contact`
+    /// can set its own afterwards.
     pub parent: Option<ObjectRef<ContactId>>,
     /// A non-academic title (sevDesk's spelling). Measured: stored (2026-11-22).
     pub titel: Option<String>,

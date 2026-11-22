@@ -5,7 +5,7 @@ use crate::document_payload::{
 };
 use crate::error::SevdeskError;
 use crate::ids::*;
-use crate::query::ContactQuery;
+use crate::query::{ContactQuery, Page};
 use crate::wire::{CommunicationWay, Contact, ContactAddress};
 use reqwest::Method;
 
@@ -19,19 +19,34 @@ fn contact_filter(contact: ContactId) -> [(&'static str, String); 2] {
 
 impl SevdeskClient {
     /// `GET /Contact` with the filters of [`ContactQuery`]. The default list
-    /// holds organisations only; see [`crate::ContactDepth`].
+    /// holds organisations only; see [`crate::ContactDepth`]. Without a
+    /// [`crate::Page`] in the query sevDesk returns at most 100 contacts
+    /// (measured 2026-11-22): the list is silently truncated.
     pub async fn list_contacts(&self, query: &ContactQuery) -> Result<Vec<Contact>, SevdeskError> {
         self.get("/Contact", &query.pairs()).await?.list()
     }
 
     /// `GET /Contact?name=…`. The `name` filter is a SUBSTRING match, ignoring
-    /// case: compare on the result.
+    /// case: compare on the result. A substring can match more than the 100
+    /// contacts sevDesk returns unpaged, so this walks the pages of
+    /// [`Page::MAX_LIMIT`] until one comes back short.
     pub async fn list_contacts_by_name(&self, name: &str) -> Result<Vec<Contact>, SevdeskError> {
-        self.list_contacts(&ContactQuery {
-            name: Some(name.to_owned()),
-            ..Default::default()
-        })
-        .await
+        let mut all = Vec::new();
+        loop {
+            let offset = u32::try_from(all.len()).unwrap_or(u32::MAX);
+            let page = self
+                .list_contacts(&ContactQuery {
+                    name: Some(name.to_owned()),
+                    page: Some(Page::new(Page::MAX_LIMIT, offset)?),
+                    ..Default::default()
+                })
+                .await?;
+            let full = page.len() == Page::MAX_LIMIT as usize;
+            all.extend(page);
+            if !full {
+                return Ok(all);
+            }
+        }
     }
 
     /// `GET /Contact/{id}`.
@@ -44,7 +59,9 @@ impl SevdeskClient {
     /// the contact, a prefix of it finds nothing); the comparison on the
     /// result stays as a guard against a filter sevDesk ignores (which would
     /// answer every contact). `None` when no contact has that number; several
-    /// with it is a drift error, as numbers are unique.
+    /// with it is a drift error, as numbers are unique. The exact filter
+    /// returns at most a handful of contacts, far below the 100 sevDesk
+    /// returns unpaged, so no paging is needed.
     pub async fn find_contact_by_customer_number(
         &self,
         customer_number: &str,

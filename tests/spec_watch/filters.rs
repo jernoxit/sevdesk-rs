@@ -147,6 +147,14 @@ pub(super) const SENT_FILTERS_NOT_IN_SPEC: &[(&str, &str)] = &[
         "not in the spec; measured exact (2026-11-22)",
     ),
     (
+        "GET /Contact:limit",
+        "paging; not in the spec for these operations, measured working (1..=1000)",
+    ),
+    (
+        "GET /Contact:offset",
+        "paging; not in the spec for these operations, measured working (1..=1000)",
+    ),
+    (
         "GET /CreditNote:creditNoteNumberSmaller",
         "not in the spec (it names creditNoteNumberNumberSmaller); measured working (2026-11-22)",
     ),
@@ -316,6 +324,7 @@ fn contact_query() -> ContactQuery {
         tag: Some(TagId::new(1)),
         depth: Some(ContactDepth::WithPersons),
         order_by_customer_number: Some(SortOrder::Asc),
+        page: page(),
     }
 }
 
