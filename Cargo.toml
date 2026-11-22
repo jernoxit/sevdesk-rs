@@ -28,7 +28,7 @@ time = { version = "0.3", features = ["macros"] }
 # `test-util`: paused time for the pacing unit tests.
 tokio = { version = "1", features = ["macros", "rt-multi-thread", "sync", "test-util"] }
 wiremock = "0.6"
-# Completeness guard (tests/completeness.rs): every key a fixture carries and a read type ignores.
+# Completeness guard (tests/completeness/): every key a fixture carries and a read type ignores.
 serde_ignored = "0.1.14"
 
 [lints.rust]
@@ -90,3 +90,8 @@ test = false
 name = "quantity_probe"
 path = "tests/quantity_probe/main.rs"
 test = false
+
+# Keeps the target name `fixtures` (tests/fixtures/ holds the JSON recordings).
+[[test]]
+name = "fixtures"
+path = "tests/decoding/main.rs"
