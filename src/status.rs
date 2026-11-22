@@ -217,6 +217,24 @@ named_enum!(
     }
 );
 
+named_enum!(
+    /// `bookingCategory` as a credit-note answer carries it. The outgoing
+    /// [`CreditNoteCategory`] stays `Copy` and has no `Other`; this read form
+    /// is tolerant.
+    CreditNoteBookingCategory {
+        /// `PROVISION`; measured.
+        Provision = "PROVISION",
+        /// `UNDERACHIEVEMENT`; measured.
+        Underachievement = "UNDERACHIEVEMENT",
+        /// `ROYALTY_ASSIGNED`; seen in the shape survey, not in a fixture.
+        RoyaltyAssigned = "ROYALTY_ASSIGNED",
+        /// `ROYALTY_UNASSIGNED`; known only from the OpenAPI spec.
+        RoyaltyUnassigned = "ROYALTY_UNASSIGNED",
+        /// `ACCOUNTING_TYPE`; known only from the OpenAPI spec.
+        AccountingType = "ACCOUNTING_TYPE",
+    }
+);
+
 /// `bookingCategory` of a credit note. Outgoing only, so no `Other`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
 pub enum CreditNoteCategory {

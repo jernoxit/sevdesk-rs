@@ -61,6 +61,12 @@ resource_id!(VoucherPositionId, "VoucherPos");
 resource_id!(InvoiceId, "Invoice");
 resource_id!(InvoicePositionId, "InvoicePos");
 resource_id!(CreditNoteId, "CreditNote");
+resource_id!(CreditNotePositionId, "CreditNotePos");
+resource_id!(
+    /// An accounting type (`accountingType` of a credit note).
+    AccountingTypeId,
+    "AccountingType"
+);
 resource_id!(DocumentId, "Document");
 resource_id!(ContactId, "Contact");
 resource_id!(ContactCategoryId, "Category");

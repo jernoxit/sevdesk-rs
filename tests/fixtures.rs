@@ -361,6 +361,100 @@ async fn credit_note() {
 }
 
 #[tokio::test]
+async fn credit_note_reads_every_other_key() {
+    let (_s, c) = serving("/CreditNote/2996041", "credit_note").await;
+    let n = c.credit_note(CreditNoteId::new(2996041)).await.unwrap();
+    assert_eq!(n.send_type, Some(DocumentSendType::Vpdf));
+    assert_eq!(
+        n.booking_category,
+        Some(CreditNoteBookingCategory::Underachievement)
+    );
+    assert_eq!(n.credit_note_type.as_deref(), Some("CN"));
+    assert_eq!(n.sum_tax, Some(eur(931)));
+    assert_eq!(n.sum_net_accounting, Some(eur(4900)));
+    assert_eq!(n.sum_discounts, Some(eur(0)));
+    assert_eq!(n.show_net, Some(true));
+    assert_eq!(n.small_settlement, Some(false));
+    assert_eq!(n.is_transferred, Some(false));
+    assert_eq!(n.discount_time, Some(0));
+    assert_eq!(n.discount, Some(0));
+    assert_eq!(n.tax_rate, Some(0));
+    assert_eq!(n.tax_type, None);
+    assert_eq!(n.paid_amount, None);
+    assert_eq!(n.head_text, None);
+    assert_eq!(
+        n.header.as_deref(),
+        Some("Gutschrift Nr. GU-1006 zur Rechnung Nr. RE-1020")
+    );
+    assert_eq!(
+        n.create,
+        Some(time::macros::datetime!(2026-09-29 1:30:50 +2))
+    );
+    assert_eq!(
+        n.pay_date,
+        Some(time::macros::datetime!(2026-08-26 12:00:00 +2))
+    );
+    assert_eq!(
+        n.delivery_date_until,
+        Some(time::macros::datetime!(2026-10-27 0:00:00 +1))
+    );
+    assert_eq!(n.contact, Some(ObjectRef::new(ContactId::new(138615465))));
+    assert_eq!(
+        n.ref_src_invoice,
+        Some(ObjectRef::new(InvoiceId::new(135171965)))
+    );
+    assert_eq!(n.tax_rule, Some(ObjectRef::new(TaxRuleId::new(1))));
+    assert_eq!(n.property_is_e_invoice, None);
+}
+
+#[test]
+fn credit_note_keys_in_unmeasured_forms() {
+    let read = |extra: &str| {
+        serde_json::from_str::<CreditNote>(&format!(r#"{{"id": "1", "currency": "EUR", {extra}}}"#))
+    };
+    assert!(read(r#""showNet": "2""#).is_err());
+    assert_eq!(
+        read(r#""bookingCategory": "ROYALTY_ASSIGNED""#)
+            .unwrap()
+            .booking_category,
+        Some(CreditNoteBookingCategory::RoyaltyAssigned)
+    );
+    assert_eq!(
+        read(r#""bookingCategory": "ZZ""#).unwrap().booking_category,
+        Some(CreditNoteBookingCategory::Other("ZZ".into()))
+    );
+    assert_eq!(
+        read(r#""sendType": "0""#).unwrap().send_type,
+        Some(DocumentSendType::Unset)
+    );
+    // Measured only in the shape survey: a reference to an accounting type.
+    assert_eq!(
+        read(r#""accountingType": {"id": "46", "objectName": "AccountingType"}"#)
+            .unwrap()
+            .accounting_type,
+        Some(ObjectRef::new(AccountingTypeId::new(46)))
+    );
+}
+
+#[test]
+fn a_gross_credit_note_position_reads_eight_digit_unit_prices() {
+    // Synthetic: the form (strings, up to eight fraction digits in `priceNet`
+    // and `priceTax`) is what the shape survey measured on gross credit notes.
+    let p: CreditNotePosition = serde_json::from_str(
+        r#"{"id": "1", "quantity": "2.5", "price": "11.9", "priceNet": "8.40336134",
+            "priceGross": "10", "priceTax": "1.59663866", "discount": "10",
+            "isPercentage": "0", "discountedValue": "10", "optional": true}"#,
+    )
+    .unwrap();
+    assert_eq!(p.quantity, Some(Decimal::new(25, 1)));
+    assert_eq!(p.price_net, Some(Decimal::new(840336134, 8)));
+    assert_eq!(p.price_tax, Some(Decimal::new(159663866, 8)));
+    assert_eq!(p.is_percentage, Some(false));
+    assert_eq!(p.discounted_value, Some(Decimal::new(10, 0)));
+    assert_eq!(p.optional, Some(true));
+}
+
+#[tokio::test]
 async fn receipt_guidance() {
     let (_s, c) = serving("/ReceiptGuidance/forExpense", "receipt_guidance").await;
     let list = c.receipt_guidance_for_expense().await.unwrap();

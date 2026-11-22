@@ -24,6 +24,10 @@ fn save_invoice() -> SaveInvoice {
     SaveInvoice::new(common::invoice_draft(CurrencyCode::EUR), vec![])
 }
 
+fn save_credit_note() -> SaveCreditNote {
+    SaveCreditNote::new(common::credit_note_draft("GU-1", CurrencyCode::EUR), vec![])
+}
+
 #[tokio::test]
 async fn the_recorded_save_invoice_answer_is_a_b2b_draft() {
     let (_s, c) = answering(
@@ -243,4 +247,52 @@ async fn the_quantity_probe_get_invoice_pos_answer_reads_strings() {
         Some(ObjectRef::new(InvoiceId::new(140025486)))
     );
     assert_eq!(positions[0].quantity, Some(Decimal::new(0, 0)));
+}
+
+#[tokio::test]
+async fn the_recorded_save_credit_note_answer_carries_its_position_as_strings() {
+    let (_s, c) = answering(
+        "POST",
+        "/CreditNote/Factory/saveCreditNote",
+        200,
+        "write_credit_note_save",
+    )
+    .await;
+    let saved = c.save_credit_note(&save_credit_note()).await.unwrap();
+    let note = &saved.credit_note;
+    assert_eq!(note.send_type, Some(DocumentSendType::Unset));
+    assert_eq!(note.property_is_e_invoice, Some(true));
+    assert_eq!(
+        note.payment_method,
+        Some(ObjectRef::new(PaymentMethodId::new(114251)))
+    );
+    assert_eq!(
+        note.booking_category,
+        Some(CreditNoteBookingCategory::Underachievement)
+    );
+    assert_eq!(saved.credit_note_pos.len(), 1);
+    let pos = &saved.credit_note_pos[0];
+    assert_eq!(pos.id, CreditNotePositionId::new(6151412));
+    assert_eq!(pos.credit_note, Some(ObjectRef::new(note.id)));
+    assert_eq!(pos.unity, Some(ObjectRef::new(UnityId::new(1))));
+    assert_eq!(
+        pos.sev_client,
+        Some(ObjectRef::new(SevClientId::new(1303847)))
+    );
+    assert_eq!(pos.quantity, Some(Decimal::new(1, 0)));
+    assert_eq!(pos.price, Some(Decimal::new(10, 0)));
+    assert_eq!(pos.price_gross, Some(Decimal::new(119, 1)));
+    assert_eq!(pos.price_tax, Some(Decimal::new(19, 1)));
+    assert_eq!(pos.sum_gross, Some(eur(1190)));
+    assert_eq!(pos.sum_tax, Some(eur(190)));
+    assert_eq!(pos.tax_rate, Some(1900));
+    assert_eq!(pos.is_percentage, Some(true));
+    assert_eq!(pos.discount, Some(Decimal::new(0, 0)));
+    assert_eq!(pos.discounted_value, None);
+    assert_eq!(pos.temporary, Some(false));
+    assert_eq!(pos.position_number, Some(1000));
+    assert_eq!(pos.priority, Some(100));
+    assert_eq!(pos.name.as_deref(), Some("SDRS-LIVE Teilgutschrift"));
+    assert_eq!(pos.create, Some(datetime!(2026-10-01 16:38:01 +2)));
+    assert_eq!(pos.optional, None);
 }

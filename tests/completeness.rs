@@ -101,6 +101,32 @@ const INVOICE_POSITION_FORM_UNMEASURED: &[(&str, bool)] = &[
     ("additionalInformation", true), // not in the spec; null in all 408 objects
 ];
 
+/// CreditNote keys of the same kind (all `null` in the 196 surveyed notes).
+const CREDIT_NOTE_FORM_UNMEASURED: &[(&str, bool)] = &[
+    ("accountEndDate", true), // not in the spec; null in all 196 survey objects
+    ("accountIntervall", true), // not in the spec; null in all 196 survey objects
+    ("accountLastCreditNote", true), // not in the spec; null in all 196 survey objects
+    ("accountNextCreditNote", true), // not in the spec; null in all 196 survey objects
+    ("additionalInformation", true), // not in the spec; null in all 196 survey objects
+    ("addressGender", true),  // not in the spec; null in all 196 survey objects
+    ("addressName2", true),   // not in the spec; null in all 196 survey objects
+    ("addressParentName", true), // not in the spec; null in all 196 survey objects
+    ("addressParentName2", true), // not in the spec; null in all 196 survey objects
+    ("reminderCharge", true), // not in the response spec; null in all 196 survey objects
+    ("reminderDeadline", true), // not in the response spec; null in all 196 survey objects
+    ("reminderDebit", true),  // not in the response spec; null in all 196 survey objects
+    ("reminderTotal", true),  // not in the response spec; null in all 196 survey objects
+    ("taxNumber", true),      // not in the spec; null in all 196 survey objects
+    ("timeToPay", true),      // not in the spec; null in all 196 survey objects
+    ("vatNumber", true),      // not in the spec; null in all 196 survey objects
+];
+
+/// CreditNotePos keys of the same kind (all `null` in the 206 surveyed positions).
+const CREDIT_NOTE_POSITION_FORM_UNMEASURED: &[(&str, bool)] = &[
+    ("additionalInformation", true), // not in the spec; null in all 206 survey objects
+    ("createNextPart", true),        // not in the spec; null in all 206 survey objects
+];
+
 /// Fixtures whose read type has a form-unmeasured list: the full path of each
 /// key of that list in the fixture.
 fn form_unmeasured(fixture: &str) -> Vec<(String, bool)> {
@@ -123,6 +149,15 @@ fn form_unmeasured(fixture: &str) -> Vec<(String, bool)> {
             keys
         }
         "quantity_probe_get_invoice_pos" => under("objects.*.", INVOICE_POSITION_FORM_UNMEASURED),
+        "credit_note" => under("objects.*.", CREDIT_NOTE_FORM_UNMEASURED),
+        "write_credit_note_save" => {
+            let mut keys = under("objects.creditNote.", CREDIT_NOTE_FORM_UNMEASURED);
+            keys.extend(under(
+                "objects.creditNotePos.*.",
+                CREDIT_NOTE_POSITION_FORM_UNMEASURED,
+            ));
+            keys
+        }
         _ => Vec::new(),
     }
 }
@@ -339,65 +374,15 @@ fn covered() -> Vec<(&'static str, Vec<String>, &'static [&'static str])> {
             "credit_note",
             unread::<CreditNote>("credit_note"),
             &[
-                "objects.*.accountEndDate",
-                "objects.*.accountIntervall",
-                "objects.*.accountLastCreditNote",
-                "objects.*.accountNextCreditNote",
-                "objects.*.additionalInformation",
-                "objects.*.address",
                 "objects.*.addressCountry.objectName",
-                "objects.*.addressGender",
-                "objects.*.addressName2",
-                "objects.*.addressParentName",
-                "objects.*.addressParentName2",
-                "objects.*.bookingCategory",
-                "objects.*.contact",
-                "objects.*.contactPerson",
-                "objects.*.create",
-                "objects.*.createUser",
-                "objects.*.creditNoteType",
-                "objects.*.deliveryDate",
-                "objects.*.deliveryDateUntil",
-                "objects.*.discount",
-                "objects.*.discountTime",
-                "objects.*.footText",
-                "objects.*.headText",
-                "objects.*.header",
-                "objects.*.isTransferred",
+                "objects.*.contact.objectName",
+                "objects.*.contactPerson.objectName",
+                "objects.*.createUser.objectName",
                 "objects.*.objectName",
                 "objects.*.origin.objectName",
-                "objects.*.payDate",
                 "objects.*.refSrcInvoice.objectName",
-                "objects.*.reminderCharge",
-                "objects.*.reminderDeadline",
-                "objects.*.reminderDebit",
-                "objects.*.reminderTotal",
-                "objects.*.sendDate",
-                "objects.*.sendType",
-                "objects.*.sevClient",
-                "objects.*.showNet",
-                "objects.*.smallSettlement",
-                "objects.*.sumDiscountGross",
-                "objects.*.sumDiscountGrossForeignCurrency",
-                "objects.*.sumDiscountNet",
-                "objects.*.sumDiscountNetForeignCurrency",
-                "objects.*.sumDiscounts",
-                "objects.*.sumDiscountsForeignCurrency",
-                "objects.*.sumGrossAccounting",
-                "objects.*.sumGrossForeignCurrency",
-                "objects.*.sumNetAccounting",
-                "objects.*.sumNetForeignCurrency",
-                "objects.*.sumTax",
-                "objects.*.sumTaxAccounting",
-                "objects.*.sumTaxForeignCurrency",
-                "objects.*.taxNumber",
-                "objects.*.taxRate",
-                "objects.*.taxRule",
-                "objects.*.taxText",
-                "objects.*.taxType",
-                "objects.*.timeToPay",
-                "objects.*.update",
-                "objects.*.vatNumber",
+                "objects.*.sevClient.objectName",
+                "objects.*.taxRule.objectName",
             ],
         ),
         (
@@ -773,67 +758,19 @@ fn covered() -> Vec<(&'static str, Vec<String>, &'static [&'static str])> {
             "write_credit_note_save",
             unread::<SavedCreditNote>("write_credit_note_save"),
             &[
-                "objects.creditNote.accountEndDate",
-                "objects.creditNote.accountIntervall",
-                "objects.creditNote.accountLastCreditNote",
-                "objects.creditNote.accountNextCreditNote",
-                "objects.creditNote.additionalInformation",
-                "objects.creditNote.address",
                 "objects.creditNote.addressCountry.objectName",
-                "objects.creditNote.addressGender",
-                "objects.creditNote.addressName2",
-                "objects.creditNote.addressParentName",
-                "objects.creditNote.addressParentName2",
-                "objects.creditNote.bookingCategory",
-                "objects.creditNote.contact",
-                "objects.creditNote.contactPerson",
-                "objects.creditNote.create",
-                "objects.creditNote.createUser",
-                "objects.creditNote.creditNoteType",
-                "objects.creditNote.deliveryDate",
-                "objects.creditNote.deliveryDateUntil",
-                "objects.creditNote.discount",
-                "objects.creditNote.discountTime",
-                "objects.creditNote.footText",
-                "objects.creditNote.headText",
-                "objects.creditNote.header",
-                "objects.creditNote.isTransferred",
+                "objects.creditNote.contact.objectName",
+                "objects.creditNote.contactPerson.objectName",
+                "objects.creditNote.createUser.objectName",
                 "objects.creditNote.objectName",
-                "objects.creditNote.payDate",
-                "objects.creditNote.paymentMethod",
-                "objects.creditNote.propertyIsEInvoice",
+                "objects.creditNote.paymentMethod.objectName",
                 "objects.creditNote.refSrcInvoice.objectName",
-                "objects.creditNote.reminderCharge",
-                "objects.creditNote.reminderDeadline",
-                "objects.creditNote.reminderDebit",
-                "objects.creditNote.reminderTotal",
-                "objects.creditNote.sendDate",
-                "objects.creditNote.sendType",
-                "objects.creditNote.sevClient",
-                "objects.creditNote.showNet",
-                "objects.creditNote.smallSettlement",
-                "objects.creditNote.sumDiscountGross",
-                "objects.creditNote.sumDiscountGrossForeignCurrency",
-                "objects.creditNote.sumDiscountNet",
-                "objects.creditNote.sumDiscountNetForeignCurrency",
-                "objects.creditNote.sumDiscounts",
-                "objects.creditNote.sumDiscountsForeignCurrency",
-                "objects.creditNote.sumGrossAccounting",
-                "objects.creditNote.sumGrossForeignCurrency",
-                "objects.creditNote.sumNetAccounting",
-                "objects.creditNote.sumNetForeignCurrency",
-                "objects.creditNote.sumTax",
-                "objects.creditNote.sumTaxAccounting",
-                "objects.creditNote.sumTaxForeignCurrency",
-                "objects.creditNote.taxNumber",
-                "objects.creditNote.taxRate",
-                "objects.creditNote.taxRule",
-                "objects.creditNote.taxText",
-                "objects.creditNote.taxType",
-                "objects.creditNote.timeToPay",
-                "objects.creditNote.update",
-                "objects.creditNote.vatNumber",
-                "objects.creditNotePos",
+                "objects.creditNote.sevClient.objectName",
+                "objects.creditNote.taxRule.objectName",
+                "objects.creditNotePos.*.creditNote.objectName",
+                "objects.creditNotePos.*.objectName",
+                "objects.creditNotePos.*.sevClient.objectName",
+                "objects.creditNotePos.*.unity.objectName",
             ],
         ),
         (
