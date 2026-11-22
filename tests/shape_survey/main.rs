@@ -20,7 +20,8 @@
 //! values. `survey_all` also writes up to 4 scrubbed sample objects per
 //! resource to `target/tmp/shape_survey/samples/<Resource>.json` plus a
 //! `.coverage.tsv` sidecar (none for `SevUser`); see `sample.rs`. `typed_all` (see `typed.rs`) is the release gate: it
-//! decodes the raw answers through the crate's public read types.
+//! decodes the raw answers through the crate's public read types. `filters_all`
+//! (see `filters.rs`) measures every list filter the spec names, read-only.
 #![allow(
     dead_code,
     clippy::unwrap_used,
@@ -28,6 +29,10 @@
     reason = "the harness file is shared with live_write and uses only some of its helpers; a failure in a test helper is a test failure"
 )]
 
+mod filter_cases;
+mod filter_judge;
+mod filter_table;
+mod filters;
 #[path = "../live_write/harness.rs"]
 mod harness;
 mod sample;

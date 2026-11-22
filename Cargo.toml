@@ -103,6 +103,16 @@ name = "answer_probe"
 path = "tests/answer_probe/main.rs"
 test = false
 
+# Writes PERMANENT objects (an invoice, a credit note, a voucher, a contact with
+# address and e-mail, a transaction) to the test account and measures every
+# further writable field of the spec; never part of a plain `cargo test`; run
+# with `just test-live --test field_probe case1` (`just test-live` appends
+# `-- --ignored --nocapture` itself).
+[[test]]
+name = "field_probe"
+path = "tests/field_probe/main.rs"
+test = false
+
 # Keeps the target name `fixtures` (tests/fixtures/ holds the JSON recordings).
 [[test]]
 name = "fixtures"
