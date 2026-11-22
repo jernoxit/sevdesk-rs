@@ -1,8 +1,10 @@
 #!/bin/sh
 # Local token guard. Enable with `just hooks`.
 # Fails the commit if the staged diff contains the SEVDESK_API_KEY from .env,
-# or if a staged file contains the key lastLogin+Ip (a sign of an unredacted account
-# object in a recorded response). The token is never printed.
+# or if any file in the index has a lastLogin+Ip key whose value is not a
+# placeholder (null, "SDRS-SAMPLE", "REDACTED", ""), a sign of an unredacted
+# account object in a recorded response. Neither the token nor the offending
+# value is ever printed.
 
 if [ -f .env ]; then
     token=$(sed -n 's/^[[:space:]]*\(export[[:space:]]\{1,\}\)\{0,1\}SEVDESK_API_KEY=//p' .env | head -n 1)
@@ -14,7 +16,14 @@ if [ -f .env ]; then
 fi
 
 # The pattern is split so that this file does not match itself.
-if git grep --cached -qF -e '"lastLogin''Ip"'; then
-    echo 'pre-commit: a staged file contains "lastLogin''Ip" (unredacted account/user object). Commit aborted.' >&2
+# -o yields only "key: value" (value up to the next , or }), so several keys on
+# one line are judged separately. Anything not an allowed placeholder is
+# reported as file:line only.
+bad=$(git grep --cached -n -o -E -e '"lastLogin''Ip"[[:space:]]*:[[:space:]]*[^,}]*' \
+    | grep -v -E ':[[:space:]]*(null|"SDRS-SAMPLE"|"REDACTED"|"")[[:space:]]*$' \
+    | sed 's/^\([^:]*:[0-9]*\):.*/\1/')
+if [ -n "$bad" ]; then
+    echo 'pre-commit: a staged file has a "lastLogin''Ip" key with a non-placeholder value (unredacted account/user object). Commit aborted. Locations:' >&2
+    echo "$bad" >&2
     exit 1
 fi
