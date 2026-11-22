@@ -63,3 +63,10 @@ test = false
 name = "length_probe"
 path = "tests/length_probe/main.rs"
 test = false
+
+# Writes PERMANENT documents to the test account: never part of a plain
+# `cargo test`; run with `just test-live --test address_probe case1`.
+[[test]]
+name = "address_probe"
+path = "tests/address_probe/main.rs"
+test = false
