@@ -73,10 +73,13 @@ macro_rules! named_enum {
 }
 
 coded_enum!(
-    /// Voucher (expense document) status.
+    /// Voucher (expense document) status. `750` is measured although the
+    /// OpenAPI enumerations leave it out.
     VoucherStatus {
         Draft = 50,
         Open = 100,
+        /// `150`, "Transferred"; known only from the OpenAPI spec prose.
+        Transferred = 150,
         PartiallyPaid = 750,
         Paid = 1000,
     }
@@ -265,5 +268,33 @@ named_enum!(
     /// The `type` of a communication way. Only `EMAIL` is measured.
     CommunicationWayType {
         Email = "EMAIL",
+    }
+);
+
+named_enum!(
+    /// `recurringInterval` of a recurring voucher, an ISO 8601 duration. Every
+    /// measurement has `null`, so all variants are known only from the OpenAPI
+    /// spec; the names read the durations (`P0Y1M0W` is one month).
+    RecurringInterval {
+        /// `P0Y0M1W`; known only from the OpenAPI spec.
+        Weekly = "P0Y0M1W",
+        /// `P0Y0M2W`; known only from the OpenAPI spec.
+        EveryTwoWeeks = "P0Y0M2W",
+        /// `P0Y1M0W`; known only from the OpenAPI spec.
+        Monthly = "P0Y1M0W",
+        /// `P0Y3M0W`; known only from the OpenAPI spec.
+        Quarterly = "P0Y3M0W",
+        /// `P0Y6M0W`; known only from the OpenAPI spec.
+        HalfYearly = "P0Y6M0W",
+        /// `P1Y0M0W`; known only from the OpenAPI spec.
+        Yearly = "P1Y0M0W",
+        /// `P2Y0M0W`; known only from the OpenAPI spec.
+        EveryTwoYears = "P2Y0M0W",
+        /// `P3Y0M0W`; known only from the OpenAPI spec.
+        EveryThreeYears = "P3Y0M0W",
+        /// `P4Y0M0W`; known only from the OpenAPI spec.
+        EveryFourYears = "P4Y0M0W",
+        /// `P5Y0M0W`; known only from the OpenAPI spec.
+        EveryFiveYears = "P5Y0M0W",
     }
 );

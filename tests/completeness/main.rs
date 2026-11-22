@@ -89,6 +89,7 @@ fn under(prefix: &str, keys: &[(&str, bool)]) -> Vec<(String, bool)> {
 fn form_unmeasured(fixture: &str) -> Vec<(String, bool)> {
     invoice::form_unmeasured(fixture)
         .or_else(|| credit_note::form_unmeasured(fixture))
+        .or_else(|| voucher::form_unmeasured(fixture))
         .unwrap_or_default()
 }
 
@@ -120,14 +121,6 @@ const SKIPPED: &[(&str, &str)] = &[
     (
         "write_transaction_delete",
         "answer is a list holding null, no read type",
-    ),
-    (
-        "write_voucher_book_amount",
-        "write answer the client discards, no read type",
-    ),
-    (
-        "write_voucher_reset_to_open",
-        "write answer the client discards, no read type",
     ),
 ];
 

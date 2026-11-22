@@ -59,7 +59,8 @@ pub use query::{CreditNoteQuery, InvoiceQuery, Page, TransactionQuery, VoucherQu
 pub use status::*;
 pub use wire::{
     AdditionalInformation, AllowedTaxRule, BookedDocument, CheckAccount, CommunicationWay, Contact,
-    ContactAddress, CreditNote, CreditNotePosition, DocumentPdf, Invoice, InvoicePosition,
-    PaymentMethod, ReceiptGuidance, SavedCreditNote, SavedInvoice, SavedVoucher, SevSequence,
-    SevUser, Transaction, TransactionLogEntry, UploadedFile, Voucher, VoucherPosition,
+    ContactAddress, CreditNote, CreditNotePosition, Document, DocumentPdf, Invoice,
+    InvoicePosition, PaymentMethod, ReceiptGuidance, SavedCreditNote, SavedInvoice, SavedVoucher,
+    SevSequence, SevUser, Transaction, TransactionLogEntry, UploadedFile, Voucher, VoucherLog,
+    VoucherPosition,
 };

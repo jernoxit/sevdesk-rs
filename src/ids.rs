@@ -58,6 +58,11 @@ resource_id!(CheckAccountId, "CheckAccount");
 resource_id!(TransactionId, "CheckAccountTransaction");
 resource_id!(VoucherId, "Voucher");
 resource_id!(VoucherPositionId, "VoucherPos");
+resource_id!(
+    /// A booking log entry of a voucher (`bookAmount` answer).
+    VoucherLogId,
+    "VoucherLog"
+);
 resource_id!(InvoiceId, "Invoice");
 resource_id!(InvoicePositionId, "InvoicePos");
 resource_id!(CreditNoteId, "CreditNote");

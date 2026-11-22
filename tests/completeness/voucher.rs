@@ -1,7 +1,51 @@
 //! Completeness lists of the voucher resource group.
 
+use super::under;
 use super::{Covered, unread};
 use sevdesk::*;
+
+/// Voucher keys that no recording or survey shows filled and that the OpenAPI
+/// spec does not type (form unmeasured): not read until a measurement shows
+/// them. The flag says whether any fixture carries the key at all.
+const VOUCHER_FORM_UNMEASURED: &[(&str, bool)] = &[
+    ("accountingSpecialCase", true), // not in the spec; null in all 16 survey objects
+    ("additionalInformation", true), // not in the spec; null in all 16 survey objects
+    ("iban", true),                  // not in the spec; null in all 16 survey objects
+    ("inSource", true),              // not in the spec; null in all 16 survey objects
+    ("propertyCreationOrigin", true), // not in the spec; null in the one recording that has it
+    ("propertyIsBookkeepingV1", true), // not in the spec; null in the one recording that has it
+    ("recurringIntervall", true), // not in the spec (double l, unlike `recurringInterval`); null in all 16 survey objects
+    ("resultDisdar", true),       // not in the spec; null in all 16 survey objects
+    ("sendType", true),           // not in the spec; null in all 16 survey objects
+    ("taxmaroStockAccount", true), // not in the spec; null in all 16 survey objects
+    ("vatNumber", true),          // not in the spec; null in all 16 survey objects
+];
+
+/// VoucherPos keys of the same kind.
+const VOUCHER_POSITION_FORM_UNMEASURED: &[(&str, bool)] = &[
+    ("additionalInformation", true), // not in the spec; null in all 21 survey objects
+    ("cateringTaxRate", true),       // not in the spec; null in all 21 survey objects
+    ("createNextPart", true),        // not in the spec; null in all 21 survey objects
+    ("specialAccountingField1", true), // not in the spec; null in all 21 survey objects
+    ("specialAccountingField2", true), // not in the spec; null in all 21 survey objects
+    ("specialAccountingField3", true), // not in the spec; null in all 21 survey objects
+    ("specialAccountingField4", true), // not in the spec; null in all 21 survey objects
+    ("specialAccountingField5", true), // not in the spec; null in all 21 survey objects
+    ("sum", true),                   // not in the spec; null in all 21 survey objects
+];
+
+/// Document keys of the same kind (the spec has no schema for a document).
+const DOCUMENT_FORM_UNMEASURED: &[(&str, bool)] = &[
+    ("additionalInformation", true), // not in the spec; null in both recordings
+    ("description", true),           // not in the spec; null in both recordings
+    ("documentNumber", true),        // not in the spec; null in both recordings
+    ("mimeType", true),              // not in the spec; null in both recordings
+];
+
+/// VoucherLog keys of the same kind.
+const VOUCHER_LOG_FORM_UNMEASURED: &[(&str, bool)] = &[
+    ("additionalInformation", true), // not in the spec; null in both recordings
+];
 
 pub(super) fn covered() -> Vec<Covered> {
     vec![
@@ -9,95 +53,32 @@ pub(super) fn covered() -> Vec<Covered> {
             "voucher",
             unread::<Voucher>("voucher"),
             &[
-                "objects.*.accountingSpecialCase",
-                "objects.*.additionalInformation",
-                "objects.*.create",
-                "objects.*.createUser",
+                "objects.*.createUser.objectName",
                 "objects.*.document.objectName",
-                "objects.*.enshrined",
-                "objects.*.hidden",
-                "objects.*.iban",
-                "objects.*.inSource",
-                "objects.*.mileageRate",
                 "objects.*.objectName",
-                "objects.*.payDate",
-                "objects.*.paymentDeadline",
-                "objects.*.recurringEndDate",
-                "objects.*.recurringInterval",
-                "objects.*.recurringIntervall",
-                "objects.*.recurringLastVoucher",
-                "objects.*.recurringNextVoucher",
-                "objects.*.recurringStartDate",
-                "objects.*.resultDisdar",
-                "objects.*.selectedForPaymentFile",
-                "objects.*.sendType",
-                "objects.*.sevClient",
-                "objects.*.showNet",
-                "objects.*.sumDiscountGross",
-                "objects.*.sumDiscountGrossForeignCurrency",
-                "objects.*.sumDiscountNet",
-                "objects.*.sumDiscountNetForeignCurrency",
-                "objects.*.sumGrossAccounting",
-                "objects.*.sumGrossForeignCurrency",
-                "objects.*.sumNetAccounting",
-                "objects.*.sumNetForeignCurrency",
-                "objects.*.sumTax",
-                "objects.*.sumTaxAccounting",
-                "objects.*.sumTaxForeignCurrency",
-                "objects.*.supplierNameAtSave",
+                "objects.*.sevClient.objectName",
                 "objects.*.taxRule.objectName",
-                "objects.*.taxType",
-                "objects.*.taxmaroStockAccount",
-                "objects.*.tip",
-                "objects.*.update",
-                "objects.*.vatNumber",
             ],
         ),
         (
             "voucher_list",
             unread::<Voucher>("voucher_list"),
             &[
-                "objects.*.accountingSpecialCase",
-                "objects.*.additionalInformation",
-                "objects.*.create",
-                "objects.*.createUser",
-                "objects.*.enshrined",
-                "objects.*.hidden",
-                "objects.*.iban",
-                "objects.*.inSource",
-                "objects.*.mileageRate",
+                "objects.*.createUser.objectName",
                 "objects.*.objectName",
-                "objects.*.payDate",
-                "objects.*.paymentDeadline",
-                "objects.*.recurringEndDate",
-                "objects.*.recurringInterval",
-                "objects.*.recurringIntervall",
-                "objects.*.recurringLastVoucher",
-                "objects.*.recurringNextVoucher",
-                "objects.*.recurringStartDate",
-                "objects.*.resultDisdar",
-                "objects.*.selectedForPaymentFile",
-                "objects.*.sendType",
-                "objects.*.sevClient",
-                "objects.*.showNet",
-                "objects.*.sumDiscountGross",
-                "objects.*.sumDiscountGrossForeignCurrency",
-                "objects.*.sumDiscountNet",
-                "objects.*.sumDiscountNetForeignCurrency",
-                "objects.*.sumGrossAccounting",
-                "objects.*.sumGrossForeignCurrency",
-                "objects.*.sumNetAccounting",
-                "objects.*.sumNetForeignCurrency",
-                "objects.*.sumTax",
-                "objects.*.sumTaxAccounting",
-                "objects.*.sumTaxForeignCurrency",
-                "objects.*.supplierNameAtSave",
+                "objects.*.sevClient.objectName",
                 "objects.*.taxRule.objectName",
-                "objects.*.taxType",
-                "objects.*.taxmaroStockAccount",
-                "objects.*.tip",
-                "objects.*.update",
-                "objects.*.vatNumber",
+            ],
+        ),
+        (
+            "sample_voucher_list",
+            unread::<Voucher>("sample_voucher_list"),
+            &[
+                "objects.*.createUser.objectName",
+                "objects.*.document.objectName",
+                "objects.*.objectName",
+                "objects.*.sevClient.objectName",
+                "objects.*.taxRule.objectName",
             ],
         ),
         (
@@ -105,111 +86,52 @@ pub(super) fn covered() -> Vec<Covered> {
             unread::<VoucherPosition>("voucher_positions"),
             &[
                 "objects.*.accountDatev.objectName",
-                "objects.*.additionalInformation",
-                "objects.*.assetMemoValue",
-                "objects.*.cateringTaxRate",
-                "objects.*.cateringTip",
-                "objects.*.create",
-                "objects.*.createNextPart",
-                "objects.*.discountedValue",
-                "objects.*.isAsset",
-                "objects.*.isGwg",
-                "objects.*.isPercentage",
                 "objects.*.objectName",
-                "objects.*.sevClient",
-                "objects.*.specialAccountingField1",
-                "objects.*.specialAccountingField2",
-                "objects.*.specialAccountingField3",
-                "objects.*.specialAccountingField4",
-                "objects.*.specialAccountingField5",
-                "objects.*.sum",
-                "objects.*.sumDiscountForeignCurrency",
-                "objects.*.sumGrossAccounting",
-                "objects.*.sumGrossForeignCurrency",
-                "objects.*.sumNetAccounting",
-                "objects.*.sumNetForeignCurrency",
-                "objects.*.sumTax",
-                "objects.*.sumTaxAccounting",
-                "objects.*.sumTaxForeignCurrency",
-                "objects.*.update",
+                "objects.*.sevClient.objectName",
                 "objects.*.voucher.objectName",
+            ],
+        ),
+        (
+            "sample_voucher_pos_list",
+            unread::<VoucherPosition>("sample_voucher_pos_list"),
+            &[
+                "objects.*.accountDatev.objectName",
+                "objects.*.objectName",
+                "objects.*.sevClient.objectName",
+                "objects.*.voucher.objectName",
+            ],
+        ),
+        (
+            "write_voucher_reset_to_open",
+            unread::<Voucher>("write_voucher_reset_to_open"),
+            &[
+                "objects.createUser.objectName",
+                "objects.document.objectName",
+                "objects.objectName",
+                "objects.sevClient.objectName",
+                "objects.taxRule.objectName",
+            ],
+        ),
+        (
+            "write_voucher_book_amount",
+            unread::<VoucherLog>("write_voucher_book_amount"),
+            &[
+                "objects.objectName",
+                "objects.sevClient.objectName",
+                "objects.voucher.objectName",
             ],
         ),
         (
             "write_voucher_save_create",
             unread::<SavedVoucher>("write_voucher_save_create"),
             &[
-                "objects.vatdrop",
-                "objects.voucher.accountingSpecialCase",
-                "objects.voucher.additionalInformation",
-                "objects.voucher.create",
-                "objects.voucher.createUser",
-                "objects.voucher.enshrined",
-                "objects.voucher.hidden",
-                "objects.voucher.iban",
-                "objects.voucher.inSource",
-                "objects.voucher.mileageRate",
+                "objects.voucher.createUser.objectName",
                 "objects.voucher.objectName",
-                "objects.voucher.payDate",
-                "objects.voucher.paymentDeadline",
-                "objects.voucher.propertyCreationOrigin",
-                "objects.voucher.recurringEndDate",
-                "objects.voucher.recurringInterval",
-                "objects.voucher.recurringIntervall",
-                "objects.voucher.recurringLastVoucher",
-                "objects.voucher.recurringNextVoucher",
-                "objects.voucher.recurringStartDate",
-                "objects.voucher.resultDisdar",
-                "objects.voucher.selectedForPaymentFile",
-                "objects.voucher.sendType",
-                "objects.voucher.sevClient",
-                "objects.voucher.showNet",
-                "objects.voucher.sumDiscountGross",
-                "objects.voucher.sumDiscountGrossForeignCurrency",
-                "objects.voucher.sumDiscountNet",
-                "objects.voucher.sumDiscountNetForeignCurrency",
-                "objects.voucher.sumGrossAccounting",
-                "objects.voucher.sumGrossForeignCurrency",
-                "objects.voucher.sumNetAccounting",
-                "objects.voucher.sumNetForeignCurrency",
-                "objects.voucher.sumTax",
-                "objects.voucher.sumTaxAccounting",
-                "objects.voucher.sumTaxForeignCurrency",
-                "objects.voucher.supplierNameAtSave",
+                "objects.voucher.sevClient.objectName",
                 "objects.voucher.taxRule.objectName",
-                "objects.voucher.taxType",
-                "objects.voucher.taxmaroStockAccount",
-                "objects.voucher.tip",
-                "objects.voucher.update",
-                "objects.voucher.vatNumber",
                 "objects.voucherPos.*.accountDatev.objectName",
-                "objects.voucherPos.*.additionalInformation",
-                "objects.voucherPos.*.assetMemoValue",
-                "objects.voucherPos.*.cateringTaxRate",
-                "objects.voucherPos.*.cateringTip",
-                "objects.voucherPos.*.create",
-                "objects.voucherPos.*.createNextPart",
-                "objects.voucherPos.*.discountedValue",
-                "objects.voucherPos.*.isAsset",
-                "objects.voucherPos.*.isGwg",
-                "objects.voucherPos.*.isPercentage",
                 "objects.voucherPos.*.objectName",
-                "objects.voucherPos.*.sevClient",
-                "objects.voucherPos.*.specialAccountingField1",
-                "objects.voucherPos.*.specialAccountingField2",
-                "objects.voucherPos.*.specialAccountingField3",
-                "objects.voucherPos.*.specialAccountingField4",
-                "objects.voucherPos.*.specialAccountingField5",
-                "objects.voucherPos.*.sum",
-                "objects.voucherPos.*.sumDiscountForeignCurrency",
-                "objects.voucherPos.*.sumGrossAccounting",
-                "objects.voucherPos.*.sumGrossForeignCurrency",
-                "objects.voucherPos.*.sumNetAccounting",
-                "objects.voucherPos.*.sumNetForeignCurrency",
-                "objects.voucherPos.*.sumTax",
-                "objects.voucherPos.*.sumTaxAccounting",
-                "objects.voucherPos.*.sumTaxForeignCurrency",
-                "objects.voucherPos.*.update",
+                "objects.voucherPos.*.sevClient.objectName",
                 "objects.voucherPos.*.voucher.objectName",
             ],
         ),
@@ -217,81 +139,47 @@ pub(super) fn covered() -> Vec<Covered> {
             "write_voucher_save_update_release_attach",
             unread::<SavedVoucher>("write_voucher_save_update_release_attach"),
             &[
-                "objects.document",
-                "objects.vatdrop",
-                "objects.voucher.accountingSpecialCase",
-                "objects.voucher.additionalInformation",
-                "objects.voucher.create",
-                "objects.voucher.createUser",
+                "objects.document.createUser.objectName",
+                "objects.document.objectName",
+                "objects.document.sevClient.objectName",
+                "objects.document.updateUser.objectName",
+                "objects.voucher.createUser.objectName",
                 "objects.voucher.document.objectName",
-                "objects.voucher.enshrined",
-                "objects.voucher.hidden",
-                "objects.voucher.iban",
-                "objects.voucher.inSource",
-                "objects.voucher.mileageRate",
                 "objects.voucher.objectName",
-                "objects.voucher.payDate",
-                "objects.voucher.paymentDeadline",
-                "objects.voucher.propertyIsBookkeepingV1",
-                "objects.voucher.recurringEndDate",
-                "objects.voucher.recurringInterval",
-                "objects.voucher.recurringIntervall",
-                "objects.voucher.recurringLastVoucher",
-                "objects.voucher.recurringNextVoucher",
-                "objects.voucher.recurringStartDate",
-                "objects.voucher.resultDisdar",
-                "objects.voucher.selectedForPaymentFile",
-                "objects.voucher.sendType",
-                "objects.voucher.sevClient",
-                "objects.voucher.showNet",
-                "objects.voucher.sumDiscountGross",
-                "objects.voucher.sumDiscountGrossForeignCurrency",
-                "objects.voucher.sumDiscountNet",
-                "objects.voucher.sumDiscountNetForeignCurrency",
-                "objects.voucher.sumGrossAccounting",
-                "objects.voucher.sumGrossForeignCurrency",
-                "objects.voucher.sumNetAccounting",
-                "objects.voucher.sumNetForeignCurrency",
-                "objects.voucher.sumTax",
-                "objects.voucher.sumTaxAccounting",
-                "objects.voucher.sumTaxForeignCurrency",
-                "objects.voucher.supplierNameAtSave",
+                "objects.voucher.sevClient.objectName",
                 "objects.voucher.taxRule.objectName",
-                "objects.voucher.taxType",
-                "objects.voucher.taxmaroStockAccount",
-                "objects.voucher.tip",
-                "objects.voucher.update",
-                "objects.voucher.vatNumber",
                 "objects.voucherPos.*.accountDatev.objectName",
-                "objects.voucherPos.*.additionalInformation",
-                "objects.voucherPos.*.assetMemoValue",
-                "objects.voucherPos.*.cateringTaxRate",
-                "objects.voucherPos.*.cateringTip",
-                "objects.voucherPos.*.create",
-                "objects.voucherPos.*.createNextPart",
-                "objects.voucherPos.*.discountedValue",
-                "objects.voucherPos.*.isAsset",
-                "objects.voucherPos.*.isGwg",
-                "objects.voucherPos.*.isPercentage",
                 "objects.voucherPos.*.objectName",
-                "objects.voucherPos.*.sevClient",
-                "objects.voucherPos.*.specialAccountingField1",
-                "objects.voucherPos.*.specialAccountingField2",
-                "objects.voucherPos.*.specialAccountingField3",
-                "objects.voucherPos.*.specialAccountingField4",
-                "objects.voucherPos.*.specialAccountingField5",
-                "objects.voucherPos.*.sum",
-                "objects.voucherPos.*.sumDiscountForeignCurrency",
-                "objects.voucherPos.*.sumGrossAccounting",
-                "objects.voucherPos.*.sumGrossForeignCurrency",
-                "objects.voucherPos.*.sumNetAccounting",
-                "objects.voucherPos.*.sumNetForeignCurrency",
-                "objects.voucherPos.*.sumTax",
-                "objects.voucherPos.*.sumTaxAccounting",
-                "objects.voucherPos.*.sumTaxForeignCurrency",
-                "objects.voucherPos.*.update",
+                "objects.voucherPos.*.sevClient.objectName",
                 "objects.voucherPos.*.voucher.objectName",
             ],
         ),
     ]
+}
+
+/// Full paths of this group's form-unmeasured keys in `fixture`, if its read
+/// type has such a list.
+pub(super) fn form_unmeasured(fixture: &str) -> Option<Vec<(String, bool)>> {
+    Some(match fixture {
+        "voucher" | "voucher_list" | "sample_voucher_list" => {
+            under("objects.*.", VOUCHER_FORM_UNMEASURED)
+        }
+        "voucher_positions" | "sample_voucher_pos_list" => {
+            under("objects.*.", VOUCHER_POSITION_FORM_UNMEASURED)
+        }
+        "write_voucher_reset_to_open" => under("objects.", VOUCHER_FORM_UNMEASURED),
+        "write_voucher_book_amount" => under("objects.", VOUCHER_LOG_FORM_UNMEASURED),
+        "write_voucher_save_create" | "write_voucher_save_update_release_attach" => {
+            let mut keys = under("objects.voucher.", VOUCHER_FORM_UNMEASURED);
+            keys.extend(under(
+                "objects.voucherPos.*.",
+                VOUCHER_POSITION_FORM_UNMEASURED,
+            ));
+            if fixture == "write_voucher_save_update_release_attach" {
+                keys.extend(under("objects.document.", DOCUMENT_FORM_UNMEASURED));
+            }
+            keys
+        }
+        _ => return None,
+    })
 }

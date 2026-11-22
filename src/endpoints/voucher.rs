@@ -3,7 +3,7 @@ use crate::error::SevdeskError;
 use crate::ids::{Resource, VoucherId};
 use crate::payload::{BookVoucherAmount, SaveVoucher};
 use crate::query::VoucherQuery;
-use crate::wire::{SavedVoucher, UploadedFile, Voucher, VoucherPosition};
+use crate::wire::{SavedVoucher, UploadedFile, Voucher, VoucherLog, VoucherPosition};
 use reqwest::{Method, multipart};
 
 impl SevdeskClient {
@@ -65,26 +65,26 @@ impl SevdeskClient {
     }
 
     /// `PUT /Voucher/{id}/bookAmount`; sevDesk answers with the booking as a
-    /// `VoucherLog` object (`amountPayed`, `fromStatus`, `toStatus`). The amount carries the sign of the
+    /// [`VoucherLog`] (`amountPayed`, `fromStatus`, `toStatus`). The amount carries the sign of the
     /// transaction; sevDesk refuses a booking on a paid voucher with code 751
     /// and accepts the one that exceeds the total (capping `paidAmount`).
     pub async fn book_voucher_amount(
         &self,
         id: VoucherId,
         booking: &BookVoucherAmount,
-    ) -> Result<(), SevdeskError> {
+    ) -> Result<VoucherLog, SevdeskError> {
         self.send_json(Method::PUT, &format!("/Voucher/{id}/bookAmount"), booking)
-            .await
-            .map(drop)
+            .await?
+            .one()
     }
 
-    /// `PUT /Voucher/{id}/resetToOpen`: takes back all bookings (the answer is
-    /// the voucher); the transactions return to status 100 and their log
-    /// entries disappear.
-    pub async fn reset_voucher_to_open(&self, id: VoucherId) -> Result<(), SevdeskError> {
+    /// `PUT /Voucher/{id}/resetToOpen`: takes back all bookings and returns the
+    /// voucher; the transactions return to status 100 and their log entries
+    /// disappear.
+    pub async fn reset_voucher_to_open(&self, id: VoucherId) -> Result<Voucher, SevdeskError> {
         self.send_empty(Method::PUT, &format!("/Voucher/{id}/resetToOpen"))
-            .await
-            .map(drop)
+            .await?
+            .one()
     }
 
     /// `PUT /Voucher/{id}/resetToDraft`: a released voucher (status 100) back

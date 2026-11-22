@@ -1,0 +1,96 @@
+{
+  "objects": [
+    {
+      "accountDatev": {
+        "id": "4285",
+        "objectName": "AccountDatev"
+      },
+      "additionalInformation": null,
+      "assetMemoValue": "0",
+      "cateringTaxRate": null,
+      "cateringTip": "0",
+      "comment": "Zahlungsabwicklung 08/2026 (Stripe-Testmodus, 106 Bewegungen mit Gebühr)",
+      "create": "2026-09-29T15:10:36+02:00",
+      "createNextPart": null,
+      "discountedValue": "0",
+      "id": "213038234",
+      "isAsset": "0",
+      "isGwg": "0",
+      "isPercentage": "1",
+      "net": "1",
+      "objectName": "VoucherPos",
+      "sevClient": {
+        "id": "1303847",
+        "objectName": "SevClient"
+      },
+      "specialAccountingField1": null,
+      "specialAccountingField2": null,
+      "specialAccountingField3": null,
+      "specialAccountingField4": null,
+      "specialAccountingField5": null,
+      "sum": null,
+      "sumDiscountForeignCurrency": "0",
+      "sumGross": "24.99",
+      "sumGrossAccounting": "24.99",
+      "sumGrossForeignCurrency": "0",
+      "sumNet": "24.99",
+      "sumNetAccounting": "24.99",
+      "sumNetForeignCurrency": "0",
+      "sumTax": "0",
+      "sumTaxAccounting": "0",
+      "sumTaxForeignCurrency": "0",
+      "taxRate": "0",
+      "update": "2026-09-29T15:17:20+02:00",
+      "voucher": {
+        "id": "156242963",
+        "objectName": "Voucher"
+      }
+    },
+    {
+      "accountDatev": {
+        "id": "4285",
+        "objectName": "AccountDatev"
+      },
+      "additionalInformation": null,
+      "assetMemoValue": "0",
+      "cateringTaxRate": null,
+      "cateringTip": null,
+      "comment": "Dispute-Gebühren 08/2026",
+      "create": "2026-09-29T15:21:57+02:00",
+      "createNextPart": null,
+      "discountedValue": "0",
+      "id": "213039665",
+      "isAsset": "0",
+      "isGwg": "0",
+      "isPercentage": "1",
+      "net": "1",
+      "objectName": "VoucherPos",
+      "sevClient": {
+        "id": "1303847",
+        "objectName": "SevClient"
+      },
+      "specialAccountingField1": null,
+      "specialAccountingField2": null,
+      "specialAccountingField3": null,
+      "specialAccountingField4": null,
+      "specialAccountingField5": null,
+      "sum": null,
+      "sumDiscountForeignCurrency": "0",
+      "sumGross": "30",
+      "sumGrossAccounting": "30",
+      "sumGrossForeignCurrency": "0",
+      "sumNet": "30",
+      "sumNetAccounting": "30",
+      "sumNetForeignCurrency": "0",
+      "sumTax": "0",
+      "sumTaxAccounting": "0",
+      "sumTaxForeignCurrency": "0",
+      "taxRate": "0",
+      "update": "2026-09-29T15:44:34+02:00",
+      "voucher": {
+        "id": "156244190",
+        "objectName": "Voucher"
+      }
+    }
+  ]
+}

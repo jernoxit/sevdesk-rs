@@ -176,18 +176,23 @@ async fn book_amounts_carry_the_transactions_sign_and_endpoint_specific_dates() 
     let c = client(&server);
     let account = ObjectRef::new(CheckAccountId::new(6306017));
     let transaction = ObjectRef::new(TransactionId::new(1897813785));
-    c.book_voucher_amount(
-        VoucherId::new(156244013),
-        &BookVoucherAmount {
-            amount: eur(-5749),
-            date: datetime!(2026-08-25 12:00 +2),
-            booking_type: BookingType::N,
-            check_account: account,
-            check_account_transaction: transaction,
-        },
-    )
-    .await
-    .unwrap();
+    let log = c
+        .book_voucher_amount(
+            VoucherId::new(156244013),
+            &BookVoucherAmount {
+                amount: eur(-5749),
+                date: datetime!(2026-08-25 12:00 +2),
+                booking_type: BookingType::N,
+                check_account: account,
+                check_account_transaction: transaction,
+            },
+        )
+        .await
+        .unwrap();
+    // The recorded answer is the `VoucherLog` of the booking.
+    assert_eq!(log.id, VoucherLogId::new(148586846));
+    assert_eq!(log.amount_payed, Some(eur(45)));
+    assert_eq!(log.to_status, Some(VoucherStatus::Paid));
     c.book_credit_note_amount(
         CreditNoteId::new(2996041),
         &BookDocumentAmount {
@@ -324,7 +329,10 @@ async fn reset_and_delete_answers_decode_from_real_captures() {
         .mount(&server)
         .await;
     let c = client(&server);
-    c.reset_voucher_to_open(VoucherId::new(1)).await.unwrap();
+    // The recorded answer is the voucher, back in status 100.
+    let reset = c.reset_voucher_to_open(VoucherId::new(1)).await.unwrap();
+    assert_eq!(reset.id, VoucherId::new(156270656));
+    assert_eq!(reset.status, Some(VoucherStatus::Open));
     c.reset_voucher_to_draft(VoucherId::new(1)).await.unwrap();
 }
 
