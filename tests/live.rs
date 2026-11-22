@@ -40,7 +40,7 @@ async fn live_check_accounts() {
         .iter()
         .find(|a| a.id == CheckAccountId::new(IMPORT_ACCOUNT))
         .expect("import account");
-    assert_eq!(import.kind.as_deref(), Some("online"));
+    assert_eq!(import.kind, Some(CheckAccountType::Online));
     let one = c.check_account(import.id).await.unwrap();
     assert_eq!(one.accounting_number, Some(1201));
     c.balance_at_date(import.id, time::macros::date!(2026 - 09 - 29))

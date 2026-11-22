@@ -109,10 +109,14 @@ coded_enum!(
 
 coded_enum!(
     /// Check account transaction status.
+    ///
+    /// `350` is known only from the OpenAPI response spec; its meaning is unknown.
     TransactionStatus {
         Created = 100,
         Linked = 200,
         Private = 300,
+        /// `350`; known only from the OpenAPI response spec.
+        Unknown350 = 350,
         Booked = 400,
     }
 );
@@ -182,6 +186,39 @@ pub enum ImportType {
     #[serde(rename = "MT940")]
     Mt940,
 }
+
+named_enum!(
+    /// `importType` as a check account answer carries it. The outgoing
+    /// [`ImportType`] stays `Copy` and has no `Other`; this read form is
+    /// tolerant. An account without file import has `null`, not a variant.
+    CheckAccountImportType {
+        /// `CSV`; measured.
+        Csv = "CSV",
+        /// `MT940`; known only from the OpenAPI spec.
+        Mt940 = "MT940",
+    }
+);
+
+named_enum!(
+    /// `type` of a check account: `online` and `offline` are measured,
+    /// `register` is known only from the OpenAPI spec.
+    CheckAccountType {
+        Online = "online",
+        Offline = "offline",
+        /// `register`; known only from the OpenAPI spec.
+        Register = "register",
+    }
+);
+
+coded_enum!(
+    /// `status` of a check account. `100` is measured on every account, `0`
+    /// is known only from the OpenAPI spec; the names are inferred.
+    CheckAccountStatus {
+        /// `0`; known only from the OpenAPI spec.
+        Inactive = 0,
+        Active = 100,
+    }
+);
 
 /// How `sendBy` "sends" a document; `Vpdf` only marks it as sent (no mail, no
 /// print) and finalizes it, which is what gives an invoice its number. Whether it

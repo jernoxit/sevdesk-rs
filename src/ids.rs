@@ -56,6 +56,11 @@ macro_rules! resource_id {
 
 resource_id!(CheckAccountId, "CheckAccount");
 resource_id!(TransactionId, "CheckAccountTransaction");
+resource_id!(
+    /// A booking log entry of a transaction (`GET /CheckAccountTransactionLog`).
+    TransactionLogId,
+    "CheckAccountTransactionLog"
+);
 resource_id!(VoucherId, "Voucher");
 resource_id!(VoucherPositionId, "VoucherPos");
 resource_id!(

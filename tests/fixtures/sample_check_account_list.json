@@ -1,0 +1,66 @@
+{
+  "objects": [
+    {
+      "accountingNumber": "1201",
+      "additionalInformation": null,
+      "autoMapTransaction": "1",
+      "autoSyncTransactions": "0",
+      "balance": "0",
+      "bankServer": null,
+      "baseAccount": "0",
+      "bic": null,
+      "checkAccId": null,
+      "countryCode": null,
+      "create": "2026-09-28T19:48:09+02:00",
+      "currency": "EUR",
+      "defaultAccount": "1",
+      "iban": null,
+      "id": "6306017",
+      "importType": "CSV",
+      "lastSync": null,
+      "name": "Probe Stripe Import PROBE-R1",
+      "objectName": "CheckAccount",
+      "pin": null,
+      "priority": "0",
+      "sevClient": {
+        "id": "1303847",
+        "objectName": "SevClient"
+      },
+      "status": "100",
+      "translationCode": null,
+      "type": "online",
+      "update": "2026-09-28T19:48:09+02:00"
+    },
+    {
+      "accountingNumber": "1220",
+      "additionalInformation": null,
+      "autoMapTransaction": "1",
+      "autoSyncTransactions": "1",
+      "balance": null,
+      "bankServer": null,
+      "baseAccount": "1",
+      "bic": null,
+      "checkAccId": null,
+      "countryCode": null,
+      "create": "2026-09-28T19:27:55+02:00",
+      "currency": "EUR",
+      "defaultAccount": "0",
+      "iban": null,
+      "id": "6305996",
+      "importType": null,
+      "lastSync": null,
+      "name": "Basiskonto",
+      "objectName": "CheckAccount",
+      "pin": null,
+      "priority": "0",
+      "sevClient": {
+        "id": "1303847",
+        "objectName": "SevClient"
+      },
+      "status": "100",
+      "translationCode": null,
+      "type": "offline",
+      "update": "2026-09-28T19:48:09+02:00"
+    }
+  ]
+}

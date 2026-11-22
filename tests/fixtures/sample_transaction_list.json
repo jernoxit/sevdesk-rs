@@ -1,0 +1,80 @@
+{
+  "objects": [
+    {
+      "additionalInformation": null,
+      "amount": "2928.94",
+      "checkAccount": {
+        "id": "6306817",
+        "objectName": "CheckAccount"
+      },
+      "compareHash": null,
+      "create": "2026-11-05T13:16:20+01:00",
+      "deletedAt": null,
+      "enshrined": null,
+      "entryDate": "2026-10-24T00:53:02+02:00",
+      "entryText": null,
+      "externalId": null,
+      "feeAmount": null,
+      "gvCode": null,
+      "id": "1910008228",
+      "objectName": "CheckAccountTransaction",
+      "obonoReceiptUuid": null,
+      "payeePayerAcctNo": null,
+      "payeePayerBankCode": null,
+      "payeePayerName": "Stripe",
+      "paymtPurpose": "SDRS-SAMPLE- Anfangsbestand",
+      "primaNotaNo": null,
+      "restoredAt": null,
+      "score": null,
+      "sevClient": {
+        "id": "1303847",
+        "objectName": "SevClient"
+      },
+      "sourceTransaction": {
+        "id": "1910008228",
+        "objectName": "CheckAccountTransaction"
+      },
+      "status": "400",
+      "targetTransaction": {
+        "id": "1910008228",
+        "objectName": "CheckAccountTransaction"
+      },
+      "update": "2026-11-05T13:16:21+01:00",
+      "valueDate": "2026-10-24T00:53:02+02:00"
+    },
+    {
+      "additionalInformation": null,
+      "amount": "10",
+      "checkAccount": {
+        "id": "6306817",
+        "objectName": "CheckAccount"
+      },
+      "compareHash": null,
+      "create": "2026-11-05T12:17:49+01:00",
+      "deletedAt": null,
+      "enshrined": "2026-11-05T12:17:55+01:00",
+      "entryDate": "2026-11-05T12:12:11+01:00",
+      "entryText": null,
+      "externalId": null,
+      "feeAmount": null,
+      "gvCode": null,
+      "id": "1909988173",
+      "objectName": "CheckAccountTransaction",
+      "obonoReceiptUuid": null,
+      "payeePayerAcctNo": null,
+      "payeePayerBankCode": null,
+      "payeePayerName": "SDRS-SAMPLE-Dispute",
+      "paymtPurpose": "SDRS-SAMPLE-DISP-1793877131-A6-PAY",
+      "primaNotaNo": null,
+      "restoredAt": null,
+      "score": null,
+      "sevClient": {
+        "id": "1303847",
+        "objectName": "SevClient"
+      },
+      "status": "400",
+      "update": "2026-11-05T12:17:55+01:00",
+      "valueDate": "2026-11-05T12:12:11+01:00"
+    }
+  ]
+}

@@ -90,6 +90,8 @@ fn form_unmeasured(fixture: &str) -> Vec<(String, bool)> {
     invoice::form_unmeasured(fixture)
         .or_else(|| credit_note::form_unmeasured(fixture))
         .or_else(|| voucher::form_unmeasured(fixture))
+        .or_else(|| transaction::form_unmeasured(fixture))
+        .or_else(|| check_account::form_unmeasured(fixture))
         .unwrap_or_default()
 }
 

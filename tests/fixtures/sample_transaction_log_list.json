@@ -1,0 +1,48 @@
+{
+  "objects": [
+    {
+      "additionalInformation": null,
+      "amountPaid": 34.51,
+      "bookingDate": "2026-09-28T00:00:00+02:00",
+      "checkAccountTransaction": {
+        "id": "1897434114",
+        "objectName": "CheckAccountTransaction"
+      },
+      "create": "2026-09-28T19:48:22+02:00",
+      "fromStatus": "100",
+      "id": "237319967",
+      "object": {
+        "id": "135169196",
+        "objectName": "Invoice"
+      },
+      "objectName": "CheckAccountTransactionLog",
+      "sevClient": {
+        "id": "1303847",
+        "objectName": "SevClient"
+      },
+      "toStatus": "400"
+    },
+    {
+      "additionalInformation": null,
+      "amountPaid": 10,
+      "bookingDate": "2026-09-28T19:48:38+02:00",
+      "checkAccountTransaction": {
+        "id": "1897434140",
+        "objectName": "CheckAccountTransaction"
+      },
+      "create": "2026-09-28T19:48:38+02:00",
+      "fromStatus": "100",
+      "id": "237319987",
+      "object": {
+        "id": "135169198",
+        "objectName": "Invoice"
+      },
+      "objectName": "CheckAccountTransactionLog",
+      "sevClient": {
+        "id": "1303847",
+        "objectName": "SevClient"
+      },
+      "toStatus": "400"
+    }
+  ]
+}
