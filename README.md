@@ -91,6 +91,10 @@ Where a measurement contradicts sevDesk's OpenAPI spec, the measurement wins.
 The crate docs (`just doc`, then `target/doc/sevdesk/index.html`) carry these
 details at the types and methods they concern.
 
+`just spec-check` downloads sevDesk's published OpenAPI spec and compares it
+with the crate's read types and endpoints: it lists new properties, enum values
+and endpoints, so a changed spec is noticed. It generates nothing.
+
 ## Read types
 
 Every read type maps every field its call returns, taken from recorded

@@ -30,6 +30,17 @@ test-live *args:
     set -a; . ./.env; set +a
     cargo test {{ if args == "" { "--workspace" } else { args } }} -- --ignored --nocapture
 
+# Downloads sevDesk's public OpenAPI spec (static file, no token) and lists what is
+# new relative to the read types and endpoints. The spec itself is never committed.
+spec-check:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    mkdir -p target/tmp/spec
+    curl -fsS -D target/tmp/spec/headers.txt -o target/tmp/spec/openapi.yaml https://api.sevdesk.de/openapi.yaml
+    shasum -a 256 target/tmp/spec/openapi.yaml
+    grep -i '^last-modified' target/tmp/spec/headers.txt || echo "no Last-Modified header"
+    cargo test --test spec_watch -- --ignored --nocapture
+
 # Enable the local pre-commit token guard (.githooks/pre-commit).
 hooks:
     git config core.hooksPath .githooks
