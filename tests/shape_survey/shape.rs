@@ -51,6 +51,10 @@ struct KeyStat {
     present: usize,
     forms: BTreeMap<&'static str, FormStat>,
     patterns: BTreeSet<String>,
+    max_frac_digits: usize,
+    max_int_digits: usize,
+    /// Files the key came from (recorded answers only).
+    files: BTreeSet<String>,
 }
 
 /// All objects of one resource.
@@ -60,9 +64,36 @@ pub(crate) struct Survey {
     keys: BTreeMap<String, KeyStat>,
     /// How many objects carry each parent key as a nested object.
     parents: BTreeMap<String, usize>,
+    /// Record no example values at all (the examples column reads `-`).
+    no_examples: bool,
+    /// Record and print the source file per key (recorded answers).
+    track_files: bool,
+    /// The file the objects added next come from.
+    source: String,
 }
 
 impl Survey {
+    /// A survey that records no example value at all.
+    pub(crate) fn without_examples() -> Self {
+        Self {
+            no_examples: true,
+            ..Self::default()
+        }
+    }
+
+    /// A survey of recorded answers: keys carry their source files.
+    pub(crate) fn with_files() -> Self {
+        Self {
+            track_files: true,
+            ..Self::default()
+        }
+    }
+
+    /// The file the objects added next come from.
+    pub(crate) fn set_source(&mut self, file: &str) {
+        file.clone_into(&mut self.source);
+    }
+
     pub(crate) fn key_count(&self) -> usize {
         self.keys.len()
     }
@@ -84,13 +115,20 @@ impl Survey {
         let stat = self.keys.entry(key.to_owned()).or_default();
         stat.parent = parent.map(str::to_owned);
         stat.present += 1;
+        if self.track_files {
+            stat.files.insert(self.source.clone());
+        }
+        if let Some((int, frac)) = digits(value) {
+            stat.max_int_digits = stat.max_int_digits.max(int);
+            stat.max_frac_digits = stat.max_frac_digits.max(frac);
+        }
         let (form, pattern, example) = classify(value);
         if let Some(p) = pattern {
             stat.patterns.insert(p);
         }
         let form_stat = stat.forms.entry(form).or_default();
         form_stat.count += 1;
-        let recorded = if is_scalar(form) && is_sensitive(key) {
+        let recorded = if self.no_examples || (is_scalar(form) && is_sensitive(key)) {
             None
         } else {
             Some(example)
@@ -109,7 +147,8 @@ impl Survey {
             out.push('\t');
             out.push_str(f);
         }
-        out.push_str("\tmissing\ttimestamp_patterns\texamples\n");
+        out.push_str("\tmissing\tmax_frac_digits\tmax_int_digits\ttimestamp_patterns\texamples");
+        out.push_str(if self.track_files { "\tfiles\n" } else { "\n" });
         for (key, stat) in &self.keys {
             let base = match &stat.parent {
                 Some(p) => self.parents.get(p).copied().unwrap_or_default(),
@@ -127,14 +166,52 @@ impl Survey {
                     (!s.examples.is_empty()).then(|| format!("{f}: {}", s.examples.join(" | ")))
                 })
                 .collect();
+            let examples = if self.no_examples {
+                "-".to_owned()
+            } else {
+                examples.join("; ")
+            };
             out.push_str(&format!(
-                "\t{}\t{}\t{}\n",
+                "\t{}\t{}\t{}\t{}\t{}",
                 base.saturating_sub(stat.present),
+                stat.max_frac_digits,
+                stat.max_int_digits,
                 tsv_cell(&patterns.join(", ")),
-                tsv_cell(&examples.join("; "))
+                tsv_cell(&examples)
             ));
+            if self.track_files {
+                let files: Vec<&str> = stat.files.iter().take(5).map(String::as_str).collect();
+                out.push_str(&format!("\t{}", tsv_cell(&files.join(", "))));
+            }
+            out.push('\n');
         }
         out
+    }
+}
+
+/// Digits before and after the point of a numeric value or numeric string
+/// (sign excluded); `None` for every other form.
+fn digits(value: &Value) -> Option<(usize, usize)> {
+    let text = match value {
+        Value::Number(n) => n.to_string(),
+        Value::String(s) => s.clone(),
+        _ => return None,
+    };
+    let unsigned = text.strip_prefix('-').unwrap_or(&text);
+    let (int, frac) = match unsigned.split_once('.') {
+        Some((i, f)) => (i, Some(f)),
+        None => (unsigned, None),
+    };
+    if !all_digits(int) {
+        return None;
+    }
+    match frac {
+        None => Some((int.len(), 0)),
+        Some(f) => {
+            // a float may print as `1.5e-7`: count the mantissa digits only
+            let f = f.split(['e', 'E']).next().unwrap_or(f);
+            all_digits(f).then_some((int.len(), f.len()))
+        }
     }
 }
 

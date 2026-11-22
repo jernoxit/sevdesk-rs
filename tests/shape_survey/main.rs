@@ -11,9 +11,12 @@
 //! 1000 objects, at most 10 pages. A resource that answers 300 or more is
 //! recorded as such and skipped. Output: one TSV per resource in
 //! `target/tmp/shape_survey/<Resource>.tsv` and one stderr line per resource,
-//! `SURVEY\t<Resource>\t<http>\t<objects>\t<keys>`. Expanded `SevClient` /
+//! `SURVEY\t<Resource>\t<http>\t<objects>\t<keys>`. `survey_recordings` is the
+//! offline twin: the same classifier over `tests/fixtures/*.json` and
+//! `target/tmp/captures/*.json`, grouped by `objectName` into
+//! `recorded_<objectName>.tsv` (no network, no token). Expanded `SevClient` /
 //! `SevUser` objects are collapsed by the shared scrubber before they are
-//! classified; keys that may hold personal or secret data record no example
+//! classified (except the `SevUser` list itself: keys and forms, no examples); keys that may hold personal or secret data record no example
 //! values.
 #![allow(
     dead_code,
@@ -90,10 +93,13 @@ async fn get(ctx: &Ctx, path: &str) -> (u16, String) {
     ctx.raw(only_get(Method::GET), path, None, None).await
 }
 
-/// `objects` of an answer as a list, expanded account objects collapsed.
-fn objects_of(text: &str) -> Option<Vec<Value>> {
+/// `objects` of an answer as a list, expanded account objects collapsed
+/// unless `collapse` is off (the `SevUser` list itself).
+fn objects_of(text: &str, collapse: bool) -> Option<Vec<Value>> {
     let mut v: Value = serde_json::from_str(text).ok()?;
-    scrub::collapse_account_objects(&mut v);
+    if collapse {
+        scrub::collapse_account_objects(&mut v);
+    }
     match v.get_mut("objects")?.take() {
         Value::Array(list) => Some(list),
         obj @ Value::Object(_) => Some(vec![obj]),
@@ -105,7 +111,7 @@ fn objects_of(text: &str) -> Option<Vec<Value>> {
 async fn verify_test_account(ctx: &Ctx) {
     let (status, text) = get(ctx, "/SevClient").await;
     assert!(status < 300, "GET /SevClient answered {status}");
-    let id = objects_of(&text)
+    let id = objects_of(&text, true)
         .and_then(|l| l.first().map(|o| o["id"].clone()))
         .and_then(|id| match id {
             Value::String(s) => s.parse::<i64>().ok(),
@@ -120,7 +126,14 @@ async fn verify_test_account(ctx: &Ctx) {
 }
 
 async fn survey_resource(ctx: &Ctx, res: &Resource) {
-    let mut survey = Survey::default();
+    // The `SevUser` list is the one place account objects are surveyed as
+    // they are: keys and forms, never a value.
+    let own_users = res.name == "SevUser";
+    let mut survey = if own_users {
+        Survey::without_examples()
+    } else {
+        Survey::default()
+    };
     let mut http = 0;
     'paths: for path in res.paths {
         for page in 0..if res.paged { MAX_PAGES } else { 1 } {
@@ -135,7 +148,7 @@ async fn survey_resource(ctx: &Ctx, res: &Resource) {
                 eprintln!("SURVEY-NOTE\t{}\t{url}\t{status}\tskipped", res.name);
                 break 'paths;
             }
-            let Some(list) = objects_of(&text) else {
+            let Some(list) = objects_of(&text, !own_users) else {
                 eprintln!("SURVEY-NOTE\t{}\t{url}\tno objects array", res.name);
                 break;
             };
@@ -163,6 +176,66 @@ async fn survey_resource(ctx: &Ctx, res: &Resource) {
         survey.objects,
         survey.key_count()
     );
+}
+
+/// Every object carrying an `objectName`, at any depth, grouped by that name.
+fn collect_objects(v: &Value, file: &str, out: &mut std::collections::BTreeMap<String, Survey>) {
+    match v {
+        Value::Object(m) => {
+            if let Some(Value::String(name)) = m.get("objectName") {
+                let survey = out.entry(name.clone()).or_insert_with(Survey::with_files);
+                survey.set_source(file);
+                survey.add_object(m);
+            }
+            m.values().for_each(|x| collect_objects(x, file, out));
+        }
+        Value::Array(list) => list.iter().for_each(|x| collect_objects(x, file, out)),
+        _ => {}
+    }
+}
+
+/// Offline: the same classifier over recorded answers. No network, no token.
+fn survey_recorded_files() {
+    let root = env!("CARGO_MANIFEST_DIR");
+    let tmp = env!("CARGO_TARGET_TMPDIR");
+    let mut surveys = std::collections::BTreeMap::new();
+    for dir in [format!("{root}/tests/fixtures"), format!("{tmp}/captures")] {
+        let Ok(entries) = std::fs::read_dir(&dir) else {
+            continue;
+        };
+        let mut paths: Vec<_> = entries.filter_map(|e| e.ok().map(|e| e.path())).collect();
+        paths.sort();
+        for path in paths {
+            if path.extension().and_then(|e| e.to_str()) != Some("json") {
+                continue;
+            }
+            let Some(mut v) = std::fs::read_to_string(&path)
+                .ok()
+                .and_then(|t| serde_json::from_str::<Value>(&t).ok())
+            else {
+                continue;
+            };
+            scrub::collapse_account_objects(&mut v);
+            let file = path.file_name().unwrap().to_string_lossy().into_owned();
+            collect_objects(&v, &file, &mut surveys);
+        }
+    }
+    let out = format!("{tmp}/shape_survey");
+    std::fs::create_dir_all(&out).unwrap();
+    for (name, survey) in &surveys {
+        std::fs::write(format!("{out}/recorded_{name}.tsv"), survey.to_tsv()).unwrap();
+        eprintln!(
+            "SURVEY-RECORDED\t{name}\t{}\t{}",
+            survey.objects,
+            survey.key_count()
+        );
+    }
+}
+
+#[test]
+#[ignore = "run with the shape survey"]
+fn survey_recordings() {
+    survey_recorded_files();
 }
 
 async fn run(names: &[&str]) {
