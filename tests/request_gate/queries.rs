@@ -1054,12 +1054,18 @@ async fn contacts(g: &mut Gate<'_>, f: &Facts) {
     let ctx = g.ctx;
     let persons = ContactQuery {
         depth: Some(ContactDepth::WithPersons),
+        page: page(),
         ..Default::default()
     };
     // Our contact is a person: only `depth=1` lists it, so its queries run on
     // the widened list (the `depth` row itself is judged against the default).
     let (u0, u1) = match (
-        ctx.c.list_contacts(&ContactQuery::default()).await,
+        ctx.c
+            .list_contacts(&ContactQuery {
+                page: page(),
+                ..Default::default()
+            })
+            .await,
         ctx.c.list_contacts(&persons).await,
     ) {
         (Ok(a), Ok(b)) => (a.len(), b.len()),
@@ -1075,6 +1081,7 @@ async fn contacts(g: &mut Gate<'_>, f: &Facts) {
     let updated = instant_of(&c["update"]);
     let wide = || ContactQuery {
         depth: Some(ContactDepth::WithPersons),
+        page: page(),
         ..Default::default()
     };
     let tag = tag_for(g, "Contact").await;
@@ -1242,6 +1249,7 @@ async fn contacts(g: &mut Gate<'_>, f: &Facts) {
             u0,
             ctx.c.list_contacts(&ContactQuery {
                 tag: Some(tag),
+                page: page(),
                 ..Default::default()
             })
         ),
@@ -1258,6 +1266,7 @@ async fn contacts(g: &mut Gate<'_>, f: &Facts) {
         u0,
         ctx.c.list_contacts(&ContactQuery {
             depth: Some(ContactDepth::WithPersons),
+            page: page(),
             ..Default::default()
         })
     );
@@ -1270,6 +1279,7 @@ async fn contacts(g: &mut Gate<'_>, f: &Facts) {
         u0,
         ctx.c.list_contacts(&ContactQuery {
             order_by_customer_number: Some(SortOrder::Asc),
+            page: page(),
             ..Default::default()
         })
     );

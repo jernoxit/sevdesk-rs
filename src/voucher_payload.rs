@@ -197,10 +197,11 @@ pub struct VoucherPositionOptions {
     /// Whether the position is an asset to depreciate; measured: stored
     /// (2026-11-22).
     pub is_asset: Option<bool>,
-    /// The gross sum. Setting it sends `net: false` (measured 2026-11-22:
-    /// with `net: true` sevDesk ignores `sumGross`; with `net: false` it
-    /// stores it and derives the net sum), so sevDesk then disregards
-    /// [`VoucherPositionDraft::sum_net`].
+    /// The gross sum. Setting it sends the position with `net: false`
+    /// (measured 2026-11-22: with `net: true` sevDesk ignores `sumGross`; with
+    /// `net: false` it stores it), and sevDesk then recomputes `sumNet` from
+    /// it, ignoring the always-sent [`VoucherPositionDraft::sum_net`]
+    /// (measured 2026-11-22 at 0 % only).
     pub sum_gross: Option<Amount>,
 }
 

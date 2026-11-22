@@ -82,11 +82,13 @@ pub struct InvoiceOptions {
         note = "DO NOT USE: only records a send type on the draft without sending anything; sendBy sets it when it finalizes (measured 2026-11-22)"
     )]
     pub send_type: Option<SendType>,
-    /// DO NOT USE: a custom number replaces the number sevDesk assigned and
-    /// leaves a gap in the sequence (measured 2026-11-22); numbers come from
-    /// `sendBy`.
+    /// DO NOT USE: numbers come from `sendBy`. Measured 2026-11-22: a custom
+    /// number set on a draft REPLACES a number the draft already had (that
+    /// number is then a gap in the sequence; it only had one because the draft
+    /// was re-saved through the save factory with its id), and a custom number
+    /// is kept at `sendBy`, bypassing the sequence.
     #[deprecated(
-        note = "DO NOT USE: a custom number replaces the number sevDesk assigned and leaves a gap in the sequence (measured 2026-11-22); numbers come from sendBy"
+        note = "DO NOT USE: a custom number replaces a number the draft already had (a gap in the sequence) and is kept at sendBy, bypassing the sequence (measured 2026-11-22); numbers come from sendBy"
     )]
     pub invoice_number: Option<String>,
 }

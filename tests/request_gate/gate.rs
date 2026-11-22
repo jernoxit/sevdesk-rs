@@ -56,6 +56,7 @@ pub(crate) struct Recorder {
     dir: String,
     rows: BTreeMap<String, Vec<Row>>,
     queries: Vec<String>,
+    queries_file: String,
 }
 
 fn clean(s: &str) -> String {
@@ -71,6 +72,7 @@ impl Recorder {
             dir,
             rows: BTreeMap::new(),
             queries: Vec::new(),
+            queries_file: "queries.tsv".to_owned(),
         }
     }
 
@@ -160,6 +162,11 @@ impl Recorder {
         self.flush_queries();
     }
 
+    /// Writes the query rows to `<file>` instead of `queries.tsv`.
+    pub(crate) fn queries_to(&mut self, file: &str) {
+        self.queries_file = file.to_owned();
+    }
+
     /// A parameter that could not be tried for lack of live data.
     pub(crate) fn query_skipped(&mut self, query: &str, param: &str, unfiltered: usize, why: &str) {
         eprintln!("GATEQ\t{query}\t{param}\tno-data\t0/{unfiltered}");
@@ -176,7 +183,7 @@ impl Recorder {
             out.push_str(q);
             out.push('\n');
         }
-        std::fs::write(format!("{}/queries.tsv", self.dir), out).unwrap();
+        std::fs::write(format!("{}/{}", self.dir, self.queries_file), out).unwrap();
     }
 }
 

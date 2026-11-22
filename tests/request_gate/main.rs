@@ -45,6 +45,7 @@
 #[path = "../live_write/docs.rs"]
 mod docs;
 mod documents;
+mod existing;
 mod gate;
 #[path = "../live_write/harness.rs"]
 mod harness;
@@ -251,4 +252,40 @@ async fn case1_request_gate() {
         g.number_ok,
         "NUMBER-CHECK failed: a sequence number may have been consumed"
     );
+}
+
+/// Part 2 alone, GET only: the values come from existing objects (see
+/// `existing.rs`), nothing is written, so it needs no budget and no sweep.
+///
+/// `just test-live --test request_gate case2`
+#[tokio::test]
+#[ignore = "reads the sevDesk test account"]
+async fn case2_queries_read_only() {
+    let Ok(token) = std::env::var("SEVDESK_API_KEY") else {
+        eprintln!("SEVDESK_API_KEY is not set: skipping the read-only query gate");
+        return;
+    };
+    let _alone = SERIAL.lock().await;
+    let probe = Ctx::new(&token, "SDRS-GATE-READ-ONLY".to_owned());
+    setup::verify_test_account(&probe).await;
+    let (facts, marker) = existing::facts(&probe).await;
+    // The `fulltext_search` queries look for the marker of the chosen invoice.
+    let marker = marker.unwrap_or_else(|| {
+        eprintln!("NOTE\tno SDRS-GATE- marker found on the chosen invoice");
+        "SDRS-GATE-READ-ONLY".to_owned()
+    });
+    let ctx = Ctx::new(&token, marker);
+    let inp = Inputs::read(&ctx).await;
+    let mut g = Gate {
+        ctx: &ctx,
+        rec: Recorder::new(),
+        inp,
+        created: 0,
+        sequences: BTreeMap::new(),
+        number_ok: true,
+    };
+    g.rec.queries_to("queries_read_only.tsv");
+    queries::run(&mut g, &facts).await;
+    existing::by_name(&mut g).await;
+    assert_eq!(g.created, 0, "the read-only gate wrote an object");
 }
