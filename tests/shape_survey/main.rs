@@ -19,7 +19,8 @@
 //! classified (except the `SevUser` list itself: keys and forms, no examples); keys that may hold personal or secret data record no example
 //! values. `survey_all` also writes up to 4 scrubbed sample objects per
 //! resource to `target/tmp/shape_survey/samples/<Resource>.json` plus a
-//! `.coverage.tsv` sidecar (none for `SevUser`); see `sample.rs`.
+//! `.coverage.tsv` sidecar (none for `SevUser`); see `sample.rs`. `typed_all` (see `typed.rs`) is the release gate: it
+//! decodes the raw answers through the crate's public read types.
 #![allow(
     dead_code,
     clippy::unwrap_used,
@@ -33,6 +34,7 @@ mod sample;
 #[path = "../common/scrub.rs"]
 mod scrub;
 mod shape;
+mod typed;
 
 use harness::{Ctx, SERIAL};
 use reqwest::Method;
