@@ -82,10 +82,14 @@ async fn live_write_21_b2b_einvoice_chain_with_credit_note() {
             read["deliveryDateUntil"], read["language"]
         ));
 
-        // Measured: an e-invoice draft has no number, and rendering it fails.
+        // Measured: an e-invoice draft has no number, and rendering it fails. sevDesk
+        // answers HTTP 400 with code 832 since 2026-11 (503 in 2026-09); the code is what counts.
         let draft_err = ctx.c.invoice_pdf(inv.id).await.unwrap_err();
         measured(&format!("e-invoice draft getPdf: {draft_err}"));
-        assert!(matches!(draft_err, SevdeskError::Api { status: 503, .. }));
+        assert_eq!(
+            draft_err.known_code(),
+            Some(KnownCode::EInvoiceGenerationFailed)
+        );
         let still = ctx.c.invoice(inv.id).await.unwrap();
         assert_eq!(still.status, Some(InvoiceStatus::Draft));
         assert!(still.invoice_number.is_none());
