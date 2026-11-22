@@ -51,7 +51,80 @@ fn unread<T: DeserializeOwned>(name: &str) -> Vec<String> {
         serde_ignored::deserialize::<_, _, T>(&mut de, record)
             .unwrap_or_else(|e| panic!("{name}: {e}"));
     }
-    found.into_iter().collect()
+    let embedded = embedded_objects(name);
+    found
+        .into_iter()
+        .map(
+            |key| match embedded.iter().find(|p| key.starts_with(&format!("{p}."))) {
+                Some(prefix) => format!("{prefix}.<embedded object>"),
+                None => key,
+            },
+        )
+        .collect::<BTreeSet<_>>()
+        .into_iter()
+        .collect()
+}
+
+/// Paths where a recorded answer embeds a FULL object that the read type reads
+/// as an `ObjectRef` (another call of the crate returns that object). All its
+/// keys but the id are unread by design and collapse to one entry per path.
+fn embedded_objects(fixture: &str) -> &'static [&'static str] {
+    match fixture {
+        "write_invoice_cancel" => &["objects.contact", "objects.taxRule"],
+        "write_invoice_save" | "quantity_probe_save" => {
+            &["objects.invoicePos.*.invoice", "objects.invoicePos.*.unity"]
+        }
+        _ => &[],
+    }
+}
+
+/// Invoice keys that no recording or survey shows filled and that the OpenAPI
+/// spec does not type (form unmeasured): not read until a measurement shows
+/// them. The flag says whether any fixture carries the key at all.
+const INVOICE_FORM_UNMEASURED: &[(&str, bool)] = &[
+    ("accountEndDate", true), // not in the spec; null in all 313 survey objects
+    ("accountLastInvoice", true), // not in the spec; null in all 313 survey objects
+    ("accountStartDate", true), // not in the spec; null in all 313 survey objects
+    ("addressGender", true),  // not in the spec; null in all 313 survey objects
+    ("addressName2", true),   // not in the spec; null in all 313 survey objects
+    ("addressParentName", true), // not in the spec; null in all 313 survey objects
+    ("addressParentName2", true), // not in the spec; null in all 313 survey objects
+    ("datevConnectOnline", false), // spec: an object without fields; in no recording
+    ("propertyIsBookkeepingV1", true), // not in the spec; null in both recordings that have it
+    ("sepaCreditorId", true), // not in the spec; null in all 313 survey objects
+    ("sepaMandateReference", true), // not in the spec; null in all 313 survey objects
+    ("sepaPayerIban", true),  // not in the spec; null in all 313 survey objects
+];
+
+/// InvoicePos keys of the same kind.
+const INVOICE_POSITION_FORM_UNMEASURED: &[(&str, bool)] = &[
+    ("additionalInformation", true), // not in the spec; null in all 408 objects
+];
+
+/// Fixtures whose read type has a form-unmeasured list: the full path of each
+/// key of that list in the fixture.
+fn form_unmeasured(fixture: &str) -> Vec<(String, bool)> {
+    let under = |prefix: &str, keys: &[(&str, bool)]| -> Vec<(String, bool)> {
+        keys.iter()
+            .map(|(k, recorded)| (format!("{prefix}{k}"), *recorded))
+            .collect()
+    };
+    match fixture {
+        "invoice_draft" | "invoice_enshrined" | "invoice_list" => {
+            under("objects.*.", INVOICE_FORM_UNMEASURED)
+        }
+        "write_invoice_cancel" => under("objects.", INVOICE_FORM_UNMEASURED),
+        "write_invoice_save" | "quantity_probe_save" => {
+            let mut keys = under("objects.invoice.", INVOICE_FORM_UNMEASURED);
+            keys.extend(under(
+                "objects.invoicePos.*.",
+                INVOICE_POSITION_FORM_UNMEASURED,
+            ));
+            keys
+        }
+        "quantity_probe_get_invoice_pos" => under("objects.*.", INVOICE_POSITION_FORM_UNMEASURED),
+        _ => Vec::new(),
+    }
 }
 
 /// Fixtures that are read answers, with the read type they decode into and
@@ -331,188 +404,41 @@ fn covered() -> Vec<(&'static str, Vec<String>, &'static [&'static str])> {
             "invoice_draft",
             unread::<Invoice>("invoice_draft"),
             &[
-                "objects.*.accountEndDate",
-                "objects.*.accountIntervall",
-                "objects.*.accountLastInvoice",
-                "objects.*.accountNextInvoice",
-                "objects.*.accountStartDate",
-                "objects.*.additionalInformation",
-                "objects.*.address",
                 "objects.*.addressCountry.objectName",
-                "objects.*.addressGender",
-                "objects.*.addressName2",
-                "objects.*.addressParentName",
-                "objects.*.addressParentName2",
-                "objects.*.contact",
-                "objects.*.contactPerson",
-                "objects.*.create",
-                "objects.*.createUser",
-                "objects.*.discount",
-                "objects.*.discountTime",
-                "objects.*.dunningLevel",
-                "objects.*.einvoiceReference",
-                "objects.*.footText",
-                "objects.*.headText",
-                "objects.*.header",
+                "objects.*.contact.objectName",
+                "objects.*.contactPerson.objectName",
+                "objects.*.createUser.objectName",
                 "objects.*.objectName",
-                "objects.*.payDate",
-                "objects.*.reminderCharge",
-                "objects.*.reminderDeadline",
-                "objects.*.reminderDebit",
-                "objects.*.reminderTotal",
-                "objects.*.sendDate",
-                "objects.*.sendPaymentReceivedNotificationDate",
-                "objects.*.sendType",
-                "objects.*.sepaCreditorId",
-                "objects.*.sepaMandateReference",
-                "objects.*.sepaPayerIban",
-                "objects.*.sevClient",
-                "objects.*.showNet",
-                "objects.*.smallSettlement",
-                "objects.*.sumDiscountGross",
-                "objects.*.sumDiscountGrossForeignCurrency",
-                "objects.*.sumDiscountNet",
-                "objects.*.sumDiscountNetForeignCurrency",
-                "objects.*.sumDiscounts",
-                "objects.*.sumDiscountsForeignCurrency",
-                "objects.*.sumGrossAccounting",
-                "objects.*.sumGrossForeignCurrency",
-                "objects.*.sumNetAccounting",
-                "objects.*.sumNetForeignCurrency",
-                "objects.*.sumTax",
-                "objects.*.sumTaxAccounting",
-                "objects.*.sumTaxForeignCurrency",
-                "objects.*.taxRate",
-                "objects.*.taxRule",
-                "objects.*.taxText",
-                "objects.*.taxType",
-                "objects.*.timeToPay",
+                "objects.*.sevClient.objectName",
+                "objects.*.taxRule.objectName",
             ],
         ),
         (
             "invoice_enshrined",
             unread::<Invoice>("invoice_enshrined"),
             &[
-                "objects.*.accountEndDate",
-                "objects.*.accountIntervall",
-                "objects.*.accountLastInvoice",
-                "objects.*.accountNextInvoice",
-                "objects.*.accountStartDate",
-                "objects.*.additionalInformation",
-                "objects.*.address",
                 "objects.*.addressCountry.objectName",
-                "objects.*.addressGender",
-                "objects.*.addressName2",
-                "objects.*.addressParentName",
-                "objects.*.addressParentName2",
-                "objects.*.contact",
-                "objects.*.contactPerson",
-                "objects.*.create",
-                "objects.*.createUser",
-                "objects.*.discount",
-                "objects.*.discountTime",
-                "objects.*.dunningLevel",
-                "objects.*.einvoiceReference",
-                "objects.*.footText",
-                "objects.*.headText",
-                "objects.*.header",
+                "objects.*.contact.objectName",
+                "objects.*.contactPerson.objectName",
+                "objects.*.createUser.objectName",
                 "objects.*.objectName",
-                "objects.*.payDate",
-                "objects.*.reminderCharge",
-                "objects.*.reminderDeadline",
-                "objects.*.reminderDebit",
-                "objects.*.reminderTotal",
-                "objects.*.sendDate",
-                "objects.*.sendPaymentReceivedNotificationDate",
-                "objects.*.sendType",
-                "objects.*.sepaCreditorId",
-                "objects.*.sepaMandateReference",
-                "objects.*.sepaPayerIban",
-                "objects.*.sevClient",
-                "objects.*.showNet",
-                "objects.*.smallSettlement",
-                "objects.*.sumDiscountGross",
-                "objects.*.sumDiscountGrossForeignCurrency",
-                "objects.*.sumDiscountNet",
-                "objects.*.sumDiscountNetForeignCurrency",
-                "objects.*.sumDiscounts",
-                "objects.*.sumDiscountsForeignCurrency",
-                "objects.*.sumGrossAccounting",
-                "objects.*.sumGrossForeignCurrency",
-                "objects.*.sumNetAccounting",
-                "objects.*.sumNetForeignCurrency",
-                "objects.*.sumTax",
-                "objects.*.sumTaxAccounting",
-                "objects.*.sumTaxForeignCurrency",
-                "objects.*.taxRate",
-                "objects.*.taxRule",
-                "objects.*.taxText",
-                "objects.*.taxType",
-                "objects.*.timeToPay",
+                "objects.*.sevClient.objectName",
+                "objects.*.taxRule.objectName",
             ],
         ),
         (
             "invoice_list",
             unread::<Invoice>("invoice_list"),
             &[
-                "objects.*.accountEndDate",
-                "objects.*.accountIntervall",
-                "objects.*.accountLastInvoice",
-                "objects.*.accountNextInvoice",
-                "objects.*.accountStartDate",
-                "objects.*.additionalInformation",
-                "objects.*.address",
                 "objects.*.addressCountry.objectName",
-                "objects.*.addressGender",
-                "objects.*.addressName2",
-                "objects.*.addressParentName",
-                "objects.*.addressParentName2",
-                "objects.*.contact",
-                "objects.*.contactPerson",
-                "objects.*.create",
-                "objects.*.createUser",
-                "objects.*.discount",
-                "objects.*.discountTime",
-                "objects.*.dunningLevel",
-                "objects.*.einvoiceReference",
-                "objects.*.footText",
-                "objects.*.headText",
-                "objects.*.header",
+                "objects.*.contact.objectName",
+                "objects.*.contactPerson.objectName",
+                "objects.*.createUser.objectName",
                 "objects.*.objectName",
                 "objects.*.origin.objectName",
-                "objects.*.payDate",
-                "objects.*.paymentMethod",
-                "objects.*.reminderCharge",
-                "objects.*.reminderDeadline",
-                "objects.*.reminderDebit",
-                "objects.*.reminderTotal",
-                "objects.*.sendDate",
-                "objects.*.sendPaymentReceivedNotificationDate",
-                "objects.*.sendType",
-                "objects.*.sepaCreditorId",
-                "objects.*.sepaMandateReference",
-                "objects.*.sepaPayerIban",
-                "objects.*.sevClient",
-                "objects.*.showNet",
-                "objects.*.smallSettlement",
-                "objects.*.sumDiscountGross",
-                "objects.*.sumDiscountGrossForeignCurrency",
-                "objects.*.sumDiscountNet",
-                "objects.*.sumDiscountNetForeignCurrency",
-                "objects.*.sumDiscounts",
-                "objects.*.sumDiscountsForeignCurrency",
-                "objects.*.sumGrossAccounting",
-                "objects.*.sumGrossForeignCurrency",
-                "objects.*.sumNetAccounting",
-                "objects.*.sumNetForeignCurrency",
-                "objects.*.sumTax",
-                "objects.*.sumTaxAccounting",
-                "objects.*.sumTaxForeignCurrency",
-                "objects.*.taxRate",
-                "objects.*.taxRule",
-                "objects.*.taxText",
-                "objects.*.taxType",
-                "objects.*.timeToPay",
+                "objects.*.paymentMethod.objectName",
+                "objects.*.sevClient.objectName",
+                "objects.*.taxRule.objectName",
             ],
         ),
         (
@@ -914,132 +840,57 @@ fn covered() -> Vec<(&'static str, Vec<String>, &'static [&'static str])> {
             "write_invoice_cancel",
             unread::<Invoice>("write_invoice_cancel"),
             &[
-                "objects.accountEndDate",
-                "objects.accountIntervall",
-                "objects.accountLastInvoice",
-                "objects.accountNextInvoice",
-                "objects.accountStartDate",
-                "objects.additionalInformation",
-                "objects.address",
-                "objects.addressGender",
-                "objects.addressName2",
-                "objects.addressParentName",
-                "objects.addressParentName2",
-                "objects.contact",
-                "objects.contactPerson",
-                "objects.create",
-                "objects.createUser",
-                "objects.discount",
-                "objects.discountTime",
-                "objects.dunningLevel",
-                "objects.einvoiceReference",
-                "objects.footText",
-                "objects.headText",
-                "objects.header",
+                "objects.contact.<embedded object>",
+                "objects.contactPerson.objectName",
+                "objects.createUser.objectName",
                 "objects.objectName",
                 "objects.origin.objectName",
-                "objects.payDate",
-                "objects.propertyIsBookkeepingV1",
-                "objects.propertyIsEInvoice",
-                "objects.propertyUseNewCalculation",
-                "objects.propertyUseNewDocServer",
-                "objects.reminderCharge",
-                "objects.reminderDeadline",
-                "objects.reminderDebit",
-                "objects.reminderTotal",
-                "objects.sendDate",
-                "objects.sendPaymentReceivedNotificationDate",
-                "objects.sendType",
-                "objects.sepaCreditorId",
-                "objects.sepaMandateReference",
-                "objects.sepaPayerIban",
-                "objects.sevClient",
-                "objects.showNet",
-                "objects.smallSettlement",
-                "objects.sumDiscountGross",
-                "objects.sumDiscountGrossForeignCurrency",
-                "objects.sumDiscountNet",
-                "objects.sumDiscountNetForeignCurrency",
-                "objects.sumDiscounts",
-                "objects.sumDiscountsForeignCurrency",
-                "objects.sumGrossAccounting",
-                "objects.sumGrossForeignCurrency",
-                "objects.sumNetAccounting",
-                "objects.sumNetForeignCurrency",
-                "objects.sumTax",
-                "objects.sumTaxAccounting",
-                "objects.sumTaxForeignCurrency",
-                "objects.taxRate",
-                "objects.taxRule",
-                "objects.taxText",
-                "objects.taxType",
-                "objects.timeToPay",
+                "objects.sevClient.objectName",
+                "objects.taxRule.<embedded object>",
+            ],
+        ),
+        (
+            "quantity_probe_save",
+            unread::<SavedInvoice>("quantity_probe_save"),
+            &[
+                "objects.invoice.addressCountry.objectName",
+                "objects.invoice.contact.objectName",
+                "objects.invoice.contactPerson.objectName",
+                "objects.invoice.createUser.objectName",
+                "objects.invoice.objectName",
+                "objects.invoice.paymentMethod.objectName",
+                "objects.invoice.sevClient.objectName",
+                "objects.invoice.taxRule.objectName",
+                "objects.invoicePos.*.invoice.<embedded object>",
+                "objects.invoicePos.*.objectName",
+                "objects.invoicePos.*.unity.<embedded object>",
+            ],
+        ),
+        (
+            "quantity_probe_get_invoice_pos",
+            unread::<InvoicePosition>("quantity_probe_get_invoice_pos"),
+            &[
+                "objects.*.invoice.objectName",
+                "objects.*.objectName",
+                "objects.*.sevClient.objectName",
+                "objects.*.unity.objectName",
             ],
         ),
         (
             "write_invoice_save",
             unread::<SavedInvoice>("write_invoice_save"),
             &[
-                "objects.invoice.accountEndDate",
-                "objects.invoice.accountIntervall",
-                "objects.invoice.accountLastInvoice",
-                "objects.invoice.accountNextInvoice",
-                "objects.invoice.accountStartDate",
-                "objects.invoice.additionalInformation",
-                "objects.invoice.address",
                 "objects.invoice.addressCountry.objectName",
-                "objects.invoice.addressGender",
-                "objects.invoice.addressName2",
-                "objects.invoice.addressParentName",
-                "objects.invoice.addressParentName2",
-                "objects.invoice.contact",
-                "objects.invoice.contactPerson",
-                "objects.invoice.create",
-                "objects.invoice.createUser",
-                "objects.invoice.discount",
-                "objects.invoice.discountTime",
-                "objects.invoice.dunningLevel",
-                "objects.invoice.einvoiceReference",
-                "objects.invoice.footText",
-                "objects.invoice.headText",
-                "objects.invoice.header",
+                "objects.invoice.contact.objectName",
+                "objects.invoice.contactPerson.objectName",
+                "objects.invoice.createUser.objectName",
                 "objects.invoice.objectName",
-                "objects.invoice.payDate",
-                "objects.invoice.paymentMethod",
-                "objects.invoice.propertyIsEInvoice",
-                "objects.invoice.reminderCharge",
-                "objects.invoice.reminderDeadline",
-                "objects.invoice.reminderDebit",
-                "objects.invoice.reminderTotal",
-                "objects.invoice.sendDate",
-                "objects.invoice.sendPaymentReceivedNotificationDate",
-                "objects.invoice.sendType",
-                "objects.invoice.sepaCreditorId",
-                "objects.invoice.sepaMandateReference",
-                "objects.invoice.sepaPayerIban",
-                "objects.invoice.sevClient",
-                "objects.invoice.showNet",
-                "objects.invoice.smallSettlement",
-                "objects.invoice.sumDiscountGross",
-                "objects.invoice.sumDiscountGrossForeignCurrency",
-                "objects.invoice.sumDiscountNet",
-                "objects.invoice.sumDiscountNetForeignCurrency",
-                "objects.invoice.sumDiscounts",
-                "objects.invoice.sumDiscountsForeignCurrency",
-                "objects.invoice.sumGrossAccounting",
-                "objects.invoice.sumGrossForeignCurrency",
-                "objects.invoice.sumNetAccounting",
-                "objects.invoice.sumNetForeignCurrency",
-                "objects.invoice.sumTax",
-                "objects.invoice.sumTaxAccounting",
-                "objects.invoice.sumTaxForeignCurrency",
-                "objects.invoice.taxRate",
-                "objects.invoice.taxRule",
-                "objects.invoice.taxText",
-                "objects.invoice.taxType",
-                "objects.invoice.timeToPay",
-                "objects.invoicePos",
-                "objects.vatdrop",
+                "objects.invoice.paymentMethod.objectName",
+                "objects.invoice.sevClient.objectName",
+                "objects.invoice.taxRule.objectName",
+                "objects.invoicePos.*.invoice.<embedded object>",
+                "objects.invoicePos.*.objectName",
+                "objects.invoicePos.*.unity.<embedded object>",
             ],
         ),
         (
@@ -1288,7 +1139,16 @@ const SKIPPED: &[(&str, &str)] = &[
 #[test]
 fn unread_keys_equal_the_named_lists() {
     let mut failures = Vec::new();
-    for (name, found, expected) in covered() {
+    for (name, found, listed) in covered() {
+        let mut expected: Vec<String> = listed.iter().map(|k| (*k).to_owned()).collect();
+        // A form-unmeasured key is expected exactly where the fixture has it.
+        expected.extend(
+            form_unmeasured(name)
+                .into_iter()
+                .map(|(key, _)| key)
+                .filter(|key| found.contains(key)),
+        );
+        expected.sort();
         if found != expected {
             failures.push(format!(
                 "{name}: unread keys changed ({} -> {}); new list:\n{found:#?}",
@@ -1298,6 +1158,29 @@ fn unread_keys_equal_the_named_lists() {
         }
     }
     assert!(failures.is_empty(), "{}", failures.join("\n"));
+}
+
+/// A key on a form-unmeasured list must still be unread: when a field is added
+/// for it, it leaves the list in the same commit.
+#[test]
+fn form_unmeasured_keys_are_still_unread_in_some_fixture() {
+    let all = covered();
+    let bare = |path: &str| path.rsplit('.').next().unwrap_or(path).to_owned();
+    let mut stale = BTreeSet::new();
+    for (name, _, _) in &all {
+        for (key, recorded) in form_unmeasured(name) {
+            let shown = all.iter().any(|(other, found, _)| {
+                form_unmeasured(other)
+                    .iter()
+                    .any(|(k, _)| bare(k) == bare(&key))
+                    && found.iter().any(|f| bare(f) == bare(&key))
+            });
+            if recorded && !shown {
+                stale.insert(bare(&key));
+            }
+        }
+    }
+    assert!(stale.is_empty(), "no fixture shows these unread: {stale:?}");
 }
 
 #[test]

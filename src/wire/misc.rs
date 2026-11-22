@@ -1,6 +1,17 @@
 use super::Guard;
+use crate::codec::deserialize_flag_opt;
 use crate::ids::*;
 use serde::Deserialize;
+
+/// The `additionalInformation` object some documents carry (`null` on most).
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AdditionalInformation {
+    /// Measured once: `false` on a cancellation invoice. Other keys of the
+    /// object are not measured.
+    #[serde(default, deserialize_with = "deserialize_flag_opt")]
+    pub credit_voucher: Option<bool>,
+}
 
 /// A tax rule a booking account allows.
 #[derive(Debug, Clone, Deserialize)]

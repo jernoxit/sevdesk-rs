@@ -85,6 +85,8 @@ coded_enum!(
 coded_enum!(
     /// Invoice status (`100` is a draft for invoices, unlike for vouchers).
     InvoiceStatus {
+        /// Deactivated recurring invoice; known only from the OpenAPI spec.
+        DeactivatedRecurring = 50,
         Draft = 100,
         Open = 200,
         PartiallyPaid = 750,
@@ -113,10 +115,21 @@ coded_enum!(
 );
 
 named_enum!(
-    /// `invoiceType`: `RE` invoice, `SR` cancellation invoice; the rest is `Other`.
+    /// `invoiceType`: `RE` invoice, `SR` cancellation invoice (both measured);
+    /// the rest are known only from the OpenAPI spec, anything else is `Other`.
     InvoiceType {
         Invoice = "RE",
         Cancellation = "SR",
+        /// `WKR`, recurring invoice; known only from the OpenAPI spec.
+        Recurring = "WKR",
+        /// `MA`, reminder (Mahnung); known only from the OpenAPI spec.
+        Reminder = "MA",
+        /// `TR`, partial invoice (Teilrechnung); known only from the OpenAPI spec.
+        Partial = "TR",
+        /// `AR`, advance invoice (Abschlagsrechnung); known only from the OpenAPI spec.
+        Advance = "AR",
+        /// `ER`, final invoice (Schlussrechnung); known only from the OpenAPI spec.
+        Final = "ER",
     }
 );
 
@@ -175,6 +188,34 @@ pub enum SendType {
     #[serde(rename = "VPDF")]
     Vpdf,
 }
+
+named_enum!(
+    /// `sendType` as an invoice or credit note answer carries it. The outgoing
+    /// [`SendType`] stays `Copy` and has no `Other`; this read form is tolerant.
+    DocumentSendType {
+        /// `"0"`, measured on drafts that were never sent (the meaning is inferred).
+        Unset = "0",
+        /// Measured; the document was marked as sent (`VPDF`).
+        Vpdf = "VPDF",
+        /// `VPR`; known only from the OpenAPI spec.
+        Vpr = "VPR",
+        /// `VM`; known only from the OpenAPI spec.
+        Vm = "VM",
+        /// `VP`; known only from the OpenAPI spec.
+        Vp = "VP",
+    }
+);
+
+named_enum!(
+    /// `taxType` of a document. Every recording has `null`, so all variants
+    /// are known only from the OpenAPI spec (`default|eu|noteu|custom`).
+    TaxType {
+        Default = "default",
+        Eu = "eu",
+        NotEu = "noteu",
+        Custom = "custom",
+    }
+);
 
 /// `bookingCategory` of a credit note. Outgoing only, so no `Other`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]

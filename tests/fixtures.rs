@@ -237,6 +237,63 @@ async fn enshrined_invoice_has_number_update_and_enshrined() {
         Some(time::macros::datetime!(2026-09-28 19:39:19 +2))
     );
     assert_eq!(i.currency, CurrencyCode::EUR);
+    assert_eq!(i.send_type, Some(DocumentSendType::Vpdf));
+    assert_eq!(
+        i.send_date,
+        Some(time::macros::datetime!(2026-09-28 19:39:18 +2))
+    );
+    assert_eq!(i.header.as_deref(), Some("Rechnung PROBE-R1 A1-str-date"));
+}
+
+#[tokio::test]
+async fn invoice_draft_reads_every_other_key() {
+    let (_s, c) = serving("/Invoice/135169163", "invoice_draft").await;
+    let i = c.invoice(InvoiceId::new(135169163)).await.unwrap();
+    assert_eq!(i.send_type, Some(DocumentSendType::Unset));
+    assert_eq!(i.small_settlement, Some(false));
+    assert_eq!(i.show_net, Some(true));
+    assert_eq!(i.time_to_pay, Some(14));
+    assert_eq!(i.discount, Some(0));
+    assert_eq!(i.tax_rate, Some(0));
+    assert_eq!(i.sum_tax, Some(eur(551)));
+    assert_eq!(i.paid_amount, Some(eur(0)));
+    assert_eq!(i.reminder_charge, Some(eur(0)));
+    assert_eq!(i.reminder_total, None);
+    assert_eq!(i.tax_type, None);
+    assert_eq!(i.pay_date, None);
+    assert_eq!(i.contact, Some(ObjectRef::new(ContactId::new(138615465))));
+    assert_eq!(
+        i.sev_client,
+        Some(ObjectRef::new(SevClientId::new(1303847)))
+    );
+    assert_eq!(i.create_user, Some(ObjectRef::new(SevUserId::new(1551095))));
+    assert_eq!(i.tax_rule, Some(ObjectRef::new(TaxRuleId::new(1))));
+    assert_eq!(
+        i.create,
+        Some(time::macros::datetime!(2026-09-28 19:39:15 +2))
+    );
+    assert_eq!(i.tax_text.as_deref(), Some("Umsatzsteuer 19%"));
+}
+
+#[test]
+fn invoice_keys_in_unmeasured_forms_are_decode_errors_naming_the_key() {
+    let read = |extra: &str| {
+        serde_json::from_str::<Invoice>(&format!(r#"{{"id": "1", "currency": "EUR", {extra}}}"#))
+    };
+    assert!(read(r#""showNet": "2""#).is_err());
+    assert!(read(r#""sumTax": "1.234""#).is_err());
+    assert_eq!(
+        read(r#""sendType": "ZZ""#).unwrap().send_type,
+        Some(DocumentSendType::Other("ZZ".into()))
+    );
+    assert_eq!(
+        read(r#""invoiceType": "WKR""#).unwrap().invoice_type,
+        Some(InvoiceType::Recurring)
+    );
+    assert_eq!(
+        read(r#""taxType": "noteu""#).unwrap().tax_type,
+        Some(TaxType::NotEu)
+    );
 }
 
 #[tokio::test]

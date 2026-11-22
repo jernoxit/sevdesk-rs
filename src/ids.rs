@@ -59,6 +59,7 @@ resource_id!(TransactionId, "CheckAccountTransaction");
 resource_id!(VoucherId, "Voucher");
 resource_id!(VoucherPositionId, "VoucherPos");
 resource_id!(InvoiceId, "Invoice");
+resource_id!(InvoicePositionId, "InvoicePos");
 resource_id!(CreditNoteId, "CreditNote");
 resource_id!(DocumentId, "Document");
 resource_id!(ContactId, "Contact");
@@ -86,6 +87,26 @@ resource_id!(
     "PaymentMethod"
 );
 resource_id!(TaxRuleId, "TaxRule");
+resource_id!(
+    /// The sevDesk client (the account's own company).
+    SevClientId,
+    "SevClient"
+);
+resource_id!(
+    /// A cost centre; only the OpenAPI spec names it, no recording shows one.
+    CostCentreId,
+    "CostCentre"
+);
+resource_id!(
+    /// A tax set; only the OpenAPI spec names it, no recording shows one.
+    TaxSetId,
+    "TaxSet"
+);
+resource_id!(
+    /// A part (article); only the OpenAPI spec names it, no recording shows one.
+    PartId,
+    "Part"
+);
 resource_id!(
     /// A DATEV booking account as sevDesk numbers it (`4285` is account 4970
     /// in SKR03) — NOT the account number itself.
