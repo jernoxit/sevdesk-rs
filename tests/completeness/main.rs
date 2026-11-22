@@ -103,6 +103,7 @@ fn form_unmeasured(fixture: &str) -> Vec<(String, bool)> {
         .or_else(|| transaction::form_unmeasured(fixture))
         .or_else(|| check_account::form_unmeasured(fixture))
         .or_else(|| contact::form_unmeasured(fixture))
+        .or_else(|| misc::form_unmeasured(fixture))
         .unwrap_or_default()
 }
 
@@ -129,7 +130,10 @@ const SKIPPED: &[(&str, &str)] = &[
     ),
     ("error_404_code_151", "an error body"),
     ("error_422_offline_account", "an error body"),
-    ("invoice_pdf", "read into a private wire type (DocumentPdf)"),
+    (
+        "invoice_pdf",
+        "read into the private PdfWire (DocumentPdf); a unit test in src/wire/document_file.rs checks it",
+    ),
     ("invoice_xml", "a bare XML string, no object"),
     (
         "write_transaction_delete",

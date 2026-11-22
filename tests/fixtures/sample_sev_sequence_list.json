@@ -1,0 +1,19 @@
+{
+  "objects": [
+    {
+      "additionalInformation": null,
+      "create": "2026-09-28T19:26:33+02:00",
+      "forObject": "Invoice",
+      "format": "RE-%NUMBER",
+      "id": "13449785",
+      "nextSequence": "1274",
+      "objectName": "SevSequence",
+      "sevClient": {
+        "id": "1303847",
+        "objectName": "SevClient"
+      },
+      "type": "RE",
+      "update": "2026-11-22T11:44:16+01:00"
+    }
+  ]
+}

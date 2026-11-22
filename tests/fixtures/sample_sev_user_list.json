@@ -1,0 +1,42 @@
+{
+  "objects": [
+    {
+      "additionalInformation": null,
+      "clientOwner": "0",
+      "create": "2026-01-01T00:00:00+01:00",
+      "defaultReceiveMailCopy": "0",
+      "email": "SDRS-SAMPLE",
+      "endDate": null,
+      "firstName": "SDRS-SAMPLE",
+      "forcePasswordChange": "0",
+      "fullname": "SDRS-SAMPLE",
+      "gender": "SDRS-SAMPLE",
+      "hideMapsDirections": "0",
+      "id": "1",
+      "languageCode": "SDRS-SAMPLE",
+      "lastLogin": "2026-01-01T00:00:00+01:00",
+      "lastLoginIp": "SDRS-SAMPLE",
+      "lastName": "SDRS-SAMPLE",
+      "lastPasswordChange": "2026-01-01T00:00:00+01:00",
+      "memberCode": "SDRS-SAMPLE",
+      "objectName": "SevUser",
+      "role": "SDRS-SAMPLE",
+      "sevClient": {
+        "id": "1",
+        "objectName": "SevClient"
+      },
+      "smtpHost": null,
+      "smtpMail": null,
+      "smtpName": null,
+      "smtpPort": null,
+      "smtpSsl": null,
+      "smtpUser": null,
+      "startDate": null,
+      "status": "1",
+      "twoFactorAuth": "0",
+      "update": "2026-01-01T00:00:00+01:00",
+      "username": "SDRS-SAMPLE",
+      "welcomeScreenSeen": "0"
+    }
+  ]
+}

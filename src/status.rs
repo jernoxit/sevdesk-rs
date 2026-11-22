@@ -354,3 +354,13 @@ named_enum!(
         EveryFiveYears = "P5Y0M0W",
     }
 );
+
+named_enum!(
+    /// An entry of `allowedReceiptTypes` of a receipt guidance. `EXPENSE` and
+    /// `REVENUE` are measured; the OpenAPI spec names only the example
+    /// `EXPENSE` and no enumeration.
+    ReceiptType {
+        Expense = "EXPENSE",
+        Revenue = "REVENUE",
+    }
+);

@@ -8,9 +8,9 @@ use reqwest::{Method, multipart};
 
 impl SevdeskClient {
     /// `POST /Voucher/Factory/uploadTempFile` (multipart field `file`). Attach
-    /// the result to a voucher via [`SaveVoucher::filename`] (the answer also
-    /// carries a large base64 preview in `content`, which is ignored); the API does not
-    /// trigger sevDesk's document recognition, so all fields stay as sent.
+    /// the result to a voucher via [`SaveVoucher::filename`] (the answer's
+    /// `content` is `[]` in the only recording and is not read); the API does
+    /// not trigger sevDesk's document recognition, so all fields stay as sent.
     pub async fn upload_temp_file(
         &self,
         file_name: &str,

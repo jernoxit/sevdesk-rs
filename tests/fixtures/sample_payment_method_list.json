@@ -1,0 +1,15 @@
+{
+  "objects": [
+    {
+      "additionalInformation": null,
+      "create": "2020-10-26T18:57:14+01:00",
+      "electronicInvoiceId": "58",
+      "id": "21919",
+      "name": "SEPA Überweisung",
+      "objectName": "PaymentMethod",
+      "text": "Bitte überweisen Sie den Rechnungsbetrag unter Angabe der Rechnungsnummer auf das unten angegebene Konto. Der Rechnungsbetrag ist bis zum [%ZAHLUNGSZIEL%] fällig.",
+      "translationCode": "PAYMENT_METHOD_58",
+      "update": "2024-10-28T22:20:24+01:00"
+    }
+  ]
+}

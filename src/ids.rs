@@ -94,6 +94,7 @@ resource_id!(
     "CommunicationWayKey"
 );
 resource_id!(SevUserId, "SevUser");
+resource_id!(SevSequenceId, "SevSequence");
 resource_id!(CountryId, "StaticCountry");
 resource_id!(UnityId, "Unity");
 resource_id!(

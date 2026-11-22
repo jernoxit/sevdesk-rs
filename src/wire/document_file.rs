@@ -74,3 +74,22 @@ pub(crate) fn xml_from_body(body: &Body) -> Result<String, SevdeskError> {
     }
     Ok(xml)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::PdfWire;
+
+    /// Every key of the recorded `getPdf` answer is a field of `PdfWire`; the
+    /// completeness test cannot see the private type, so it is checked here.
+    #[test]
+    fn every_key_of_the_recorded_pdf_answer_is_read() {
+        let recorded = include_str!("../../tests/fixtures/invoice_pdf.json");
+        let value: serde_json::Value = serde_json::from_str(recorded).expect("fixture is JSON");
+        let mut ignored = Vec::new();
+        let _: PdfWire = serde_ignored::deserialize(&value["objects"], |path| {
+            ignored.push(path.to_string());
+        })
+        .expect("objects decode");
+        assert!(ignored.is_empty(), "PdfWire ignores {ignored:?}");
+    }
+}
