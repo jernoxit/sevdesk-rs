@@ -17,7 +17,9 @@
 //! `recorded_<objectName>.tsv` (no network, no token). Expanded `SevClient` /
 //! `SevUser` objects are collapsed by the shared scrubber before they are
 //! classified (except the `SevUser` list itself: keys and forms, no examples); keys that may hold personal or secret data record no example
-//! values.
+//! values. `survey_all` also writes up to 4 scrubbed sample objects per
+//! resource to `target/tmp/shape_survey/samples/<Resource>.json` plus a
+//! `.coverage.tsv` sidecar (none for `SevUser`); see `sample.rs`.
 #![allow(
     dead_code,
     clippy::unwrap_used,
@@ -27,6 +29,7 @@
 
 #[path = "../live_write/harness.rs"]
 mod harness;
+mod sample;
 #[path = "../common/scrub.rs"]
 mod scrub;
 mod shape;
@@ -134,6 +137,7 @@ async fn survey_resource(ctx: &Ctx, res: &Resource) {
     } else {
         Survey::default()
     };
+    let mut pool: Vec<serde_json::Map<String, Value>> = Vec::new();
     let mut http = 0;
     'paths: for path in res.paths {
         for page in 0..if res.paged { MAX_PAGES } else { 1 } {
@@ -155,7 +159,10 @@ async fn survey_resource(ctx: &Ctx, res: &Resource) {
             let n = list.len();
             for o in &list {
                 match o {
-                    Value::Object(m) => survey.add_object(m),
+                    Value::Object(m) => {
+                        survey.add_object(m);
+                        pool.push(m.clone());
+                    }
                     other => eprintln!("SURVEY-NOTE\t{}\tnon-object element: {other:.0}", res.name),
                 }
             }
@@ -170,6 +177,9 @@ async fn survey_resource(ctx: &Ctx, res: &Resource) {
     let dir = format!("{}/shape_survey", env!("CARGO_TARGET_TMPDIR"));
     std::fs::create_dir_all(&dir).unwrap();
     std::fs::write(format!("{dir}/{}.tsv", res.name), survey.to_tsv()).unwrap();
+    if !own_users {
+        sample::write_samples(&dir, res.name, &pool);
+    }
     eprintln!(
         "SURVEY\t{}\t{http}\t{}\t{}",
         res.name,

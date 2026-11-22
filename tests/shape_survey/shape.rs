@@ -189,6 +189,21 @@ impl Survey {
     }
 }
 
+/// Every (key, form) pair of one object, nested keys as `parent.child`,
+/// the same keys `Survey::add_object` records.
+pub(crate) fn form_pairs(object: &Map<String, Value>) -> BTreeSet<(String, &'static str)> {
+    let mut out = BTreeSet::new();
+    for (key, value) in object {
+        out.insert((key.clone(), classify(value).0));
+        if let Value::Object(inner) = value {
+            for (child, v) in inner {
+                out.insert((format!("{key}.{child}"), classify(v).0));
+            }
+        }
+    }
+    out
+}
+
 /// Digits before and after the point of a numeric value or numeric string
 /// (sign excluded); `None` for every other form.
 fn digits(value: &Value) -> Option<(usize, usize)> {
