@@ -412,13 +412,14 @@ async fn case1_credit_rounding() {
 
 /// Gross needed on the reference invoice for `case2`, in thousandths: both
 /// drafts together (1.79 + 0.60 = 2.39); the drafts count against the cap too.
+/// `case3` passes its own figure.
 const NEEDED_GROSS_THOUSANDTHS: i64 = 2390;
 
 /// Reference invoice for `case2`: an enshrined net invoice whose gross minus
 /// the gross of all credit notes already referencing it covers
 /// [`NEEDED_GROSS_THOUSANDTHS`]; one without any credit note is preferred.
 /// Read-only; aborts when none qualifies.
-async fn enshrined_invoice(ctx: &Ctx) -> InvoiceId {
+async fn enshrined_invoice(ctx: &Ctx, needed_thousandths: i64) -> InvoiceId {
     let enshrined = |v: &Value| !matches!(v["enshrined"], Value::Null);
     let (status, text) = ctx
         .raw(Method::GET, "/Invoice?limit=1000", None, None)
@@ -470,7 +471,7 @@ async fn enshrined_invoice(ctx: &Ctx) -> InvoiceId {
             continue;
         };
         let room = gross - used;
-        if room < NEEDED_GROSS_THOUSANDTHS {
+        if room < needed_thousandths {
             no_room += 1;
             continue;
         }
@@ -589,7 +590,7 @@ async fn case2_half_cent_drafts() {
         .id;
     let customer = existing_customer(&ctx).await;
     let person = contact_person(&ctx).await;
-    let invoice_id = enshrined_invoice(&ctx).await;
+    let invoice_id = enshrined_invoice(&ctx, NEEDED_GROSS_THOUSANDTHS).await;
     let (seq_before, number_before) = credit_sequence(&ctx, "half_cent_sequence_before").await;
     eprintln!(
         "SETUP contact {} payment method {} ref invoice {} next CN {number_before}",
@@ -755,4 +756,271 @@ async fn case2_half_cent_drafts() {
         "drafts left on the test account: {undeleted:?}"
     );
     assert_eq!(created.len(), cases.len(), "not every draft was saved");
+}
+
+/// Gross needed on the reference invoice for `case3`, in thousandths: the
+/// largest single draft (49.50 net + 9.41 VAT = 58.91); the drafts are saved
+/// and deleted one at a time, so only one counts against the cap.
+const CASE3_NEEDED_GROSS_THOUSANDTHS: i64 = 58_910;
+
+/// `(net in cents, tax rate in basis points)` of the `case3` drafts.
+const CASE3_CASES: [(i64, i64); 6] = [
+    (250, 1900),
+    (1050, 1900),
+    (4250, 1900),
+    (4950, 1900),
+    (1450, 700),
+    (3050, 700),
+];
+
+/// VAT in cents of `net` cents at `rate_bp` basis points, rounded half away
+/// from zero (`half_even == false`) or half to even (`true`); exact integers.
+fn vat_cents(net: i64, rate_bp: i64, half_even: bool) -> i64 {
+    let num = net * rate_bp;
+    let (q, r) = (num / 10_000, num % 10_000);
+    // `r` has the sign of `num`; `|r| * 2` against the divisor decides.
+    let twice = r.abs() * 2;
+    let away = if num < 0 { -1 } else { 1 };
+    if twice > 10_000 || (twice == 10_000 && !(half_even && q % 2 == 0)) {
+        q + away
+    } else {
+        q
+    }
+}
+
+#[test]
+fn vat_cents_rounds_half_up_and_half_even_exactly() {
+    // (net, rate, half-up, half-even): the table of `case3`.
+    for (net, rate, up, even) in [
+        (250, 1900, 48, 48),
+        (1050, 1900, 200, 200),
+        (4250, 1900, 808, 808),
+        (4950, 1900, 941, 940),
+        (1450, 700, 102, 102),
+        (3050, 700, 214, 214),
+        (150, 1900, 29, 28),
+        (-150, 1900, -29, -28),
+    ] {
+        assert_eq!(vat_cents(net, rate, false), up, "{net} {rate} half-up");
+        assert_eq!(vat_cents(net, rate, true), even, "{net} {rate} half-even");
+    }
+}
+
+fn cents_text(c: i64) -> String {
+    format!(
+        "{}{}.{:02}",
+        if c < 0 { "-" } else { "" },
+        c.abs() / 100,
+        c.abs() % 100
+    )
+}
+
+/// Deletes a credit note draft of this run (own id, own marker, status 100)
+/// and confirms it is gone. `false` when anything about that failed.
+async fn delete_own_draft(ctx: &Ctx, id: i64, note: &str, name: &str) -> bool {
+    let (status, text) = ctx
+        .raw(Method::GET, &format!("/CreditNote/{id}"), None, None)
+        .await;
+    let head = if status < 300 {
+        raw_one(&text)
+    } else {
+        Value::Null
+    };
+    let own = text_of(&head, "id") == id.to_string()
+        && text_of(&head, "customerInternalNote") == note
+        && text_of(&head, "status") == "100";
+    if !own {
+        eprintln!("UNDELETED {id}\tread-back is not own marker/status 100, not deleting");
+        return false;
+    }
+    if let Err(e) = ctx.c.delete_credit_note(CreditNoteId::new(id)).await {
+        eprintln!("UNDELETED {id}\tdelete failed: {e}; not retrying");
+        return false;
+    }
+    let (status, text) = ctx
+        .raw(
+            Method::GET,
+            &format!("/CreditNote/{id}"),
+            None,
+            Some(&format!("{name}_after_delete")),
+        )
+        .await;
+    let gone = status == 404
+        || (status < 300 && matches!(raw_objects(&text), Value::Null))
+        || (status < 300 && raw_objects(&text).as_array().is_some_and(Vec::is_empty));
+    eprintln!(
+        "{}\tCreditNote {id} HTTP {status}",
+        if gone { "GONE" } else { "STILL-THERE" }
+    );
+    if !gone {
+        eprintln!("UNDELETED {id}\tstill readable after delete");
+    }
+    gone
+}
+
+#[tokio::test]
+#[ignore = "writes and deletes credit note drafts on the sevDesk test account"]
+async fn case3_half_cent_float_check() {
+    let Ok(token) = std::env::var("SEVDESK_API_KEY") else {
+        eprintln!("SEVDESK_API_KEY is not set: skipping the half cent float check");
+        return;
+    };
+    let _alone = SERIAL.lock().await;
+    let ts = OffsetDateTime::now_utc().unix_timestamp();
+    let ctx = Ctx::new(&token, format!("SDRS-HALF3-{ts}"));
+    verify_test_account(&ctx).await;
+
+    // Read-only inputs.
+    let methods = ctx.c.list_payment_methods().await.unwrap();
+    let pm = methods
+        .iter()
+        .find(|m| m.electronic_invoice_id == Some(ONLINE_PAYMENT_XML_ID))
+        .expect("a payment method with electronicInvoiceId 68")
+        .id;
+    let customer = existing_customer(&ctx).await;
+    let person = contact_person(&ctx).await;
+    let invoice_id = enshrined_invoice(&ctx, CASE3_NEEDED_GROSS_THOUSANDTHS).await;
+    let (seq_before, number_before) =
+        credit_sequence(&ctx, "half_cent_float_sequence_before").await;
+    eprintln!(
+        "SETUP contact {} payment method {} ref invoice {} next CN {number_before}",
+        customer.contact.id.get(),
+        pm.get(),
+        invoice_id.get()
+    );
+
+    let mut undeleted: Vec<i64> = Vec::new();
+    // (verdict, separates half-up from half-even) per processed case.
+    let mut results: Vec<(String, bool)> = Vec::new();
+    for (net, rate_bp) in CASE3_CASES {
+        let net_text = cents_text(net);
+        let rate_text = format!("{}", rate_bp / 100);
+        let name = format!("half_cent_float_{net_text}_{rate_text}");
+        let note = format!("{}-{net_text}-{rate_text}", ctx.marker);
+        let half_up = vat_cents(net, rate_bp, false);
+        let half_even = vat_cents(net, rate_bp, true);
+        eprintln!(
+            "EXPECT\t{net_text}\t{rate_text}\thalf-up {}\thalf-even {}\tseparates={}",
+            cents_text(half_up),
+            cents_text(half_even),
+            half_up != half_even
+        );
+        let mut draft = CreditNoteDraft {
+            credit_note_number: number_before.clone(),
+            contact: ObjectRef::new(customer.contact.id),
+            contact_person: ObjectRef::new(person),
+            credit_note_date: date!(2026 - 10 - 01),
+            delivery_date: datetime!(2026-10-01 0:00 +2),
+            header: note.clone(),
+            tax_rule: ObjectRef::new(TaxRuleId::new(1)),
+            tax_text: format!("Umsatzsteuer {rate_text}%"),
+            booking_category: CreditNoteCategory::Underachievement,
+            currency: CurrencyCode::EUR,
+            show_net: true,
+            customer_internal_note: note.clone(),
+            options: Default::default(),
+        };
+        draft.options.delivery_date_until = Some(datetime!(2026-10-31 0:00 +1));
+        draft.options.ref_src_invoice = Some(ObjectRef::new(invoice_id));
+        draft.options.address_name = Some(customer.name.clone());
+        draft.options.address_street = Some(customer.street.into());
+        draft.options.address_zip = Some(customer.zip.into());
+        draft.options.address_city = Some(customer.city.into());
+        draft.options.address_country = Some(ObjectRef::new(GERMANY));
+        draft.options.payment_method = Some(ObjectRef::new(pm));
+        draft.options.is_e_invoice = true;
+        let mut position =
+            net_position(1, net, &format!("SDRS-HALF3 {net_text} {rate_text}"), None);
+        position.tax_rate_bp = rate_bp;
+        let id = match ctx
+            .c
+            .save_credit_note(&SaveCreditNote::new(draft, vec![position]))
+            .await
+        {
+            Ok(saved) => saved.credit_note.id.get(),
+            Err(e) => {
+                // The write may have happened: look by marker, never retry.
+                eprintln!("HALF3-REFUSED\t{net_text}\t{rate_text}\tsave_credit_note failed: {e}");
+                let found = drafts_by_marker(&ctx, &note, &format!("{name}_reread")).await;
+                if !found.is_empty() {
+                    for id in &found {
+                        eprintln!("UNDELETED {id}\tfound by marker after a failed save");
+                    }
+                    break;
+                }
+                if rate_bp == 1900 {
+                    eprintln!("HALF3-FAILED\ta 19 % case was refused; stopping");
+                    break;
+                }
+                eprintln!("HALF3-REFUSED\tnothing written for this case; continuing");
+                results.push(("refused".to_owned(), half_up != half_even));
+                continue;
+            }
+        };
+        eprintln!("CREATED CreditNote {id} (marker {note})");
+        let sums = read_sums_at(&ctx, "CreditNote", id, &name).await;
+        if let Some(s) = &sums {
+            let want = half_up * 10;
+            let head = thousandths(&s.tax);
+            let pos = s.positions.first().and_then(|p| thousandths(&p[1]));
+            let verdict = if head == Some(want) && pos == Some(want) {
+                "exact-half-up"
+            } else if head == Some(want - 10) && pos == Some(want - 10) {
+                "one-cent-lower"
+            } else {
+                "other"
+            };
+            let pos_text = s
+                .positions
+                .first()
+                .map_or("-".to_owned(), |p| format!("{}/{}", p[1], p[2]));
+            eprintln!(
+                "HALF3\t{net_text}\t{rate_text}\t{id}\t{}\t{}\t{pos_text}\t{}\t{verdict}",
+                s.tax,
+                s.gross,
+                cents_text(half_up)
+            );
+            results.push((verdict.to_owned(), half_up != half_even));
+        } else {
+            results.push(("unreadable".to_owned(), half_up != half_even));
+        }
+        // Delete this draft before the next one is saved.
+        if !delete_own_draft(&ctx, id, &note, &name).await {
+            undeleted.push(id);
+            eprintln!("HALF3-FAILED\tstopping: no further drafts after an undeleted one");
+            break;
+        }
+    }
+
+    let left = drafts_by_marker(&ctx, &ctx.marker, "half_cent_float_list_after_delete").await;
+    eprintln!(
+        "GONE-LIST\tcredit notes with marker {} after delete: {left:?}",
+        ctx.marker
+    );
+    let (seq_after, number_after) = credit_sequence(&ctx, "half_cent_float_sequence_after").await;
+    eprintln!(
+        "SEQUENCE\t{number_before} -> {number_after}\traw unchanged={}",
+        seq_before == seq_after
+    );
+    let count = |v: &str, sep: bool| results.iter().filter(|r| r.0 == v && r.1 == sep).count();
+    eprintln!(
+        "HALF3-SUMMARY\tcases processed {} of {}\texact-half-up {} (separating {}), \
+         one-cent-lower {} (separating {}), other {}, refused {}, unreadable {}",
+        results.len(),
+        CASE3_CASES.len(),
+        count("exact-half-up", false) + count("exact-half-up", true),
+        count("exact-half-up", true),
+        count("one-cent-lower", false) + count("one-cent-lower", true),
+        count("one-cent-lower", true),
+        count("other", false) + count("other", true),
+        count("refused", false) + count("refused", true),
+        count("unreadable", false) + count("unreadable", true),
+    );
+    for id in &undeleted {
+        eprintln!("UNDELETED-DRAFT\tCreditNote {id} must be reported to the coordinator");
+    }
+    assert!(
+        undeleted.is_empty() && left.is_empty(),
+        "drafts left on the test account: {undeleted:?} {left:?}"
+    );
 }
