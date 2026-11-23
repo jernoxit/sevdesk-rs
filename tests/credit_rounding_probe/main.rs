@@ -1024,3 +1024,223 @@ async fn case3_half_cent_float_check() {
         "drafts left on the test account: {undeleted:?} {left:?}"
     );
 }
+
+/// The enshrined credit note GU-1199 of case 1 on the test account.
+const ENSHRINED_CREDIT_NOTE: i64 = 3117462;
+
+/// Head and positions of the enshrined credit note, read raw.
+struct PosSnapshot {
+    head: Value,
+    positions: Vec<Value>,
+}
+
+impl PosSnapshot {
+    fn first(&self) -> &Value {
+        self.positions.first().unwrap_or(&Value::Null)
+    }
+
+    /// The fields that must survive a price change and restore unchanged.
+    fn stable(&self) -> String {
+        format!(
+            "number={} status={} enshrined={} sumNet={} sumTax={} sumGross={} pos.price={} pos.sumNet={} pos.sumGross={}",
+            text_of(&self.head, "creditNoteNumber"),
+            text_of(&self.head, "status"),
+            text_of(&self.head, "enshrined"),
+            text_of(&self.head, "sumNet"),
+            text_of(&self.head, "sumTax"),
+            text_of(&self.head, "sumGross"),
+            text_of(self.first(), "price"),
+            text_of(self.first(), "sumNet"),
+            text_of(self.first(), "sumGross"),
+        )
+    }
+
+    fn describe(&self) -> String {
+        format!(
+            "{} update={} positions={} pos.id={}",
+            self.stable(),
+            text_of(&self.head, "update"),
+            self.positions.len(),
+            text_of(self.first(), "id"),
+        )
+    }
+}
+
+async fn read_enshrined(ctx: &Ctx, name: &str) -> Option<PosSnapshot> {
+    let id = ENSHRINED_CREDIT_NOTE;
+    let (status, text) = ctx
+        .raw(
+            Method::GET,
+            &format!("/CreditNote/{id}"),
+            None,
+            Some(&format!("credit_rounding_{name}_head")),
+        )
+        .await;
+    if status >= 300 {
+        eprintln!("POS-READ-FAILED\tGET /CreditNote/{id} answered {status}");
+        return None;
+    }
+    let head = raw_one(&text);
+    let (status, text) = ctx
+        .raw(
+            Method::GET,
+            &format!("/CreditNotePos?creditNote[id]={id}&creditNote[objectName]=CreditNote"),
+            None,
+            Some(&format!("credit_rounding_{name}_pos")),
+        )
+        .await;
+    if status >= 300 {
+        eprintln!("POS-READ-FAILED\tGET /CreditNotePos answered {status}");
+        return None;
+    }
+    let positions: Vec<Value> = serde_json::from_value(raw_objects(&text)).unwrap_or_default();
+    Some(PosSnapshot { head, positions })
+}
+
+/// One raw `PUT /CreditNotePos/{id}` with a price; never retried. Returns
+/// whether the answer was a clean success.
+async fn put_position_price(ctx: &Ctx, pos_id: &str, price: &str, name: &str) -> bool {
+    let body = format!("{{\"price\":\"{price}\"}}");
+    let (status, text) = ctx
+        .raw(
+            Method::PUT,
+            &format!("/CreditNotePos/{pos_id}"),
+            Some(body),
+            Some(&format!("credit_rounding_{name}")),
+        )
+        .await;
+    let parsed: Value = serde_json::from_str(&text).unwrap_or(Value::Null);
+    let error = &parsed["error"];
+    let (code, message) = if error.is_object() {
+        (text_of(error, "code"), text_of(error, "message"))
+    } else {
+        (text_of(&parsed, "code"), text_of(&parsed, "message"))
+    };
+    let failed = status >= 300 || !error.is_null();
+    eprintln!(
+        "POS-PUT\tprice {price}\tHTTP {status}\tcode {code}\tmessage {message}\terror_body={failed}"
+    );
+    !failed
+}
+
+#[tokio::test]
+#[ignore = "changes and restores a position of the enshrined credit note GU-1199 on the sevDesk test account"]
+async fn case4_enshrined_position_price() {
+    let Ok(token) = std::env::var("SEVDESK_API_KEY") else {
+        eprintln!("SEVDESK_API_KEY is not set: skipping the enshrined position price probe");
+        return;
+    };
+    let _alone = SERIAL.lock().await;
+    let ts = OffsetDateTime::now_utc().unix_timestamp();
+    let ctx = Ctx::new(&token, format!("SDRS-POS-{ts}"));
+    verify_test_account(&ctx).await;
+
+    // 1. Read and check everything before the first write.
+    let Some(before) = read_enshrined(&ctx, "pos_before").await else {
+        eprintln!("ABORT\tcould not read GU-1199");
+        return;
+    };
+    let mut problems: Vec<String> = Vec::new();
+    if text_of(&before.head, "creditNoteNumber") != "GU-1199" {
+        problems.push("number is not GU-1199".to_owned());
+    }
+    if text_of(&before.head, "status") != "200" {
+        problems.push("status is not 200".to_owned());
+    }
+    if matches!(
+        text_of(&before.head, "enshrined").as_str(),
+        "-" | "" | "null"
+    ) {
+        problems.push("not enshrined".to_owned());
+    }
+    // The marker prefix case 1 puts on every note: `SDRS-RND-<ts>-credit-note`.
+    if !text_of(&before.head, "customerInternalNote").starts_with("SDRS-RND-") {
+        problems.push("customerInternalNote lacks the SDRS-RND- marker".to_owned());
+    }
+    if before.positions.len() != 2 {
+        problems.push(format!("{} positions, expected 2", before.positions.len()));
+    }
+    for p in &before.positions {
+        let price = text_of(p, "price");
+        if price
+            .parse::<f64>()
+            .ok()
+            .is_none_or(|v| (v - 0.03).abs() > 1e-9)
+        {
+            problems.push(format!("position price {price}, expected 0.03"));
+        }
+    }
+    if !problems.is_empty() {
+        eprintln!("ABORT\t{}", problems.join("; "));
+        return;
+    }
+    let pos_id = text_of(before.first(), "id");
+    eprintln!("POS-BEFORE\t{}", before.describe());
+
+    // 3. The one write.
+    let put_ok = put_position_price(&ctx, &pos_id, "0.04", "pos_put_004").await;
+
+    // 4. Read back and classify.
+    let Some(after) = read_enshrined(&ctx, "pos_after").await else {
+        eprintln!("STOP\tread after the write failed; nothing restored");
+        return;
+    };
+    eprintln!("POS-AFTER\t{}", after.describe());
+    let price_changed = text_of(after.first(), "price") != text_of(before.first(), "price");
+    let sums_changed = ["sumNet", "sumTax", "sumGross"]
+        .iter()
+        .any(|k| text_of(&after.head, k) != text_of(&before.head, k));
+    let mut other: Vec<String> = Vec::new();
+    for (key, label) in [
+        ("creditNoteNumber", "number"),
+        ("status", "status"),
+        ("enshrined", "enshrined"),
+    ] {
+        if text_of(&after.head, key) != text_of(&before.head, key) {
+            other.push(format!(
+                "{label}: {} -> {}",
+                text_of(&before.head, key),
+                text_of(&after.head, key)
+            ));
+        }
+    }
+    if after.positions.len() != before.positions.len() || text_of(after.first(), "id") != pos_id {
+        other.push("position set or first position id changed".to_owned());
+    }
+    eprintln!(
+        "POS-CLASSIFY\tput_ok={put_ok} price_changed={price_changed} head_sums_changed={sums_changed} other_changes={other:?}"
+    );
+    if !other.is_empty() {
+        eprintln!("STOP\t{}", other.join("; "));
+        return;
+    }
+    if !price_changed {
+        eprintln!(
+            "POS-SUMMARY\tput_ok={put_ok}\tprice unchanged (sums_changed={sums_changed}); nothing to restore"
+        );
+        assert_eq!(before.stable(), after.stable(), "unexpected change");
+        return;
+    }
+
+    // 6. Restore, read back, compare.
+    let restore_ok = put_position_price(&ctx, &pos_id, "0.03", "pos_put_003").await;
+    let restored = read_enshrined(&ctx, "pos_restored").await;
+    let verdict = match &restored {
+        Some(r) if r.stable() == before.stable() => {
+            eprintln!("RESTORED ok\t{}", r.describe());
+            "RESTORED ok".to_owned()
+        }
+        Some(r) => {
+            let d = format!("before [{}] restored [{}]", before.stable(), r.stable());
+            eprintln!("RESTORE-MISMATCH\t{d}");
+            format!("RESTORE-MISMATCH {d}")
+        }
+        None => {
+            eprintln!("RESTORE-MISMATCH\tread after restore failed");
+            "RESTORE-MISMATCH unreadable".to_owned()
+        }
+    };
+    eprintln!(
+        "POS-SUMMARY\tput_ok={put_ok} price_changed={price_changed} head_sums_changed={sums_changed} restore_put_ok={restore_ok}\t{verdict}"
+    );
+}
